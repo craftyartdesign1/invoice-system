@@ -29,6 +29,7 @@
         .btn-primary{background:#2563eb;color:#fff}
         .btn-success{background:#10b981;color:#fff}
         .btn-danger{background:#ef4444;color:#fff}
+        #loginError{color:red;font-size:0.85rem;margin-top:0.5rem;font-weight:bold}
     </style>
 </head>
 <body>
@@ -39,7 +40,7 @@
         <p style="color:#666;margin-bottom:1rem">Enter credentials to sync data</p>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <div id="loginError" style="color:red;font-size:0.85rem;margin-top:0.5rem;font-weight:bold"></div>
+        <div id="loginError"></div>
         <button id="loginBtn" onclick="login()">Sign In</button>
     </div>
 </div>
@@ -129,8 +130,7 @@
 </div>
 
 <script>
-/** * VERIFIED URL FROM YOUR SCREENSHOT 
- */
+// VERIFIED VERSION 3 URL
 const URL = 'https://script.google.com/macros/s/AKfycbypB4IKPszTwaHETysyEM_mid1SArqlHcnIf3ZJOY7kNPYTk_p0muyUcRblLbGQyL4/exec';
 
 let user, inv=[], cust=[], curr={items:[]};
@@ -168,8 +168,6 @@ async function login() {
             user = found;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            
-            // Sync Data
             inv = await loadData('Inventory');
             cust = await loadData('Customers');
             setupInvoice();
@@ -177,8 +175,7 @@ async function login() {
             errDiv.innerText = "Invalid Username or Password";
         }
     } catch(e) {
-        console.error(e);
-        errDiv.innerText = "Connection Error: Check Sheet tabs/Script permissions";
+        errDiv.innerText = "Connection Error: Check Sheet tabs and Script permissions";
     } finally {
         btn.disabled = false;
         btn.innerText = "Sign In";
@@ -212,7 +209,7 @@ function updateCompany() {
 function addItem() {
     const sku = document.getElementById('skuInput').value.toUpperCase().trim();
     const it = inv.find(x => x.SKU.toString().toUpperCase() === sku);
-    if(!it) return alert("SKU Not Found in Inventory");
+    if(!it) return alert("SKU Not Found");
     curr.items.push({ ...it, qty: 1 });
     renderItems();
     document.getElementById('skuInput').value = '';
@@ -235,7 +232,6 @@ async function saveInvoice() {
     if(curr.items.length === 0) return alert("Add items first!");
     const custIdx = document.getElementById('invCustomer').value;
     if(custIdx === "") return alert("Select a customer!");
-
     const data = {
         InvoiceNum: document.getElementById('invNum').value,
         Customer: cust[custIdx].Name,
@@ -244,7 +240,7 @@ async function saveInvoice() {
         Date: new Date().toLocaleDateString()
     };
     await api('Invoices', 'add', data);
-    alert("Invoice Completed and Saved!");
+    alert("Invoice Saved!");
     location.reload();
 }
 
@@ -268,12 +264,7 @@ function renderInv() {
 }
 
 async function addCustomer() {
-    const d = { 
-        Name: document.getElementById('custName').value, 
-        Company: document.getElementById('custCompany').value, 
-        Phone: document.getElementById('custPhone').value, 
-        Email: document.getElementById('custEmail').value 
-    };
+    const d = { Name: document.getElementById('custName').value, Company: document.getElementById('custCompany').value, Phone: document.getElementById('custPhone').value, Email: document.getElementById('custEmail').value };
     await api('Customers', 'add', d);
     alert("Customer Added!");
     cust = await loadData('Customers');
@@ -294,12 +285,7 @@ async function renderLookup() {
 }
 
 async function addUser() {
-    const d = { 
-        Username: document.getElementById('newUser').value, 
-        Password: document.getElementById('newPass').value, 
-        DisplayName: document.getElementById('newDisp').value, 
-        Role: document.getElementById('newRole').value 
-    };
+    const d = { Username: document.getElementById('newUser').value, Password: document.getElementById('newPass').value, DisplayName: document.getElementById('newDisp').value, Role: document.getElementById('newRole').value };
     await api('Users', 'add', d);
     alert("User Created!");
     renderUsers();
