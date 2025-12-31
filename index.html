@@ -28,7 +28,6 @@
         .btn-primary{background:#2563eb;color:#fff}
         .btn-success{background:#10b981;color:#fff}
         .btn-danger{background:#ef4444;color:#fff}
-        .error-box{background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:6px;margin-bottom:1rem;display:none}
         .custom-size-box{display:flex;gap:0.5rem;align-items:center;margin-top:0.5rem}
         .custom-size-box input{width:70px}
     </style>
@@ -62,7 +61,6 @@
     <div class="content">
         <div id="invoice" class="card">
             <h2>New Transaction</h2>
-            <div id="errorBox" class="error-box"></div>
             <div class="form-grid">
                 <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
                 <div class="form-group"><label>Customer</label><select id="invCustomer" onchange="updateCompany()"></select></div>
@@ -103,11 +101,8 @@
                     <input type="number" id="customW" placeholder="W"><span>x</span><input type="number" id="customH" placeholder="H">
                 </div>
             </div>
-            <button id="invBtn" class="btn btn-primary" onclick="addInventory()">Save Product</button>
-            <table>
-                <thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Actions</th></tr></thead>
-                <tbody id="inventoryList"></tbody>
-            </table>
+            <button class="btn btn-primary" onclick="addInventory()">Save Product</button>
+            <table id="invTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th></tr></thead><tbody id="inventoryList"></tbody></table>
         </div>
 
         <div id="customers" class="card hidden">
@@ -119,93 +114,73 @@
                 <input type="email" id="custEmail" placeholder="Email">
             </div>
             <button class="btn btn-primary" onclick="addCustomer()">Add Customer</button>
-            <table id="customerTable">
-                <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Actions</th></tr></thead>
-                <tbody id="customerList"></tbody>
-            </table>
+            <table id="custTable"><thead><tr><th>Name</th><th>Company</th><th>Phone</th></tr></thead><tbody id="customerList"></tbody></table>
         </div>
 
         <div id="lookup" class="card hidden">
             <h2>Invoice History</h2>
-            <table>
-                <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
-                <tbody id="lookupList"></tbody>
-            </table>
+            <table id="histTable"><thead><tr><th>Inv #</th><th>Customer</th><th>Total</th><th>Date</th></tr></thead><tbody id="lookupList"></tbody></table>
         </div>
 
         <div id="admin" class="card hidden">
-            <h2>System Administration</h2>
+            <h2>Admin</h2>
             <div class="form-grid">
                 <input type="text" id="newUser" placeholder="Username">
                 <input type="text" id="newPass" placeholder="Password">
                 <input type="text" id="newDisp" placeholder="Display Name">
                 <select id="newRole"><option>Admin</option><option>Employee</option></select>
             </div>
-            <button class="btn btn-primary" onclick="addUser()">Create User Account</button>
-            <table>
-                <thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Actions</th></tr></thead>
-                <tbody id="userList"></tbody>
-            </table>
+            <button class="btn btn-primary" onclick="addUser()">Create User</button>
+            <table id="userTable"><thead><tr><th>Username</th><th>Display Name</th><th>Role</th></tr></thead><tbody id="userList"></tbody></table>
         </div>
     </div>
 </div>
 
 <script>
-const URL = 'https://script.google.com/macros/s/AKfycbycKxTpO2DpS51RS66DGg7WMO_wj1oBkuOUewGsixNSiEk0TovrlTi55U3gTTKPBcn2/exec';
-let user, inv=[], cust=[], invs=[], users=[], curr={items:[]}, ei=-1;
+// UPDATED WITH YOUR URL FROM SCREENSHOT
+const URL = 'https://script.google.com/macros/s/AKfycbyB4IKPszTwaHETysyEM_mid1SArqIHcnf3ZJOY7KNPYTk_p0muyUcRblLbGqYL4/exec';
+let user, inv=[], cust=[], invs=[], users=[], curr={items:[]};
 
-// --- API CORE ---
-async function api(sheet, action, data = {}, index = null) {
-    const payload = { sheet, action, data, index };
+async function api(sheet, action, data = {}) {
+    const payload = { sheet, action, data };
     const resp = await fetch(URL, { method: 'POST', body: JSON.stringify(payload) });
     return await resp.json();
 }
 
-async function loadAll() {
-    const r = await fetch(`${URL}?sheet=all`); // Modified to get all sheets in one call if your script supports it
-    const d = await r.json();
-    inv = d.Inventory || [];
-    cust = d.Customers || [];
-    invs = d.Invoices || [];
-    users = d.Users || [];
+async function loadData(sheet) {
+    const r = await fetch(`${URL}?sheet=${sheet}`);
+    return await r.json();
 }
 
-// --- AUTH ---
 async function login() {
     const u = document.getElementById('username').value.trim();
     const p = document.getElementById('password').value.trim();
     const btn = document.getElementById('loginBtn');
-    
     btn.disabled = true;
     btn.innerText = "Syncing...";
 
     try {
-        const r = await fetch(`${URL}?sheet=Users`);
-        users = await r.json();
-
-        const found = users.find(x => 
-            x.Username.toString().toLowerCase() === u.toLowerCase() && 
-            x.Password.toString() === p
-        );
-
+        users = await loadData('Users');
+        const found = users.find(x => x.Username.toString().toLowerCase() === u.toLowerCase() && x.Password.toString() === p);
         if (found) {
             user = found;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             setupInvoice();
-            loadAll();
+            // Pre-load data
+            inv = await loadData('Inventory');
+            cust = await loadData('Customers');
         } else {
-            document.getElementById('loginError').innerText = "Access Denied: Check Username/Password";
+            document.getElementById('loginError').innerText = "Access Denied";
         }
     } catch(e) {
-        document.getElementById('loginError').innerText = "Server Timeout. Try again.";
+        document.getElementById('loginError').innerText = "Connection Error";
     } finally {
         btn.disabled = false;
         btn.innerText = "Sign In";
     }
 }
 
-// --- TABS ---
 function showTab(id, e) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -217,36 +192,6 @@ function showTab(id, e) {
     if(id === 'admin') renderUsers();
 }
 
-// --- INVENTORY LOGIC (Fixing Custom Sizes) ---
-function toggleSize() {
-    document.getElementById('customInputs').style.display = document.getElementById('newSize').value === 'Custom' ? 'flex' : 'none';
-}
-
-async function addInventory() {
-    const data = {
-        SKU: document.getElementById('newSKU').value.toUpperCase(),
-        Item: document.getElementById('newItem').value,
-        Price: document.getElementById('newPrice').value,
-        Size: document.getElementById('newSize').value,
-        CustomWidth: document.getElementById('customW').value,
-        CustomHeight: document.getElementById('customH').value
-    };
-    
-    await api('Inventory', 'add', data);
-    alert("Saved successfully!");
-    location.reload(); // Refresh to sync iPad/Mac
-}
-
-function renderInv() {
-    let h = '';
-    inv.forEach((it, i) => {
-        const sizeDisp = it.Size === 'Custom' ? `${it.CustomWidth}x${it.CustomHeight}` : it.Size;
-        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>$${it.Price}</td><td>${sizeDisp}</td><td><button onclick="delInv(${i})">Del</button></td></tr>`;
-    });
-    document.getElementById('inventoryList').innerHTML = h;
-}
-
-// --- INVOICE LOGIC ---
 function setupInvoice() {
     document.getElementById('invNum').value = 'INV-' + Date.now().toString().slice(-6);
     document.getElementById('invEmployee').value = user.DisplayName;
@@ -264,7 +209,6 @@ function addItem() {
     const sku = document.getElementById('skuInput').value.toUpperCase();
     const it = inv.find(x => x.SKU === sku);
     if(!it) return alert("SKU Not Found");
-    
     curr.items.push({ ...it, qty: 1 });
     renderItems();
     document.getElementById('skuInput').value = '';
@@ -275,8 +219,7 @@ function renderItems() {
     curr.items.forEach((it, i) => {
         const line = it.qty * it.Price;
         sub += line;
-        const sizeDisp = it.Size === 'Custom' ? `${it.CustomWidth}x${it.CustomHeight}` : it.Size;
-        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>${sizeDisp}</td><td>${it.qty}</td><td>$${it.Price}</td><td>$${line}</td><td><button onclick="curr.items.splice(${i},1);renderItems()">X</button></td></tr>`;
+        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>${it.Size}</td><td>${it.qty}</td><td>$${it.Price}</td><td>$${line}</td><td><button onclick="curr.items.splice(${i},1);renderItems()">X</button></td></tr>`;
     });
     document.getElementById('invoiceItems').innerHTML = h;
     document.getElementById('subtotal').innerText = sub.toFixed(2);
@@ -293,33 +236,69 @@ async function saveInvoice() {
         Date: new Date().toLocaleDateString()
     };
     await api('Invoices', 'add', data);
-    alert("Invoice Generated!");
+    alert("Invoice Saved!");
     location.reload();
 }
 
-// --- ADMIN / USERS ---
-async function addUser() {
+async function addInventory() {
     const d = {
-        Username: document.getElementById('newUser').value,
-        Password: document.getElementById('newPass').value,
-        DisplayName: document.getElementById('newDisp').value,
-        Role: document.getElementById('newRole').value
+        SKU: document.getElementById('newSKU').value.toUpperCase(),
+        Item: document.getElementById('newItem').value,
+        Price: document.getElementById('newPrice').value,
+        Size: document.getElementById('newSize').value,
+        CustomWidth: document.getElementById('customW').value,
+        CustomHeight: document.getElementById('customH').value
     };
+    await api('Inventory', 'add', d);
+    alert("Product Saved!");
+    inv = await loadData('Inventory');
+    renderInv();
+}
+
+function renderInv() {
+    let h = '';
+    inv.forEach(it => h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>$${it.Price}</td><td>${it.Size}</td></tr>`);
+    document.getElementById('inventoryList').innerHTML = h;
+}
+
+async function addCustomer() {
+    const d = { Name: document.getElementById('custName').value, Company: document.getElementById('custCompany').value, Phone: document.getElementById('custPhone').value, Email: document.getElementById('custEmail').value };
+    await api('Customers', 'add', d);
+    alert("Customer Added!");
+    cust = await loadData('Customers');
+    renderCust();
+}
+
+function renderCust() {
+    let h = '';
+    cust.forEach(c => h += `<tr><td>${c.Name}</td><td>${c.Company}</td><td>${c.Phone}</td></tr>`);
+    document.getElementById('customerList').innerHTML = h;
+}
+
+async function renderLookup() {
+    const list = await loadData('Invoices');
+    let h = '';
+    list.forEach(i => h += `<tr><td>${i.InvoiceNum}</td><td>${i.Customer}</td><td>$${i.Total}</td><td>${i.Date}</td></tr>`);
+    document.getElementById('lookupList').innerHTML = h;
+}
+
+async function addUser() {
+    const d = { Username: document.getElementById('newUser').value, Password: document.getElementById('newPass').value, DisplayName: document.getElementById('newDisp').value, Role: document.getElementById('newRole').value };
     await api('Users', 'add', d);
     alert("User Created!");
+    users = await loadData('Users');
     renderUsers();
 }
 
 function renderUsers() {
     let h = '';
-    users.forEach((u, i) => {
-        h += `<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td><td><button onclick="api('Users','delete',{},${i})">Del</button></td></tr>`;
-    });
+    users.forEach(u => h += `<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td></tr>`);
     document.getElementById('userList').innerHTML = h;
 }
 
-// Initialize
-window.onload = loadAll;
+function toggleSize() {
+    document.getElementById('customInputs').style.display = document.getElementById('newSize').value === 'Custom' ? 'flex' : 'none';
+}
 </script>
 </body>
 </html>
