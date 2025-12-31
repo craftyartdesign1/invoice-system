@@ -9,8 +9,9 @@
         body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#333}
         .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a,#3b82f6)}
         .login-box{background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.2);width:100%;max-width:400px;text-align:center}
-        .login-box input{width:100%;padding:0.8rem;margin:0.6rem 0;border:1px solid #ddd;border-radius:6px}
-        .login-box button{width:100%;padding:0.8rem;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600}
+        .login-box h2{margin-bottom:0.5rem;color:#1e3a8a}
+        .login-box input{width:100%;padding:0.8rem;margin:0.6rem 0;border:1px solid #ddd;border-radius:6px;font-size:1rem}
+        .login-box button{width:100%;padding:0.8rem;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:1rem}
         .header{background:#1e3a8a;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
         .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #ddd;overflow-x:auto}
         .tab{padding:1rem 1.5rem;border:none;background:none;cursor:pointer;font-weight:500;color:#666;border-bottom:3px solid transparent}
@@ -35,10 +36,10 @@
 <div id="loginScreen" class="login">
     <div class="login-box">
         <h2>System Login</h2>
-        <p style="color:#666;margin-bottom:1.5rem">Enter credentials to sync data</p>
+        <p style="color:#666;margin-bottom:1rem">Enter credentials to sync data</p>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <div id="loginError" style="color:red;font-size:0.8rem;margin-top:0.5rem"></div>
+        <div id="loginError" style="color:red;font-size:0.85rem;margin-top:0.5rem;font-weight:bold"></div>
         <button id="loginBtn" onclick="login()">Sign In</button>
     </div>
 </div>
@@ -66,8 +67,8 @@
                 <div class="form-group"><label>Employee</label><input type="text" id="invEmployee" readonly></div>
             </div>
             <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1rem">
-                <label>Scan/Type SKU</label>
-                <div style="display:flex;gap:1rem">
+                <label style="font-weight:bold">Add Item by SKU</label>
+                <div style="display:flex;gap:1rem;margin-top:0.5rem">
                     <input type="text" id="skuInput" style="flex:1;padding:0.6rem" placeholder="Enter Product SKU">
                     <button class="btn btn-primary" onclick="addItem()">+ Add Item</button>
                 </div>
@@ -90,7 +91,7 @@
                 <input type="text" id="newSKU" placeholder="SKU">
                 <input type="text" id="newItem" placeholder="Item Name">
                 <input type="number" id="newPrice" placeholder="Price">
-                <input type="text" id="newSize" placeholder="Size (e.g. S, M, L)">
+                <input type="text" id="newSize" placeholder="Size">
             </div>
             <button class="btn btn-primary" onclick="addInventory()">Save Product</button>
             <table id="invTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th></tr></thead><tbody id="inventoryList"></tbody></table>
@@ -114,7 +115,7 @@
         </div>
 
         <div id="admin" class="card hidden">
-            <h2>Admin</h2>
+            <h2>User Management</h2>
             <div class="form-grid">
                 <input type="text" id="newUser" placeholder="Username">
                 <input type="text" id="newPass" placeholder="Password">
@@ -128,8 +129,10 @@
 </div>
 
 <script>
-// YOUR NEW GOOGLE SCRIPT URL
+/** * VERIFIED URL FROM YOUR SCREENSHOT 
+ */
 const URL = 'https://script.google.com/macros/s/AKfycbypB4IKPszTwaHETysyEM_mid1SArqlHcnIf3ZJOY7kNPYTk_p0muyUcRblLbGQyL4/exec';
+
 let user, inv=[], cust=[], curr={items:[]};
 
 async function api(sheet, action, data = {}) {
@@ -140,32 +143,42 @@ async function api(sheet, action, data = {}) {
 
 async function loadData(sheet) {
     const r = await fetch(`${URL}?sheet=${sheet}`);
+    if (!r.ok) throw new Error('Network Error');
     return await r.json();
 }
 
 async function login() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
+    const uInput = document.getElementById('username').value.trim();
+    const pInput = document.getElementById('password').value.trim();
+    const errDiv = document.getElementById('loginError');
     const btn = document.getElementById('loginBtn');
+    
+    errDiv.innerText = "";
     btn.disabled = true;
-    btn.innerText = "Syncing...";
+    btn.innerText = "Connecting...";
 
     try {
         const users = await loadData('Users');
-        const found = users.find(x => x.Username.toString().toLowerCase() === u.toLowerCase() && x.Password.toString() === p);
+        const found = users.find(x => 
+            x.Username.toString().toLowerCase() === uInput.toLowerCase() && 
+            x.Password.toString() === pInput
+        );
+
         if (found) {
             user = found;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            // Pre-load data for other tabs
+            
+            // Sync Data
             inv = await loadData('Inventory');
             cust = await loadData('Customers');
             setupInvoice();
         } else {
-            document.getElementById('loginError').innerText = "Access Denied";
+            errDiv.innerText = "Invalid Username or Password";
         }
     } catch(e) {
-        document.getElementById('loginError').innerText = "Connection Error: Check Script URL and Sheet Tab names";
+        console.error(e);
+        errDiv.innerText = "Connection Error: Check Sheet tabs/Script permissions";
     } finally {
         btn.disabled = false;
         btn.innerText = "Sign In";
@@ -187,7 +200,7 @@ function setupInvoice() {
     document.getElementById('invNum').value = 'INV-' + Date.now().toString().slice(-6);
     document.getElementById('invEmployee').value = user.DisplayName;
     let sel = document.getElementById('invCustomer');
-    sel.innerHTML = '<option>Select Customer</option>';
+    sel.innerHTML = '<option value="">Select Customer</option>';
     cust.forEach((c, i) => sel.innerHTML += `<option value="${i}">${c.Name}</option>`);
 }
 
@@ -197,9 +210,9 @@ function updateCompany() {
 }
 
 function addItem() {
-    const sku = document.getElementById('skuInput').value.toUpperCase();
-    const it = inv.find(x => x.SKU === sku);
-    if(!it) return alert("SKU Not Found");
+    const sku = document.getElementById('skuInput').value.toUpperCase().trim();
+    const it = inv.find(x => x.SKU.toString().toUpperCase() === sku);
+    if(!it) return alert("SKU Not Found in Inventory");
     curr.items.push({ ...it, qty: 1 });
     renderItems();
     document.getElementById('skuInput').value = '';
@@ -208,9 +221,9 @@ function addItem() {
 function renderItems() {
     let h = '', sub = 0;
     curr.items.forEach((it, i) => {
-        const line = it.qty * it.Price;
+        const line = Number(it.qty) * Number(it.Price);
         sub += line;
-        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>${it.Size}</td><td>${it.qty}</td><td>$${it.Price}</td><td>$${line}</td><td><button onclick="curr.items.splice(${i},1);renderItems()">X</button></td></tr>`;
+        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>${it.Size}</td><td>${it.qty}</td><td>$${it.Price}</td><td>$${line.toFixed(2)}</td><td><button onclick="curr.items.splice(${i},1);renderItems()">X</button></td></tr>`;
     });
     document.getElementById('invoiceItems').innerHTML = h;
     document.getElementById('subtotal').innerText = sub.toFixed(2);
@@ -219,15 +232,19 @@ function renderItems() {
 }
 
 async function saveInvoice() {
+    if(curr.items.length === 0) return alert("Add items first!");
+    const custIdx = document.getElementById('invCustomer').value;
+    if(custIdx === "") return alert("Select a customer!");
+
     const data = {
         InvoiceNum: document.getElementById('invNum').value,
-        Customer: cust[document.getElementById('invCustomer').value].Name,
+        Customer: cust[custIdx].Name,
         Total: document.getElementById('total').innerText,
         Items: JSON.stringify(curr.items),
         Date: new Date().toLocaleDateString()
     };
     await api('Invoices', 'add', data);
-    alert("Invoice Saved!");
+    alert("Invoice Completed and Saved!");
     location.reload();
 }
 
@@ -251,7 +268,12 @@ function renderInv() {
 }
 
 async function addCustomer() {
-    const d = { Name: document.getElementById('custName').value, Company: document.getElementById('custCompany').value, Phone: document.getElementById('custPhone').value, Email: document.getElementById('custEmail').value };
+    const d = { 
+        Name: document.getElementById('custName').value, 
+        Company: document.getElementById('custCompany').value, 
+        Phone: document.getElementById('custPhone').value, 
+        Email: document.getElementById('custEmail').value 
+    };
     await api('Customers', 'add', d);
     alert("Customer Added!");
     cust = await loadData('Customers');
@@ -272,19 +294,19 @@ async function renderLookup() {
 }
 
 async function addUser() {
-    const d = { Username: document.getElementById('newUser').value, Password: document.getElementById('newPass').value, DisplayName: document.getElementById('newDisp').value, Role: document.getElementById('newRole').value };
+    const d = { 
+        Username: document.getElementById('newUser').value, 
+        Password: document.getElementById('newPass').value, 
+        DisplayName: document.getElementById('newDisp').value, 
+        Role: document.getElementById('newRole').value 
+    };
     await api('Users', 'add', d);
     alert("User Created!");
-    const users = await loadData('Users');
-    renderUsersList(users);
+    renderUsers();
 }
 
 async function renderUsers() {
     const users = await loadData('Users');
-    renderUsersList(users);
-}
-
-function renderUsersList(users) {
     let h = '';
     users.forEach(u => h += `<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td></tr>`);
     document.getElementById('userList').innerHTML = h;
