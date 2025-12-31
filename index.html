@@ -28,8 +28,6 @@
         .btn-primary{background:#2563eb;color:#fff}
         .btn-success{background:#10b981;color:#fff}
         .btn-danger{background:#ef4444;color:#fff}
-        .custom-size-box{display:flex;gap:0.5rem;align-items:center;margin-top:0.5rem}
-        .custom-size-box input{width:70px}
     </style>
 </head>
 <body>
@@ -92,14 +90,7 @@
                 <input type="text" id="newSKU" placeholder="SKU">
                 <input type="text" id="newItem" placeholder="Item Name">
                 <input type="number" id="newPrice" placeholder="Price">
-                <select id="newSize" onchange="toggleSize()">
-                    <option value="">No Size</option>
-                    <option value="S">Small</option><option value="M">Medium</option>
-                    <option value="L">Large</option><option value="Custom">Custom</option>
-                </select>
-                <div id="customInputs" class="custom-size-box" style="display:none">
-                    <input type="number" id="customW" placeholder="W"><span>x</span><input type="number" id="customH" placeholder="H">
-                </div>
+                <input type="text" id="newSize" placeholder="Size (e.g. S, M, L)">
             </div>
             <button class="btn btn-primary" onclick="addInventory()">Save Product</button>
             <table id="invTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th></tr></thead><tbody id="inventoryList"></tbody></table>
@@ -137,9 +128,9 @@
 </div>
 
 <script>
-// UPDATED WITH YOUR URL FROM SCREENSHOT
-const URL = 'https://script.google.com/macros/s/AKfycbyB4IKPszTwaHETysyEM_mid1SArqIHcnf3ZJOY7KNPYTk_p0muyUcRblLbGqYL4/exec';
-let user, inv=[], cust=[], invs=[], users=[], curr={items:[]};
+// YOUR NEW GOOGLE SCRIPT URL
+const URL = 'https://script.google.com/macros/s/AKfycbypB4IKPszTwaHETysyEM_mid1SArqlHcnIf3ZJOY7kNPYTk_p0muyUcRblLbGQyL4/exec';
+let user, inv=[], cust=[], curr={items:[]};
 
 async function api(sheet, action, data = {}) {
     const payload = { sheet, action, data };
@@ -160,21 +151,21 @@ async function login() {
     btn.innerText = "Syncing...";
 
     try {
-        users = await loadData('Users');
+        const users = await loadData('Users');
         const found = users.find(x => x.Username.toString().toLowerCase() === u.toLowerCase() && x.Password.toString() === p);
         if (found) {
             user = found;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            setupInvoice();
-            // Pre-load data
+            // Pre-load data for other tabs
             inv = await loadData('Inventory');
             cust = await loadData('Customers');
+            setupInvoice();
         } else {
             document.getElementById('loginError').innerText = "Access Denied";
         }
     } catch(e) {
-        document.getElementById('loginError').innerText = "Connection Error";
+        document.getElementById('loginError').innerText = "Connection Error: Check Script URL and Sheet Tab names";
     } finally {
         btn.disabled = false;
         btn.innerText = "Sign In";
@@ -245,9 +236,7 @@ async function addInventory() {
         SKU: document.getElementById('newSKU').value.toUpperCase(),
         Item: document.getElementById('newItem').value,
         Price: document.getElementById('newPrice').value,
-        Size: document.getElementById('newSize').value,
-        CustomWidth: document.getElementById('customW').value,
-        CustomHeight: document.getElementById('customH').value
+        Size: document.getElementById('newSize').value
     };
     await api('Inventory', 'add', d);
     alert("Product Saved!");
@@ -286,18 +275,19 @@ async function addUser() {
     const d = { Username: document.getElementById('newUser').value, Password: document.getElementById('newPass').value, DisplayName: document.getElementById('newDisp').value, Role: document.getElementById('newRole').value };
     await api('Users', 'add', d);
     alert("User Created!");
-    users = await loadData('Users');
-    renderUsers();
+    const users = await loadData('Users');
+    renderUsersList(users);
 }
 
-function renderUsers() {
+async function renderUsers() {
+    const users = await loadData('Users');
+    renderUsersList(users);
+}
+
+function renderUsersList(users) {
     let h = '';
     users.forEach(u => h += `<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td></tr>`);
     document.getElementById('userList').innerHTML = h;
-}
-
-function toggleSize() {
-    document.getElementById('customInputs').style.display = document.getElementById('newSize').value === 'Custom' ? 'flex' : 'none';
 }
 </script>
 </body>
