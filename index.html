@@ -16,7 +16,7 @@
         .hidden{display:none}
         .form-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;margin-bottom:1rem}
         .form-group label{display:block;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;color:#475569}
-        .form-group input, .form-group select{width:100%;padding:0.6rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem}
+        .form-group input{width:100%;padding:0.6rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem}
         .btn{padding:0.6rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-weight:600;transition:0.2s}
         .btn-blue{background:#3b82f6;color:#fff}
         .btn-red{background:#ef4444;color:#fff}
@@ -32,7 +32,7 @@
         <input type="text" id="username" placeholder="Username" style="width:100%;padding:0.8rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:6px">
         <input type="password" id="password" placeholder="Password" style="width:100%;padding:0.8rem;margin-bottom:1.5rem;border:1px solid #ddd;border-radius:6px">
         <div id="loginError" style="color:red;margin-bottom:1rem;font-size:0.85rem;min-height:1.2rem"></div>
-        <button class="btn btn-blue" style="width:100%" id="signInBtn" onclick="login()">Sign In</button>
+        <button class="btn btn-blue" style="width:100%" type="button" onclick="login()">Sign In</button>
     </div>
 </div>
 
@@ -45,7 +45,7 @@
     <div class="tabs">
         <button class="tab active" onclick="showTab('inventory',event)">Inventory</button>
         <button class="tab" onclick="showTab('customers',event)">Customers</button>
-        <button id="adminTabBtn" class="tab" onclick="showTab('admin',event)">Admin</button>
+        <button class="tab" onclick="showTab('admin',event)">Admin</button>
     </div>
 
     <div class="content">
@@ -54,7 +54,7 @@
             <div class="form-grid">
                 <div class="form-group"><label>SKU</label><input type="text" id="invSKU"></div>
                 <div class="form-group"><label>Item Name</label><input type="text" id="invItem"></div>
-                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" step="0.01"></div>
+                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice"></div>
             </div>
             <button class="btn btn-blue" onclick="saveToSheet('Inventory')">Add Item</button>
         </div>
@@ -70,39 +70,25 @@
 
         <div id="admin" class="card hidden">
             <h2>Admin Panel</h2>
-            <p>Welcome, <b>Owner</b>. Your database connection is live.</p>
+            <p>System is connected to Google Sheets.</p>
         </div>
     </div>
 </div>
 
 <script>
-// YOUR LIVE GOOGLE SCRIPT URL
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD-PR1pNnLvbqS7Cp0Mas9w39FrPFYMln6Dx8I3N4pe2ceovn48CZK26D9L0D6cqc/exec';
 
-// MATCHES YOUR GOOGLE SHEET
-const AUTH = [
-    {u: "Owner", p: "Craftyowner123", r: "Owner"}
-];
-
 function login() {
-    const uInput = document.getElementById('username').value.trim();
-    const pInput = document.getElementById('password').value.trim();
-    const errDisp = document.getElementById('loginError');
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const err = document.getElementById('loginError');
 
-    const found = AUTH.find(x => x.u === uInput && x.p === pInput);
-    
-    if (found) {
-        document.getElementById('loginScreen').classList.add('hidden');
+    // Simple, direct check
+    if (u === "Owner" && p === "Craftyowner123") {
+        document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainApp').classList.remove('hidden');
-        
-        const adminBtn = document.getElementById('adminTabBtn');
-        if(found.r === 'Owner') {
-            adminBtn.style.display = 'block';
-        } else {
-            adminBtn.style.display = 'none';
-        }
     } else {
-        errDisp.innerText = "Invalid credentials. Try Owner / Craftyowner123";
+        err.innerText = "Invalid credentials. Use Owner / Craftyowner123";
     }
 }
 
@@ -113,9 +99,9 @@ function showTab(id, e) {
     if(e && e.target) e.target.classList.add('active');
 }
 
-async function saveToSheet(sheetName) {
+async function saveToSheet(name) {
     let data = [];
-    if(sheetName === 'Inventory') {
+    if(name === 'Inventory') {
         data = [document.getElementById('invSKU').value, document.getElementById('invItem').value, document.getElementById('invPrice').value];
     } else {
         data = [document.getElementById('custName').value, document.getElementById('custEmail').value];
@@ -126,15 +112,13 @@ async function saveToSheet(sheetName) {
             method: 'POST',
             mode: 'no-cors',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ sheet: sheetName, data: data })
+            body: JSON.stringify({ sheet: name, data: data })
         });
-        alert('Data saved to ' + sheetName + '!');
+        alert('Saved!');
     } catch (e) {
-        alert('Error saving data.');
+        alert('Error');
     }
 }
-
-document.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 </script>
 </body>
 </html>
