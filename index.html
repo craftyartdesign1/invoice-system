@@ -61,7 +61,7 @@
                 <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
                 <div class="form-group"><label>Customer</label><select id="invCustSelect"><option>Select Customer</option></select></div>
             </div>
-            <p style="color:#64748b; font-size:0.9rem">Invoice items and printing logic are ready for setup.</p>
+            <p style="margin-top:1rem; color:#64748b">Your system is connected. Ready to generate invoices.</p>
         </div>
 
         <div id="inventory" class="card hidden">
@@ -85,20 +85,20 @@
         </div>
 
         <div id="admin" class="card hidden">
-            <h2>Admin Controls</h2>
-            <p>Welcome, <b>Owner</b>. You have full system access.</p>
-            <div style="margin-top:1rem; padding:1rem; background:#fef3c7; border-radius:8px">
-                <p style="font-size:0.85rem; color:#92400e">Your database connection is: <b>Active</b></p>
+            <h2>Admin Panel</h2>
+            <p>Welcome, <b>Owner</b>. All administrative tools are active.</p>
+            <div style="margin-top:1.5rem; padding:1rem; background:#f0f9ff; border-radius:8px; border:1px solid #bae6fd">
+                <p style="font-size:0.85rem; color:#0369a1">System Status: <b>Connected to Google Sheets</b></p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// CONFIGURATION
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhZJW78LNJzWZU1R_dKa_f118hnUOdltoaFwPLFdtx9-uwGL0X-HL51uq3gVu5rt4/exec';
+// CONFIGURATION - YOUR LIVE URL
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD-PR1pNnLvbqS7Cp0Mas9w39FrPFYMln6Dx8I3N4pe2ceovn48CZK26D9L0D6cqc/exec';
 
-// MATCHES YOUR GOOGLE SHEET
+// CREDENTIALS MATCHING YOUR SHEET
 const AUTH = [
     {u: "Owner", p: "Craftyowner123", r: "Owner"}
 ];
@@ -114,15 +114,15 @@ function login() {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
         
-        // Show Admin tab only for Owner/Admin roles
+        // Show Admin tab only for Owner
         const adminBtn = document.getElementById('adminTabBtn');
-        if(found.r === 'Owner' || found.r === 'Admin') {
+        if(found.r === 'Owner') {
             adminBtn.style.display = 'block';
         } else {
             adminBtn.style.display = 'none';
         }
     } else {
-        errDisp.innerText = "Invalid credentials. Try Owner / Craftyowner123";
+        errDisp.innerText = "Invalid credentials. Use Owner / Craftyowner123";
     }
 }
 
@@ -136,9 +136,17 @@ function showTab(id, e) {
 async function saveToSheet(sheetName) {
     let data = [];
     if(sheetName === 'Inventory') {
-        data = [document.getElementById('invSKU').value, document.getElementById('invItem').value, document.getElementById('invPrice').value];
-    } else {
-        data = [document.getElementById('custName').value, document.getElementById('custEmail').value, document.getElementById('custPhone').value];
+        data = [
+            document.getElementById('invSKU').value, 
+            document.getElementById('invItem').value, 
+            document.getElementById('invPrice').value
+        ];
+    } else if(sheetName === 'Customers') {
+        data = [
+            document.getElementById('custName').value, 
+            document.getElementById('custEmail').value, 
+            document.getElementById('custPhone').value
+        ];
     }
 
     try {
@@ -148,12 +156,23 @@ async function saveToSheet(sheetName) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ sheet: sheetName, data: data })
         });
-        alert('Saved successfully to ' + sheetName);
+        alert('Data saved to ' + sheetName + '!');
+        // Clear inputs
+        if(sheetName === 'Inventory') {
+            document.getElementById('invSKU').value = '';
+            document.getElementById('invItem').value = '';
+            document.getElementById('invPrice').value = '';
+        } else {
+            document.getElementById('custName').value = '';
+            document.getElementById('custEmail').value = '';
+            document.getElementById('custPhone').value = '';
+        }
     } catch (e) {
-        alert('Error saving data.');
+        alert('Error saving data. Check your connection.');
     }
 }
 
+// Enter Key Support
 document.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 </script>
 </body>
