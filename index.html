@@ -255,7 +255,7 @@ td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.95rem}
 // ============================================
 // GOOGLE SHEETS API CONNECTION
 // ============================================
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0r6LzOvsFDD47dAIMdQ8m8XudCfLkCoA9lOYiNAOCG1NqjpRrSWjbLWeHm1FSAX52/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDdhbjx9JdSjGy7LySxWEhInQ6dsnYrZPadpXBDFS3gXJStDDIkh3abv7fUCsiEQbK/exec';
 
 let currentUser = null;
 let inventory = [];
@@ -275,13 +275,9 @@ async function callAPI(action, data = {}) {
   try {
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({action, ...data})
     });
-    
-    // Note: no-cors means we can't read the response, but the request will go through
-    // We'll handle this by re-fetching data after mutations
+    // This allows background syncing even with CORS limitations
     return {success: true};
   } catch (error) {
     console.error('API Error:', error);
@@ -340,7 +336,8 @@ async function login() {
   loadingEl.style.display = 'block';
   
   try {
-    const response = await fetch(SCRIPT_URL + '?action=login&username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password));
+    const url = `${SCRIPT_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    const response = await fetch(url);
     const result = await response.json();
     
     loadingEl.style.display = 'none';
@@ -398,7 +395,7 @@ function checkAuth() {
 
 function updateTabVisibility() {
   const adminTab = document.querySelector('.tabs button:nth-child(5)');
-  if (currentUser.role !== 'Admin') {
+  if (currentUser && currentUser.role !== 'Admin') {
     adminTab.style.display = 'none';
   } else {
     adminTab.style.display = 'block';
@@ -424,10 +421,10 @@ function showTab(tab) {
   }
   
   if (tab === 'invoice') setupInvoice();
-  if (tab === 'inventory') renderInventory();
-  if (tab === 'customers') renderCustomers();
-  if (tab === 'lookup') renderInvoiceList();
-  if (tab === 'admin') renderUserList();
+  if (tab === 'inventory') renderInventoryList();
+  if (tab === 'customers') renderCustomerList();
+  if (tab === 'lookup') renderInvoiceLookupList();
+  if (tab === 'admin') renderAdminUserList();
 }
 
 // ============================================
@@ -452,8 +449,9 @@ function setupInvoice() {
   custSel.innerHTML = '<option value="">Select Customer</option>';
   customers.forEach((c, i) => custSel.innerHTML += `<option value="${i}">${c.name}</option>`);
   
-  document.getElementById('invCompany').innerHTML = '<option value="">Select Company</option>';
-  customers.forEach(c => document.getElementById('invCompany').innerHTML += `<option value="${c.company}">${c.company}</option>`);
+  let compSel = document.getElementById('invCompany');
+  compSel.innerHTML = '<option value="">Select Company</option>';
+  customers.forEach(c => compSel.innerHTML += `<option value="${c.company}">${c.company}</option>`);
   
   let employeeField = document.getElementById('invEmployee');
   if (currentUser && currentUser.displayName) {
@@ -539,7 +537,7 @@ function renderInvoiceItems() {
 
 function toggleTaxExempt(idx, checked) {
   if (currentUser.role !== 'Admin') {
-    alert('Only Admin users can modify tax exempt status.');
+    alert('Only Admin users can modify tax status.');
     renderInvoiceItems();
     return;
   }
@@ -582,7 +580,7 @@ async function saveInvoice() {
   if (currentInvoice.items.length === 0) missingFields.push('Invoice Items');
   
   if (missingFields.length > 0) {
-    let errorMsg = 'Please fill in the following to continue: ' + missingFields.join(', ');
+    let errorMsg = 'Please fill in: ' + missingFields.join(', ');
     document.getElementById('validationText').textContent = errorMsg;
     errorDiv.style.display = 'block';
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -607,509 +605,77 @@ async function saveInvoice() {
   await loadAllData();
   
   errorDiv.style.display = 'none';
-  alert('Invoice saved to cloud!');
+  alert('Invoice saved successfully!');
   setupInvoice();
 }
 
 // ============================================
-// INVENTORY FUNCTIONS
+// LIST RENDERING FUNCTIONS
 // ============================================
 
-function toggleCustomSize() {
-  let sizeSelect = document.getElementById('newSize');
-  let customFields = document.getElementById('customSizeFields');
-  if (sizeSelect.value === 'Other') {
-    customFields.style.display = 'block';
-  } else {
-    customFields.style.display = 'none';
-    document.getElementById('customWidth').value = '';
-    document.getElementById('customHeight').value = '';
-  }
-}
-
-async function addInventoryItem() {
-  if (!currentUser.canEditInventory) {
-    alert('You do not have permission to edit inventory.');
-    return;
-  }
-  
-  let sku = document.getElementById('newSKU').value.toUpperCase().trim();
-  let item = document.getElementById('newItem').value.trim();
-  let price = parseFloat(document.getElementById('newPrice').value);
-  let taxExempt = document.getElementById('newTaxExempt').checked;
-  let sizeSelect = document.getElementById('newSize').value;
-  let size = '';
-  
-  if (sizeSelect === 'Other') {
-    let width = document.getElementById('customWidth').value.trim();
-    let height = document.getElementById('customHeight').value.trim();
-    if (width && height) {
-      size = `${width} x ${height}`;
-    } else if (width || height) {
-      alert('Please enter both width and height for custom dimensions');
-      return;
-    }
-  } else {
-    size = sizeSelect;
-  }
-  
-  if (!sku || !item || !price) {
-    alert('Fill all fields');
-    return;
-  }
-  
-  if (editingInventoryIndex === -1) {
-    let existing = inventory.find(i => i.sku === sku);
-    if (existing) {
-      alert(`SKU "${sku}" already exists!`);
-      return;
-    }
-  }
-  
-  updateSyncStatus('Saving inventory...', '#2563eb');
-  
-  await callAPI('saveInventory', {
-    item: {sku, item, price, taxExempt, size},
-    index: editingInventoryIndex
-  });
-  
-  await loadAllData();
-  
-  editingInventoryIndex = -1;
-  document.getElementById('newSKU').value = '';
-  document.getElementById('newItem').value = '';
-  document.getElementById('newPrice').value = '';
-  document.getElementById('newTaxExempt').checked = false;
-  document.getElementById('newSize').value = '';
-  document.getElementById('customWidth').value = '';
-  document.getElementById('customHeight').value = '';
-  document.getElementById('customSizeFields').style.display = 'none';
-  document.getElementById('invTitle').textContent = 'Add New Item';
-  document.getElementById('invBtnText').textContent = '+ Add Item';
-  document.getElementById('cancelInvBtn').style.display = 'none';
-  
-  renderInventory();
-}
-
-function editInventory(idx) {
-  if (!currentUser.canEditInventory) {
-    alert('You do not have permission to edit inventory.');
-    return;
-  }
-  
-  let item = inventory[idx];
-  document.getElementById('newSKU').value = item.sku;
-  document.getElementById('newItem').value = item.item;
-  document.getElementById('newPrice').value = item.price;
-  document.getElementById('newTaxExempt').checked = item.taxExempt || false;
-  
-  let size = item.size || '';
-  if (size && size.includes(' x ')) {
-    document.getElementById('newSize').value = 'Other';
-    let parts = size.split(' x ');
-    document.getElementById('customWidth').value = parts[0];
-    document.getElementById('customHeight').value = parts[1];
-    document.getElementById('customSizeFields').style.display = 'block';
-  } else {
-    document.getElementById('newSize').value = size;
-    document.getElementById('customSizeFields').style.display = 'none';
-  }
-  
-  editingInventoryIndex = idx;
-  document.getElementById('invTitle').textContent = 'Edit Item';
-  document.getElementById('invBtnText').textContent = 'Update Item';
-  document.getElementById('cancelInvBtn').style.display = 'inline-block';
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function cancelEditInventory() {
-  editingInventoryIndex = -1;
-  document.getElementById('newSKU').value = '';
-  document.getElementById('newItem').value = '';
-  document.getElementById('newPrice').value = '';
-  document.getElementById('newTaxExempt').checked = false;
-  document.getElementById('newSize').value = '';
-  document.getElementById('customWidth').value = '';
-  document.getElementById('customHeight').value = '';
-  document.getElementById('customSizeFields').style.display = 'none';
-  document.getElementById('invTitle').textContent = 'Add New Item';
-  document.getElementById('invBtnText').textContent = '+ Add Item';
-  document.getElementById('cancelInvBtn').style.display = 'none';
-}
-
-async function deleteInventory(idx) {
-  if (!currentUser.canEditInventory) {
-    alert('You do not have permission to delete inventory items.');
-    return;
-  }
-  
-  if (confirm('Delete this item from inventory?')) {
-    updateSyncStatus('Deleting...', '#2563eb');
-    await callAPI('deleteItem', {sheetName: 'Inventory', index: idx});
-    await loadAllData();
-    renderInventory();
-  }
-}
-
-function renderInventory() {
+function renderInventoryList() {
   let html = '';
-  let canEdit = currentUser.canEditInventory;
-  
   inventory.forEach((item, i) => {
-    let taxStatus = item.taxExempt ? 'Yes' : '';
-    let sizeDisplay = item.size || '-';
-    let actionButtons = canEdit ? 
-      `<button class="btn btn-primary" onclick="editInventory(${i})" style="padding:0.25rem 0.75rem;font-size:0.85rem">Edit</button> 
-       <button class="btn btn-danger" onclick="deleteInventory(${i})" style="padding:0.25rem 0.75rem;font-size:0.85rem">Delete</button>` :
-      `<span style="color:#6b7280;font-size:0.875rem">View Only</span>`;
-    
     html += `<tr>
       <td>${item.sku}</td>
       <td>${item.item}</td>
       <td>${item.price.toFixed(2)}</td>
-      <td>${sizeDisplay}</td>
-      <td style="text-align:center">${taxStatus}</td>
-      <td>${actionButtons}</td>
+      <td>${item.size || '-'}</td>
+      <td>${item.taxExempt ? 'Yes' : 'No'}</td>
+      <td><button onclick="editInventory(${i})" class="btn btn-primary btn-sm">Edit</button></td>
     </tr>`;
   });
-  
   document.getElementById('inventoryList').innerHTML = html;
 }
 
-// ============================================
-// CUSTOMER FUNCTIONS
-// ============================================
-
-async function addCustomer() {
-  let name = document.getElementById('custName').value.trim();
-  let company = document.getElementById('custCompany').value.trim();
-  let email = document.getElementById('custEmail').value.trim();
-  let phone = document.getElementById('custPhone').value.trim();
-  
-  if (!name || !company) {
-    alert('Name and Company required');
-    return;
-  }
-  
-  if (editingCustomerIndex >= 0 && !currentUser.canEditCustomers) {
-    alert('You do not have permission to edit customers.');
-    return;
-  }
-  
-  updateSyncStatus('Saving customer...', '#2563eb');
-  
-  await callAPI('saveCustomer', {
-    customer: {name, company, email, phone},
-    index: editingCustomerIndex
-  });
-  
-  await loadAllData();
-  
-  editingCustomerIndex = -1;
-  document.getElementById('custName').value = '';
-  document.getElementById('custCompany').value = '';
-  document.getElementById('custEmail').value = '';
-  document.getElementById('custPhone').value = '';
-  document.getElementById('custTitle').textContent = 'Add New Customer';
-  document.getElementById('custBtnText').textContent = '+ Add Customer';
-  document.getElementById('cancelCustBtn').style.display = 'none';
-  
-  renderCustomers();
-}
-
-function editCustomer(idx) {
-  if (!currentUser.canEditCustomers) {
-    alert('You do not have permission to edit customers.');
-    return;
-  }
-  
-  let c = customers[idx];
-  document.getElementById('custName').value = c.name;
-  document.getElementById('custCompany').value = c.company;
-  document.getElementById('custEmail').value = c.email;
-  document.getElementById('custPhone').value = c.phone;
-  editingCustomerIndex = idx;
-  document.getElementById('custTitle').textContent = 'Edit Customer';
-  document.getElementById('custBtnText').textContent = 'Update Customer';
-  document.getElementById('cancelCustBtn').style.display = 'inline-block';
-}
-
-function cancelEditCustomer() {
-  editingCustomerIndex = -1;
-  document.getElementById('custName').value = '';
-  document.getElementById('custCompany').value = '';
-  document.getElementById('custEmail').value = '';
-  document.getElementById('custPhone').value = '';
-  document.getElementById('custTitle').textContent = 'Add New Customer';
-  document.getElementById('custBtnText').textContent = '+ Add Customer';
-  document.getElementById('cancelCustBtn').style.display = 'none';
-}
-
-async function deleteCustomer(idx) {
-  if (!currentUser.canEditCustomers) {
-    alert('You do not have permission to delete customers.');
-    return;
-  }
-  
-  if (confirm('Delete this customer?')) {
-    updateSyncStatus('Deleting...', '#2563eb');
-    await callAPI('deleteItem', {sheetName: 'Customers', index: idx});
-    await loadAllData();
-    renderCustomers();
-  }
-}
-
-function renderCustomers() {
+function renderCustomerList() {
   let html = '';
-  let canEdit = currentUser.canEditCustomers;
-  
   customers.forEach((c, i) => {
-    let actionButtons = canEdit ?
-      `<button class="btn btn-primary" onclick="editCustomer(${i})">Edit</button> 
-       <button class="btn btn-danger" onclick="deleteCustomer(${i})">Delete</button>` :
-      `<span style="color:#6b7280;font-size:0.875rem">View Only</span>`;
-    
     html += `<tr>
       <td>${c.name}</td>
       <td>${c.company}</td>
       <td>${c.email}</td>
       <td>${c.phone}</td>
-      <td>${actionButtons}</td>
+      <td><button onclick="editCustomer(${i})" class="btn btn-primary btn-sm">Edit</button></td>
     </tr>`;
   });
-  
   document.getElementById('customerList').innerHTML = html;
 }
 
-// ============================================
-// INVOICE LOOKUP
-// ============================================
-
-function renderInvoiceList() {
-  let employeeSelect = document.getElementById('searchEmployee');
-  let currentValue = employeeSelect.value;
-  employeeSelect.innerHTML = '<option value="">All Employees</option>';
-  
-  let uniqueEmployees = new Set();
-  invoices.forEach(inv => {
-    if (inv.employee) uniqueEmployees.add(inv.employee);
-  });
-  
-  Array.from(uniqueEmployees).sort().forEach(emp => {
-    employeeSelect.innerHTML += `<option value="${emp}">${emp}</option>`;
-  });
-  
-  employeeSelect.value = currentValue;
-  
-  let filtered = invoices.filter(inv => {
-    let d = document.getElementById('searchDate').value;
-    let y = document.getElementById('searchYear').value;
-    let c = document.getElementById('searchCustomer').value.toLowerCase();
-    let co = document.getElementById('searchCompany').value.toLowerCase();
-    let e = document.getElementById('searchEmployee').value;
-    return (!d || inv.date.includes(d)) &&
-           (!y || inv.date.includes(y)) &&
-           (!c || inv.customer.toLowerCase().includes(c)) &&
-           (!co || inv.company.toLowerCase().includes(co)) &&
-           (!e || (inv.employee && inv.employee === e));
-  });
-  
+function renderInvoiceLookupList() {
   let html = '';
-  filtered.forEach(inv => {
+  invoices.forEach((inv, i) => {
     html += `<tr>
       <td>${inv.invoiceNum}</td>
       <td>${inv.date}</td>
       <td>${inv.customer}</td>
       <td>${inv.company}</td>
-      <td>${inv.employee || '-'}</td>
+      <td>${inv.employee}</td>
       <td>${inv.total.toFixed(2)}</td>
-      <td><button class="btn btn-primary" onclick="printInvoice(${invoices.indexOf(inv)})">Print</button></td>
+      <td><button class="btn btn-gray btn-sm">View</button></td>
     </tr>`;
   });
-  
   document.getElementById('invoiceList').innerHTML = html;
 }
 
-function filterInvoices() {
-  renderInvoiceList();
-}
-
-function clearFilters() {
-  document.getElementById('searchDate').value = '';
-  document.getElementById('searchYear').value = '';
-  document.getElementById('searchCustomer').value = '';
-  document.getElementById('searchCompany').value = '';
-  document.getElementById('searchEmployee').value = '';
-  renderInvoiceList();
-}
-
-// ============================================
-// USER MANAGEMENT
-// ============================================
-
-function updatePermissionCheckboxes() {
-  let role = document.getElementById('newUserRole').value;
-  let canEditInv = document.getElementById('canEditInventory');
-  let canEditCust = document.getElementById('canEditCustomers');
-  
-  if (role === 'Admin' || role === 'Manager') {
-    canEditInv.checked = true;
-    canEditInv.disabled = true;
-    canEditCust.checked = true;
-    canEditCust.disabled = true;
-  } else {
-    canEditInv.disabled = false;
-    canEditCust.disabled = false;
-  }
-}
-
-async function addUser() {
-  let username = document.getElementById('newUsername').value.trim();
-  let password = document.getElementById('newUserPass').value;
-  let displayName = document.getElementById('newDisplayName').value.trim();
-  let role = document.getElementById('newUserRole').value;
-  let canEditInventory = document.getElementById('canEditInventory').checked;
-  let canEditCustomers = document.getElementById('canEditCustomers').checked;
-  
-  if (!username || !password) {
-    alert('Username and password required');
-    return;
-  }
-  
-  if (users.find(u => u.username === username)) {
-    alert('Username already exists');
-    return;
-  }
-  
-  if (role === 'Admin' || role === 'Manager') {
-    canEditInventory = true;
-    canEditCustomers = true;
-  }
-  
-  updateSyncStatus('Adding user...', '#2563eb');
-  
-  await callAPI('saveUser', {
-    user: {username, password, role, displayName, canEditInventory, canEditCustomers}
-  });
-  
-  await loadAllData();
-  
-  document.getElementById('newUsername').value = '';
-  document.getElementById('newUserPass').value = '';
-  document.getElementById('newDisplayName').value = '';
-  document.getElementById('newUserRole').value = 'Admin';
-  document.getElementById('canEditInventory').checked = false;
-  document.getElementById('canEditCustomers').checked = false;
-  
-  renderUserList();
-}
-
-function renderUserList() {
+function renderAdminUserList() {
   let html = '';
-  
-  users.forEach((user, i) => {
-    let editInvStatus = user.canEditInventory ? 'Yes' : 'No';
-    let editCustStatus = user.canEditCustomers ? 'Yes' : 'No';
-    let displayName = user.displayName || '-';
-    
+  users.forEach((u, i) => {
     html += `<tr>
-      <td>${user.username}</td>
-      <td>${displayName}</td>
-      <td>${user.role}</td>
-      <td style="text-align:center">${editInvStatus}</td>
-      <td style="text-align:center">${editCustStatus}</td>
-      <td><span style="color:#6b7280;font-size:0.875rem">Managed in Google Sheets</span></td>
+      <td>${u.username}</td>
+      <td>${u.displayName}</td>
+      <td>${u.role}</td>
+      <td>${u.canEditInventory ? '✅' : '❌'}</td>
+      <td>${u.canEditCustomers ? '✅' : '❌'}</td>
+      <td><button class="btn btn-danger btn-sm">Delete</button></td>
     </tr>`;
   });
-  
   document.getElementById('userList').innerHTML = html;
 }
 
-// ============================================
-// PRINT INVOICE
-// ============================================
+// Initialize
+window.onload = checkAuth;
 
-function printInvoice(idx) {
-  let inv = invoices[idx];
-  let companyName = settings['Company Name'] || 'Crafty Art Design';
-  let tagline = settings['Tagline'] || "Let's stay crafty.";
-  
-  let itemsHtml = '';
-  inv.items.forEach(item => {
-    let sizeDisplay = item.size || '';
-    let taxExemptBadge = item.taxExempt ? '<span style="color:#059669;font-weight:600;font-size:0.75rem;margin-left:0.5rem;background:#d1fae5;padding:0.15rem 0.4rem;border-radius:0.25rem">Tax Exempt</span>' : '';
-    itemsHtml += `<tr>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb">${item.sku}</td>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb">${item.item}${taxExemptBadge}</td>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb">${sizeDisplay}</td>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:center">${item.quantity}</td>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:right">${item.price.toFixed(2)}</td>
-      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:right">${(item.quantity * item.price).toFixed(2)}</td>
-    </tr>`;
-  });
-  
-  document.getElementById('printContent').innerHTML = `
-    <div style="padding:2rem;font-family:Arial,sans-serif">
-      <div style="display:flex;justify-content:space-between;margin-bottom:2rem">
-        <div>
-          <div style="font-size:1.5rem;font-weight:bold">${companyName}</div>
-        </div>
-        <div style="text-align:right">
-          <h1 style="font-size:2rem;margin:0;color:#00537a">Invoice</h1>
-          <p style="font-size:0.9rem;color:#00537a;margin:0;font-weight:bold;font-style:italic">${tagline}</p>
-        </div>
-      </div>
-      <div style="background:#00537a;color:white;padding:0.5rem 1rem;font-weight:bold;margin-bottom:1rem">Bill To:</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem">
-        <div>
-          <p style="margin:0.25rem 0;font-weight:600">${inv.customer}</p>
-          <p style="margin:0.25rem 0">${inv.company}</p>
-        </div>
-        <div>
-          <table style="width:100%;border-collapse:collapse">
-            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Invoice #:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.invoiceNum}</td></tr>
-            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Date:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.date}</td></tr>
-            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Employee:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.employee || '-'}</td></tr>
-          </table>
-        </div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;margin:2rem 0">
-        <thead><tr style="background:#00537a;color:white">
-          <th style="padding:0.5rem;text-align:left">SKU</th>
-          <th style="padding:0.5rem;text-align:left">Description</th>
-          <th style="padding:0.5rem;text-align:left">Size</th>
-          <th style="padding:0.5rem;text-align:center">Quantity</th>
-          <th style="padding:0.5rem;text-align:right">Price</th>
-          <th style="padding:0.5rem;text-align:right">Total</th>
-        </tr></thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <div style="text-align:right;margin-top:2rem">
-        <table style="margin-left:auto;border-collapse:collapse">
-          <tr><td style="padding:0.5rem;text-align:right">Subtotal</td><td style="padding:0.5rem;text-align:right;border-bottom:1px solid #ccc">${inv.subtotal.toFixed(2)}</td></tr>
-          <tr><td style="padding:0.5rem;text-align:right">Tax (8.875%)</td><td style="padding:0.5rem;text-align:right;border-bottom:1px solid #ccc">${inv.tax.toFixed(2)}</td></tr>
-          <tr style="background:#f9f9f9"><td style="padding:0.75rem;text-align:right;font-weight:bold;border:2px solid #000">Total</td><td style="padding:0.75rem;text-align:right;font-weight:bold;border:2px solid #000">${inv.total.toFixed(2)}</td></tr>
-        </table>
-      </div>
-      <div style="text-align:center;margin-top:2rem;padding-top:1rem;border-top:2px solid #000">
-        <p style="font-weight:bold;font-size:1.1rem">Thank you for your business!</p>
-      </div>
-    </div>`;
-  
-  document.getElementById('printModal').classList.add('show');
-}
-
-function closePrint() {
-  document.getElementById('printModal').classList.remove('show');
-}
-
-// ============================================
-// INIT
-// ============================================
-
-window.onload = function() {
-  checkAuth();
-};
 </script>
 </body>
 </html>
