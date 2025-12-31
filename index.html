@@ -59,11 +59,18 @@
         <div id="invoice" class="card">
             <h2>Create New Invoice</h2>
             <div class="form-grid" style="margin-top:1.5rem">
-                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
+                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="INV-1001" readonly></div>
                 <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
                 <div class="form-group"><label>Customer</label><select id="invCustSelect"><option>Select Customer</option></select></div>
             </div>
-            <button class="btn btn-blue">Save Invoice</button>
+            <div id="invoiceItems">
+                <table>
+                    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                    <tbody id="invoiceTableBody"></tbody>
+                </table>
+            </div>
+            <h3 style="text-align:right; margin-top:1rem">Total: <span id="grandTotal">$0.00</span></h3>
+            <button class="btn btn-green" style="margin-top:1rem">Save & Print Invoice</button>
         </div>
 
         <div id="inventory" class="card hidden">
@@ -75,7 +82,9 @@
                 <div class="form-group">
                     <label>Size</label>
                     <select id="invSize" onchange="toggleSize()">
-                        <option value="Standard">Standard</option>
+                        <option value="No Size">No Size</option>
+                        <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+                        <option value="L">L</option><option value="XL">XL</option>
                         <option value="Custom">Custom Dimensions</option>
                     </select>
                 </div>
@@ -85,8 +94,8 @@
                 <div class="form-group"><label>Height (in)</label><input type="number" id="invH"></div>
             </div>
             <div style="margin-bottom:1rem"><input type="checkbox" id="invTax"> <label>Tax Exempt Item</label></div>
-            <button class="btn btn-blue" onclick="saveToSheet('Inventory')">Add Item</button>
-            <table id="inventoryTable"><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Price</th><th>Action</th></tr></thead><tbody></tbody></table>
+            <button class="btn btn-blue" onclick="saveInventory()">+ Add to Inventory</button>
+            <table id="inventoryTable"><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Price</th></tr></thead><tbody></tbody></table>
         </div>
 
         <div id="customers" class="card hidden">
@@ -103,17 +112,15 @@
                 <div class="form-group"><label>State</label><input type="text" id="cState"></div>
                 <div class="form-group"><label>Zip</label><input type="text" id="cZip"></div>
             </div>
-            <button class="btn btn-blue" onclick="saveToSheet('Customers')">Add Customer</button>
-            <table id="customerTable"><thead><tr><th>Name</th><th>Company</th><th>Address</th><th>Action</th></tr></thead><tbody></tbody></table>
+            <button class="btn btn-blue" onclick="saveCustomer()">+ Add Customer</button>
+            <table id="customerTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th></tr></thead><tbody></tbody></table>
         </div>
 
         <div id="lookup" class="card hidden">
             <h2>Invoice Lookup</h2>
             <div class="form-grid">
-                <div class="form-group"><label>Date</label><input type="date"></div>
-                <div class="form-group"><label>Year</label><input type="number" placeholder="2025"></div>
-                <div class="form-group"><label>Customer</label><input type="text"></div>
-                <div class="form-group"><label>Employee</label><select><option>All</option></select></div>
+                <div class="form-group"><label>Filter Date</label><input type="date"></div>
+                <div class="form-group"><label>Filter Customer</label><input type="text"></div>
             </div>
             <table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead><tbody></tbody></table>
         </div>
@@ -121,24 +128,16 @@
         <div id="admin" class="card hidden">
             <h2>Admin Panel</h2>
             <div class="form-grid">
-                <div class="upload-zone">Click to Upload Logo</div>
-                <div class="upload-zone">Click to Upload Background</div>
-            </div>
-            <div style="margin-top:2rem">
-                <h3>Yearly Tax Export</h3>
-                <div class="form-grid" style="margin-top:1rem">
-                    <select id="taxYear"><option>2025</option><option>2024</option></select>
-                    <button class="btn btn-green">Export PDF Report</button>
-                </div>
+                <div><label>Logo</label><div class="upload-zone">Small Logo Upload</div></div>
+                <div><label>Background</label><div class="upload-zone">Small BG Upload</div></div>
             </div>
             <div style="margin-top:2rem">
                 <h3>User Management</h3>
                 <table>
-                    <thead><tr><th>Username</th><th>Role</th><th>Status</th></tr></thead>
+                    <thead><tr><th>User</th><th>Role</th><th>Status</th></tr></thead>
                     <tbody>
                         <tr><td>Owner</td><td>Owner</td><td>Protected</td></tr>
                         <tr><td>Alessio</td><td>Admin</td><td>Active</td></tr>
-                        <tr><td>test_user</td><td>Employee</td><td>Active</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -147,7 +146,8 @@
 </div>
 
 <script>
-const SCRIPT_URL = 'PASTE_YOUR_GOOGLE_DEPLOYMENT_URL_HERE';
+// --- CONFIGURATION ---
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhZJW78LNJzWZU1R_dKa_f118hnUOdltoaFwPLFdtx9-uwGL0X-HL51uq3gVu5rt4/exec';
 
 const AUTH = [
     {u: "Owner", p: "Craftyowner123", r: "Owner"},
@@ -155,7 +155,7 @@ const AUTH = [
     {u: "test", p: "user123", r: "Employee"}
 ];
 
-// Global $0.00 Formatter
+// --- HELPERS ---
 const fmt = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
 
 function login() {
@@ -183,7 +183,44 @@ function toggleSize() {
     document.getElementById('customSizeInputs').classList.toggle('hidden', !isCustom);
 }
 
-// Press Enter to Login
+// --- DATABASE ACTIONS ---
+async function saveInventory() {
+    const data = [
+        document.getElementById('invSKU').value,
+        document.getElementById('invItemName').value,
+        document.getElementById('invPrice').value,
+        document.getElementById('invSize').value,
+        document.getElementById('invTax').checked
+    ];
+    await sendToSheet('Inventory', data);
+    alert('Item Saved!');
+}
+
+async function saveCustomer() {
+    const data = [
+        document.getElementById('cName').value,
+        document.getElementById('cComp').value,
+        document.getElementById('cEmail').value,
+        document.getElementById('cPhone').value,
+        document.getElementById('cStreet').value,
+        document.getElementById('cCity').value,
+        document.getElementById('cState').value,
+        document.getElementById('cZip').value
+    ];
+    await sendToSheet('Customers', data);
+    alert('Customer Saved!');
+}
+
+async function sendToSheet(sheetName, dataArray) {
+    await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ sheet: sheetName, data: dataArray })
+    });
+}
+
 document.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 </script>
 </body>
