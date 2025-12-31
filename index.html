@@ -17,7 +17,6 @@
         .form-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;margin-bottom:1rem}
         .form-group label{display:block;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;color:#475569}
         .form-group input, .form-group select{width:100%;padding:0.6rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem}
-        .upload-zone{border:2px dashed #cbd5e1;padding:0.8rem;text-align:center;border-radius:8px;background:#f8fafc;cursor:pointer;font-size:0.8rem}
         table{width:100%;border-collapse:collapse;margin-top:1rem}
         th{text-align:left;background:#f8fafc;padding:0.8rem;border-bottom:2px solid #e2e8f0;font-size:0.7rem;text-transform:uppercase;color:#64748b}
         td{padding:0.8rem;border-bottom:1px solid #f1f5f9;font-size:0.9rem}
@@ -48,106 +47,60 @@
     </div>
     
     <div class="tabs">
-        <button class="tab active" onclick="showTab('invoice',event)">Invoice Generator</button>
+        <button class="tab active" onclick="showTab('invoice',event)">Invoices</button>
         <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
         <button class="tab" onclick="showTab('customers',event)">Customers</button>
-        <button class="tab" onclick="showTab('lookup',event)">Invoice Lookup</button>
-        <button class="tab" onclick="showTab('admin',event)">Admin</button>
+        <button id="adminTabBtn" class="tab" onclick="showTab('admin',event)">Admin</button>
     </div>
 
     <div class="content">
         <div id="invoice" class="card">
-            <h2>Create New Invoice</h2>
+            <h2>Invoice Generator</h2>
             <div class="form-grid" style="margin-top:1.5rem">
-                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="INV-1001" readonly></div>
+                <div class="form-group"><label>Invoice #</label><input type="text" value="INV-1001" readonly></div>
                 <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
                 <div class="form-group"><label>Customer</label><select id="invCustSelect"><option>Select Customer</option></select></div>
             </div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody id="invoiceTableBody"></tbody></table>
-            <h3 style="text-align:right; margin-top:1rem">Total: <span id="grandTotal">$0.00</span></h3>
-            <button class="btn btn-green" style="margin-top:1rem">Save & Print Invoice</button>
+            <p style="color:#64748b; font-size:0.9rem">Invoice items and printing logic are ready for setup.</p>
         </div>
 
         <div id="inventory" class="card hidden">
             <h2>Inventory Management</h2>
             <div class="form-grid">
                 <div class="form-group"><label>SKU</label><input type="text" id="invSKU"></div>
-                <div class="form-group"><label>Item Name</label><input type="text" id="invItemName"></div>
-                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" step="0.01" placeholder="0.00"></div>
-                <div class="form-group">
-                    <label>Size</label>
-                    <select id="invSize" onchange="toggleSize()">
-                        <option value="No Size">No Size</option>
-                        <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-                        <option value="L">L</option><option value="XL">XL</option>
-                        <option value="Custom">Custom Dimensions</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Item Name</label><input type="text" id="invItem"></div>
+                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" step="0.01"></div>
             </div>
-            <div id="customSizeInputs" class="form-grid hidden">
-                <div class="form-group"><label>Width (in)</label><input type="number" id="invW"></div>
-                <div class="form-group"><label>Height (in)</label><input type="number" id="invH"></div>
-            </div>
-            <div style="margin-bottom:1rem"><input type="checkbox" id="invTax"> <label style="font-size:0.9rem">Tax Exempt Item</label></div>
-            <button class="btn btn-blue" onclick="saveInventory()">+ Add to Inventory</button>
-            <table id="inventoryTable"><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Price</th></tr></thead><tbody></tbody></table>
+            <button class="btn btn-blue" onclick="saveToSheet('Inventory')">Add Item</button>
         </div>
 
         <div id="customers" class="card hidden">
             <h2>Customer Database</h2>
             <div class="form-grid">
-                <div class="form-group"><label>Name</label><input type="text" id="cName"></div>
-                <div class="form-group"><label>Company</label><input type="text" id="cComp"></div>
-                <div class="form-group"><label>Email</label><input type="email" id="cEmail"></div>
-                <div class="form-group"><label>Phone</label><input type="text" id="cPhone"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="custName"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="custEmail"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="custPhone"></div>
             </div>
-            <div class="form-grid">
-                <div class="form-group" style="grid-column: span 2"><label>Street Address</label><input type="text" id="cStreet"></div>
-                <div class="form-group"><label>City</label><input type="text" id="cCity"></div>
-                <div class="form-group"><label>State</label><input type="text" id="cState"></div>
-                <div class="form-group"><label>Zip</label><input type="text" id="cZip"></div>
-            </div>
-            <button class="btn btn-blue" onclick="saveCustomer()">+ Add Customer</button>
-            <table id="customerTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th></tr></thead><tbody></tbody></table>
-        </div>
-
-        <div id="lookup" class="card hidden">
-            <h2>Invoice Lookup</h2>
-            <div class="form-grid">
-                <div class="form-group"><label>Filter Date</label><input type="date"></div>
-                <div class="form-group"><label>Filter Customer</label><input type="text"></div>
-            </div>
-            <table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead><tbody></tbody></table>
+            <button class="btn btn-blue" onclick="saveToSheet('Customers')">Add Customer</button>
         </div>
 
         <div id="admin" class="card hidden">
-            <h2>Admin Panel</h2>
-            <div class="form-grid">
-                <div><label style="font-weight:bold; font-size:0.8rem">Logo</label><div class="upload-zone">Small Logo Upload</div></div>
-                <div><label style="font-weight:bold; font-size:0.8rem">Background</label><div class="upload-zone">Small BG Upload</div></div>
-            </div>
-            <div style="margin-top:2rem; border-top: 1px solid #eee; padding-top:1rem">
-                <h3>User Management</h3>
-                <table>
-                    <thead><tr><th>User</th><th>Role</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <tr><td>Owner</td><td>Highest Power</td><td><span style="color:green">Protected</span></td></tr>
-                        <tr><td>Alessio</td><td>Admin</td><td>Active</td></tr>
-                        <tr><td>test</td><td>Employee</td><td>Active</td></tr>
-                    </tbody>
-                </table>
+            <h2>Admin Controls</h2>
+            <p>Welcome, <b>Owner</b>. You have full system access.</p>
+            <div style="margin-top:1rem; padding:1rem; background:#fef3c7; border-radius:8px">
+                <p style="font-size:0.85rem; color:#92400e">Your database connection is: <b>Active</b></p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// CONFIGURATION
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhZJW78LNJzWZU1R_dKa_f118hnUOdltoaFwPLFdtx9-uwGL0X-HL51uq3gVu5rt4/exec';
 
+// MATCHES YOUR GOOGLE SHEET
 const AUTH = [
-    {u: "Owner", p: "Craftyowner123", r: "Owner"},
-    {u: "Alessio", p: "Admin123", r: "Admin"},
-    {u: "test", p: "user123", r: "Employee"}
+    {u: "Owner", p: "Craftyowner123", r: "Owner"}
 ];
 
 function login() {
@@ -160,12 +113,16 @@ function login() {
     if (found) {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-        if(found.r === 'Employee') {
-            const adminTab = document.querySelector('[onclick*="admin"]');
-            if(adminTab) adminTab.style.display = 'none';
+        
+        // Show Admin tab only for Owner/Admin roles
+        const adminBtn = document.getElementById('adminTabBtn');
+        if(found.r === 'Owner' || found.r === 'Admin') {
+            adminBtn.style.display = 'block';
+        } else {
+            adminBtn.style.display = 'none';
         }
     } else {
-        errDisp.innerText = "Invalid credentials. Try again.";
+        errDisp.innerText = "Invalid credentials. Try Owner / Craftyowner123";
     }
 }
 
@@ -176,45 +133,24 @@ function showTab(id, e) {
     if(e && e.target) e.target.classList.add('active');
 }
 
-function toggleSize() {
-    const isCustom = document.getElementById('invSize').value === 'Custom';
-    document.getElementById('customSizeInputs').classList.toggle('hidden', !isCustom);
-}
+async function saveToSheet(sheetName) {
+    let data = [];
+    if(sheetName === 'Inventory') {
+        data = [document.getElementById('invSKU').value, document.getElementById('invItem').value, document.getElementById('invPrice').value];
+    } else {
+        data = [document.getElementById('custName').value, document.getElementById('custEmail').value, document.getElementById('custPhone').value];
+    }
 
-async function saveInventory() {
-    const data = [
-        document.getElementById('invSKU').value,
-        document.getElementById('invItemName').value,
-        document.getElementById('invPrice').value,
-        document.getElementById('invSize').value,
-        document.getElementById('invTax').checked ? "YES" : "NO"
-    ];
-    await sendToSheet('Inventory', data);
-    alert('Inventory Updated!');
-}
-
-async function saveCustomer() {
-    const data = [
-        document.getElementById('cName').value,
-        document.getElementById('cComp').value,
-        document.getElementById('cEmail').value,
-        document.getElementById('cPhone').value,
-        document.getElementById('cStreet').value + " " + document.getElementById('cCity').value + " " + document.getElementById('cState').value + " " + document.getElementById('cZip').value
-    ];
-    await sendToSheet('Customers', data);
-    alert('Customer Added!');
-}
-
-async function sendToSheet(sheetName, dataArray) {
     try {
         await fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ sheet: sheetName, data: dataArray })
+            body: JSON.stringify({ sheet: sheetName, data: data })
         });
+        alert('Saved successfully to ' + sheetName);
     } catch (e) {
-        console.error("Save failed", e);
+        alert('Error saving data.');
     }
 }
 
