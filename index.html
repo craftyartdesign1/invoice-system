@@ -1,128 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice & Inventory System</title>
+    <title>Invoice System</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
-        .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
-        .login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
-        .login-box h1{margin-bottom:2rem;color:#1f2937}
-        .login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
-        .login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
-        .error{color:#ef4444;margin-top:0.5rem;font-size:0.875rem}
-        .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
-        .sync-status{font-size:0.875rem;padding:0.5rem 1rem;border-radius:0.5rem}
-        .tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
-        .tab{padding:1rem 1.5rem;border:none;background:none;cursor:pointer;font-size:0.95rem;color:#6b7280}
-        .tab.active{color:#2563eb;border-bottom:2px solid #2563eb}
-        .content{padding:1.5rem;max-width:1200px;margin:0 auto}
-        .card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
+        body{font-family:sans-serif;background:#f3f4f6;display:flex;justify-content:center;padding-top:50px}
+        .box{background:#fff;padding:40px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.1);width:300px;text-align:center}
+        input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:5px}
+        button{width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:5px;cursor:pointer}
         .hidden{display:none}
-        table{width:100%;border-collapse:collapse;margin-top:1rem}
-        th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e5e7eb}
-        .btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;cursor:pointer;font-weight:600}
-        .btn-primary{background:#2563eb;color:#fff}
-        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
-        input, select{width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:0.375rem}
     </style>
 </head>
 <body>
-
-<div id="loginScreen" class="login-screen">
-    <div class="login-box">
-        <h1>Login</h1>
+    <div id="loginScreen" class="box">
+        <h2>Login</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
-        <div id="loginError" class="error"></div>
+        <div id="err" style="color:red;font-size:12px"></div>
         <button onclick="login()">Login</button>
     </div>
-</div>
-
-<div id="mainApp" class="hidden">
-    <div class="header">
-        <h1>Invoice System</h1>
-        <div id="syncStatus" class="sync-status" style="background:#fee2e2;color:#ef4444">Connecting...</div>
+    <div id="mainApp" class="box hidden">
+        <h2 style="color:green">Success!</h2>
+        <p>Connected to Cloud ☁️</p>
     </div>
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('invoice')">Invoice</button>
-        <button class="tab" onclick="showTab('inventory')">Inventory</button>
-        <button class="tab" onclick="showTab('customers')">Customers</button>
-    </div>
-    <div class="content">
-        <div id="invoice" class="card">
-            <h2>Create Invoice</h2>
-            <div class="form-grid">
-                <input type="text" id="invNum" readonly>
-                <select id="invCustomer"><option>Select Customer</option></select>
-            </div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead><tbody id="invoiceItems"></tbody></table>
-        </div>
-        <div id="inventory" class="card hidden">
-            <h2>Inventory</h2>
-            <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody></tbody></table>
-        </div>
-        <div id="customers" class="card hidden">
-            <h2>Customers</h2>
-            <table id="customerList"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody></tbody></table>
-        </div>
-    </div>
-</div>
-
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDdhbjx9JdSjGy7LySxWEhInQ6dsnYrZPadpXBDFS3gXJStDDIkh3abv7fUCsiEQbK/exec';
-let currentUser = null;
-
-async function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    const error = document.getElementById('loginError');
-    
+async function login(){
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    const e = document.getElementById('err');
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`);
-        const result = await response.json();
-        if (result.success) {
+        const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
+        const data = await res.json();
+        if(data.success){
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            loadData();
-        } else {
-            error.textContent = "Invalid Credentials";
-        }
-    } catch (e) {
-        error.textContent = "Connection Error";
-    }
-}
-
-async function loadData() {
-    const status = document.getElementById('syncStatus');
-    try {
-        const response = await fetch(SCRIPT_URL + '?action=getAll');
-        const res = await response.json();
-        if (res.success) {
-            status.textContent = "Connected to Cloud ☁️";
-            status.style.background = "#d1fae5"; status.style.color = "#059669";
-            renderTable('inventoryList', res.data.inventory, ['sku', 'item', 'price']);
-            renderTable('customerList', res.data.customers, ['name', 'company']);
-            const custSelect = document.getElementById('invCustomer');
-            res.data.customers.forEach(c => custSelect.innerHTML += `<option>${c.name}</option>`);
-        }
-    } catch (e) {
-        status.textContent = "Offline";
-    }
-}
-
-function renderTable(id, data, keys) {
-    const body = document.getElementById(id).querySelector('tbody');
-    body.innerHTML = data.map(row => `<tr>${keys.map(k => `<td>${row[k] || ''}</td>`).join('')}</tr>`).join('');
-}
-
-function showTab(tabId) {
-    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-    document.getElementById(tabId).classList.remove('hidden');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
+        } else { e.textContent = "Wrong login details"; }
+    } catch(err) { e.textContent = "Connection Error"; }
 }
 </script>
 </body>
