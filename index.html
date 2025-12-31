@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CraftyArt Management System</title>
+    <title>CraftyArt Design System</title>
     <style>
         :root { --primary: #1e3a8a; --secondary: #3b82f6; --success: #10b981; --bg: #f8fafc; --text: #1e293b; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
@@ -21,7 +21,6 @@
         .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.6rem; font-weight: 700; color: #475569; text-transform: uppercase; }
         .form-group input, .form-group select { width: 100%; padding: 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 1rem; }
         .form-group input[readonly] { background: #f8fafc; cursor: not-allowed; border-style: dashed; }
-        .tax-exempt-group { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f1f5f9; border-radius: 10px; width: fit-content; }
         .btn { padding: 1rem 2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px; }
         .btn-blue { background: var(--secondary); color: #fff; }
         .btn-green { background: var(--success); color: #fff; width: 100%; justify-content: center; }
@@ -54,15 +53,15 @@
     </div>
     
     <div class="tabs">
-        <button class="tab active" onclick="showTab('invoice',event)">Invoice Generator</button>
+        <button class="tab active" onclick="showTab('invoice',event)">Invoices</button>
         <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
         <button class="tab" onclick="showTab('customers',event)">Customers</button>
-        <button class="tab" onclick="showTab('admin',event)">Admin Panel</button>
+        <button class="tab" onclick="showTab('admin',event)">Admin</button>
     </div>
 
     <div class="content">
         <div id="invoice" class="card">
-            <h2>📄 New Invoice</h2>
+            <h2>📄 Generate Invoice</h2>
             <div class="form-grid">
                 <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="INV-101"></div>
                 <div class="form-group"><label>Customer Name</label><input type="text" id="invCust"></div>
@@ -74,29 +73,33 @@
                 <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" oninput="calcInv()"></div>
                 <div class="form-group"><label>Total ($)</label><input type="text" id="invTotal" readonly value="0.00"></div>
             </div>
-            <div class="tax-exempt-group">
-                <input type="checkbox" id="invTax">
-                <label style="margin:0; font-size:0.9rem;">Tax Exempt Client</label>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <input type="checkbox" id="invTax" style="width:20px; height:20px;">
+                <label style="font-weight:bold; font-size:0.9rem;">TAX EXEMPT</label>
             </div>
-            <button class="btn btn-green" style="margin-top:2rem" onclick="save('Invoices')">Save Invoice to Sheet</button>
+            <button class="btn btn-green" onclick="save('Invoices')">Log Invoice to Sheet</button>
         </div>
 
         <div id="inventory" class="card hidden">
-            <h2>📦 Add Stock</h2>
+            <h2>📦 Inventory Management</h2>
             <div class="form-grid">
                 <div class="form-group"><label>SKU</label><input type="text" id="stSKU"></div>
-                <div class="form-group"><label>Product</label><input type="text" id="stProd"></div>
+                <div class="form-group"><label>Product Name</label><input type="text" id="stProd"></div>
                 <div class="form-group"><label>Size</label><input type="text" id="stSize"></div>
                 <div class="form-group"><label>Type</label>
-                    <select id="stType"><option>Material</option><option>Apparel</option><option>Finished Good</option></select>
+                    <select id="stType">
+                        <option>Material</option>
+                        <option>Apparel</option>
+                        <option>Finished Good</option>
+                    </select>
                 </div>
                 <div class="form-group"><label>Cost ($)</label><input type="number" id="stCost"></div>
             </div>
-            <button class="btn btn-blue" onclick="save('Inventory')">Add to Inventory</button>
+            <button class="btn btn-blue" onclick="save('Inventory')">Add Product</button>
         </div>
 
         <div id="customers" class="card hidden">
-            <h2>👥 Register Customer</h2>
+            <h2>👥 Customer Registry</h2>
             <div class="form-grid">
                 <div class="form-group"><label>Full Name</label><input type="text" id="cName"></div>
                 <div class="form-group"><label>Company</label><input type="text" id="cComp"></div>
@@ -104,24 +107,30 @@
                 <div class="form-group"><label>Phone</label><input type="text" id="cPhone"></div>
                 <div class="form-group" style="grid-column: span 2;"><label>Address</label><input type="text" id="cAddr"></div>
             </div>
-            <button class="btn btn-blue" onclick="save('Customers')">Save Customer Profile</button>
+            <button class="btn btn-blue" onclick="save('Customers')">Save Customer</button>
         </div>
 
         <div id="admin" class="card hidden">
-            <h2>⚙️ System Status</h2>
-            <p>Database: <b>Online</b> | Logged in as: <b>Owner</b></p>
+            <h2>⚙️ System Info</h2>
+            <p>Database Connected: <b>Yes</b></p>
+            <p>User: <b>Owner</b></p>
         </div>
     </div>
 </div>
 
 <script>
-const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD5VxX4ldV2KLAaE2GDW7zPHEvNCq5pLzHvkR545Gt3M/exec';
+// This matches your deployment URL
+const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD8VxX4ldV2KLAaE2GDW7zPHEvNCq5pLzHvkR545Gt3M/exec';
 
 function login() {
-    if(document.getElementById('username').value === "Owner" && document.getElementById('password').value === "Craftyowner123") {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    
+    // Exact match for your Users tab
+    if(u === "Owner" && p === "Craftyowner123") {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-    } else { alert("Wrong credentials"); }
+    } else { alert("Invalid Credentials"); }
 }
 
 function showTab(id, e) {
@@ -137,21 +146,42 @@ function calcInv() {
     document.getElementById('invTotal').value = (q * p).toFixed(2);
 }
 
-async function save(tab) {
+async function save(tabName) {
     let data = [];
-    if(tab === 'Invoices') {
-        data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('invDate').value, document.getElementById('invDesc').value, document.getElementById('invQty').value, document.getElementById('invPrice').value, document.getElementById('invTotal').value, document.getElementById('invTax').checked ? "YES" : "NO"];
-    } else if(tab === 'Inventory') {
-        data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stSize').value, document.getElementById('stType').value, document.getElementById('stCost').value];
-    } else if(tab === 'Customers') {
-        data = [document.getElementById('cName').value, document.getElementById('cComp').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value, document.getElementById('cAddr').value];
+    if(tabName === 'Invoices') {
+        data = [
+            document.getElementById('invNum').value, 
+            document.getElementById('invCust').value, 
+            document.getElementById('invDate').value, 
+            document.getElementById('invDesc').value, 
+            document.getElementById('invQty').value, 
+            document.getElementById('invPrice').value, 
+            document.getElementById('invTotal').value, 
+            document.getElementById('invTax').checked ? "YES" : "NO"
+        ];
+    } else if(tabName === 'Inventory') {
+        data = [
+            document.getElementById('stSKU').value, 
+            document.getElementById('stProd').value, 
+            document.getElementById('stSize').value, 
+            document.getElementById('stType').value, 
+            document.getElementById('stCost').value
+        ];
+    } else if(tabName === 'Customers') {
+        data = [
+            document.getElementById('cName').value, 
+            document.getElementById('cComp').value, 
+            document.getElementById('cEmail').value, 
+            document.getElementById('cPhone').value, 
+            document.getElementById('cAddr').value
+        ];
     }
 
     try {
-        await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: tab, data: data }) });
-        alert("Data sent to " + tab + "!");
+        await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: tabName, data: data }) });
+        alert("Synced successfully with " + tabName);
         location.reload();
-    } catch (e) { alert("Error connecting to sheet"); }
+    } catch (e) { alert("Connectivity Error"); }
 }
 </script>
 </body>
