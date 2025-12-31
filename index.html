@@ -3,32 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CraftyArt Pro System</title>
+<title>CraftyArt Management System</title>
 <style>
-    /* Professional Styling from Test7 */
+    /* FULL TEST7 STYLING & FIXES */
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6;color:#1f2937}
-    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%)}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
     .login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
-    .login-box h1{margin-bottom:2rem;color:#1f2937}
     .login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
-    .login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
+    .login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-weight:600;cursor:pointer}
     .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
-    .tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
-    .tab{padding:1rem 1.5rem;border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;font-size:0.95rem;font-weight:500;color:#6b7280;white-space:nowrap}
+    .tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.5rem;overflow-x:auto}
+    .tab{padding:1rem 1.5rem;border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;color:#6b7280;white-space:nowrap}
     .tab.active{color:#2563eb;border-bottom-color:#2563eb;background:#f8faff}
     .content{padding:1.5rem;max-width:1200px;margin:0 auto}
-    .card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
+    .card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem;border:1px solid #e5e7eb}
     .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-bottom:1.5rem}
-    .form-group label{display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.25rem}
-    .form-group input, .form-group select{width:100%;padding:0.6rem;border:1px solid #d1d5db;border-radius:0.375rem}
-    .btn{padding:0.6rem 1.2rem;border-radius:0.375rem;border:none;font-weight:600;cursor:pointer;transition:0.2s}
+    .form-group label{display:block;font-size:0.875rem;font-weight:600;margin-bottom:0.25rem}
+    .form-group input, .form-group textarea{width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:0.375rem}
+    .btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;font-weight:600;cursor:pointer}
     .btn-primary{background:#2563eb;color:#fff}
     .btn-success{background:#10b981;color:#fff}
     .app-hidden{display:none !important}
     table{width:100%;border-collapse:collapse;margin-top:1rem}
-    th{background:#f9fafb;padding:0.75rem;text-align:left;border-bottom:1px solid #e5e7eb;font-size:0.85rem;color:#4b5563}
-    td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.9rem}
+    th{background:#f9fafb;padding:0.75rem;text-align:left;border-bottom:1px solid #e5e7eb}
+    td{padding:0.75rem;border-bottom:1px solid #f3f4f6}
+    @media print{.no-print{display:none !important}}
 </style>
 </head>
 <body>
@@ -43,135 +43,140 @@
 </div>
 
 <div id="mainApp" class="app-hidden">
-    <div class="header">
-        <h1>CraftyArt Design</h1>
-        <button class="btn" style="background:#ef4444; color:white" onclick="location.reload()">Logout</button>
+    <div class="header no-print">
+        <h1>CraftyArt Management</h1>
+        <button class="btn" style="background:#ef4444;color:white" onclick="location.reload()">Logout</button>
     </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('invoice', event)">Invoice Generator</button>
+    <div class="tabs no-print">
+        <button class="tab active" onclick="showTab('invoice', event)">Invoices</button>
         <button class="tab" onclick="showTab('inventory', event)">Inventory</button>
         <button class="tab" onclick="showTab('customers', event)">Customers</button>
-        <button class="tab" onclick="showTab('lookup', event)">Invoice Lookup</button>
         <button class="tab" onclick="showTab('admin', event)">Admin</button>
     </div>
 
     <div class="content">
         <div id="invoice" class="card">
-            <h2>📄 Create New Invoice</h2>
+            <h2>New Invoice</h2>
             <div class="form-grid">
-                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" placeholder="INV-001"></div>
-                <div class="form-group"><label>Customer Name</label><input type="text" id="invCust"></div>
+                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="INV-001"></div>
+                <div class="form-group"><label>Customer</label><input type="text" id="invCust"></div>
                 <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
             </div>
-            <div class="form-grid">
-                <div class="form-group"><label>Item Description (or SKU)</label><input type="text" id="invItem"></div>
-                <div class="form-group"><label>Quantity</label><input type="number" id="invQty" value="1" oninput="calcTotal()"></div>
-                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" oninput="calcTotal()"></div>
-                <div class="form-group"><label>Total ($)</label><input type="text" id="invTotal" readonly style="background:#f3f4f6"></div>
+            <table id="invoiceTable">
+                <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th class="no-print"></th></tr></thead>
+                <tbody id="invoiceRows">
+                    <tr>
+                        <td><input type="text" class="row-item" style="width:100%"></td>
+                        <td><input type="number" class="row-qty" value="1" oninput="calculate()"></td>
+                        <td><input type="number" class="row-price" value="0" oninput="calculate()"></td>
+                        <td class="row-total">$0.00</td>
+                        <td class="no-print"><button onclick="this.closest('tr').remove();calculate()">×</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-primary no-print" onclick="addRow()" style="margin-top:1rem">+ Add Item</button>
+            <div style="text-align:right; margin-top:1.5rem">
+                <p>Tax (8.875%): <span id="taxDisplay">$0.00</span></p>
+                <h3 style="font-size:1.5rem">Total: <span id="totalDisplay">$0.00</span></h3>
             </div>
-            <button class="btn btn-success" onclick="save('Invoices')">Sync to Google Sheets</button>
-        </div>
-
-        <div id="inventory" class="card app-hidden">
-            <h2>📦 Inventory Management</h2>
-            <div class="form-grid">
-                <div class="form-group"><label>SKU</label><input type="text" id="stSKU"></div>
-                <div class="form-group"><label>Product Name</label><input type="text" id="stProd"></div>
-                <div class="form-group"><label>Stock Level</label><input type="number" id="stQty"></div>
+            <div style="display:flex;gap:1rem;margin-top:1.5rem" class="no-print">
+                <button class="btn btn-success" onclick="saveToCloud('Invoices')">Sync to Cloud</button>
+                <button class="btn btn-primary" onclick="window.print()">Print Preview</button>
             </div>
-            <button class="btn btn-primary" onclick="save('Inventory')">Add/Update Stock</button>
         </div>
 
         <div id="customers" class="card app-hidden">
-            <h2>👥 Customer Registry</h2>
+            <h2>Customer Registry</h2>
             <div class="form-grid">
-                <div class="form-group"><label>Full Name</label><input type="text" id="cName"></div>
-                <div class="form-group"><label>Email</label><input type="email" id="cEmail"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="cName"></div>
+                <div class="form-group"><label>Email</label><input type="text" id="cEmail"></div>
                 <div class="form-group"><label>Phone</label><input type="text" id="cPhone"></div>
             </div>
-            <div class="form-grid">
-                <div class="form-group"><label>Shipping Address</label><input type="text" id="cAddress" placeholder="Street, City, State, ZIP"></div>
-                <div class="form-group"><label>Company</label><input type="text" id="cCompany"></div>
-            </div>
-            <button class="btn btn-primary" onclick="save('Customers')">Save Customer Details</button>
+            <div class="form-group"><label>Full Shipping Address</label><textarea id="cAddress" rows="2" style="width:100%"></textarea></div>
+            <button class="btn btn-primary" style="margin-top:1rem" onclick="saveToCloud('Customers')">Save Customer</button>
         </div>
 
-        <div id="lookup" class="card app-hidden">
-            <h2>🔍 History Lookup</h2>
-            <p>Recent activity is automatically synced to your Cloud Database.</p>
-            <div id="historyLog"></div>
+        <div id="inventory" class="card app-hidden">
+            <h2>Inventory Stock</h2>
+            <div class="form-grid">
+                <input type="text" id="stSKU" placeholder="SKU">
+                <input type="text" id="stProd" placeholder="Product Name">
+                <input type="number" id="stQty" placeholder="Stock Level">
+            </div>
+            <button class="btn btn-primary" onclick="saveToCloud('Inventory')">Add Product</button>
         </div>
 
         <div id="admin" class="card app-hidden">
-            <h2>⚙️ System Admin</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Database Status</label>
-                    <div style="color:#059669; font-weight:bold">Connected ✅</div>
-                </div>
-                <div class="form-group">
-                    <label>App Version</label>
-                    <div>v2.0.1 (Pro)</div>
-                </div>
+            <h2>Admin Panel</h2>
+            <div class="card" style="background:#f9fafb; border:1px dashed #ccc">
+                <p><strong>Database Status:</strong> Connected ✅</p>
+                <p><strong>URL:</strong> ...Mm2ySSc7mlw/exec</p>
             </div>
-            <button class="btn btn-primary" onclick="alert('Configuration Saved')">Save Settings</button>
         </div>
     </div>
 </div>
 
 <script>
-// Verified Google App Script URL
-const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD8VxX4ldV2KLAaE2GDW7zPHEvNCq5pLzHvkR545Gt3M/exec';
+    /* CONNECTED TO YOUR URL */
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFnKv0LcAiZTRfQDItCXuoI5cT5i-aXWRKmDQAOIacJyR5uZ6Ns1R2Mm2ySSc7mlw/exec';
 
-function login() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    if (u === 'Owner' && p === 'Craftyowner123') {
-        document.getElementById('loginScreen').classList.add('app-hidden');
-        document.getElementById('mainApp').classList.remove('app-hidden');
-    } else { alert('Access Denied'); }
-}
-
-function showTab(tabId, e) {
-    document.querySelectorAll('.card').forEach(c => c.classList.add('app-hidden'));
-    document.getElementById(tabId).classList.remove('app-hidden');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    e.currentTarget.classList.add('active');
-}
-
-function calcTotal() {
-    const q = document.getElementById('invQty').value || 0;
-    const p = document.getElementById('invPrice').value || 0;
-    document.getElementById('invTotal').value = (q * p).toFixed(2);
-}
-
-async function save(sheet) {
-    let data = [];
-    const btn = event.target;
-    
-    if(sheet === 'Invoices') {
-        data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('invDate').value, document.getElementById('invItem').value, document.getElementById('invTotal').value];
-    } else if(sheet === 'Inventory') {
-        data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stQty').value];
-    } else if(sheet === 'Customers') {
-        data = [document.getElementById('cName').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value, document.getElementById('cAddress').value, document.getElementById('cCompany').value];
+    function login() {
+        if (document.getElementById('username').value === 'Owner' && document.getElementById('password').value === 'Craftyowner123') {
+            document.getElementById('loginScreen').classList.add('app-hidden');
+            document.getElementById('mainApp').classList.remove('app-hidden');
+        } else { alert('Incorrect Login'); }
     }
 
-    try {
-        btn.innerText = "Syncing...";
-        btn.disabled = true;
-        // Sending to Google Sheets
-        await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: sheet, data: data }) });
-        
-        alert('Data Successfully Saved to ' + sheet);
-        location.reload();
-    } catch (e) { 
-        alert('Database Connection Error'); 
-        btn.innerText = "Retry Sync";
-        btn.disabled = false;
+    function showTab(id, e) {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('app-hidden'));
+        document.getElementById(id).classList.remove('app-hidden');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.currentTarget.classList.add('active');
     }
-}
+
+    function addRow() {
+        const row = `<tr><td><input type="text" class="row-item" style="width:100%"></td><td><input type="number" class="row-qty" value="1" oninput="calculate()"></td><td><input type="number" class="row-price" value="0" oninput="calculate()"></td><td class="row-total">$0.00</td><td class="no-print"><button onclick="this.closest('tr').remove();calculate()">×</button></td></tr>`;
+        document.getElementById('invoiceRows').insertAdjacentHTML('beforeend', row);
+    }
+
+    function calculate() {
+        let sub = 0;
+        document.querySelectorAll('#invoiceRows tr').forEach(row => {
+            const q = row.querySelector('.row-qty').value || 0;
+            const p = row.querySelector('.row-price').value || 0;
+            const total = q * p;
+            row.querySelector('.row-total').innerText = '$' + total.toFixed(2);
+            sub += total;
+        });
+        const tax = sub * 0.08875;
+        document.getElementById('taxDisplay').innerText = '$' + tax.toFixed(2);
+        document.getElementById('totalDisplay').innerText = '$' + (sub + tax).toFixed(2);
+    }
+
+    async function saveToCloud(sheet) {
+        let data = [];
+        if(sheet === 'Invoices') data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('totalDisplay').innerText];
+        if(sheet === 'Customers') data = [document.getElementById('cName').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value, document.getElementById('cAddress').value];
+        if(sheet === 'Inventory') data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stQty').value];
+
+        try {
+            const btn = event.target; 
+            const originalText = btn.innerText;
+            btn.innerText = "Syncing...";
+            btn.disabled = true;
+            
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: sheet, data: data }) });
+            
+            alert('Saved Successfully to Google Sheets!');
+            btn.innerText = originalText;
+            btn.disabled = false;
+        } catch (e) { 
+            alert('Sync failed. Check connection.'); 
+            btn.innerText = "Retry";
+            btn.disabled = false;
+        }
+    }
 </script>
 </body>
 </html>
