@@ -1,220 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice & Inventory System</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
-.login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
-.login-box h1{margin-bottom:2rem;color:#1f2937}
-.login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
-.login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
-.login-box button:hover{background:#1d4ed8}
-.error{color:#ef4444;margin-top:0.5rem;font-size:0.875rem}
-.success{color:#10b981;margin-top:0.5rem;font-size:0.875rem}
-.loading{color:#2563eb;margin-top:0.5rem;font-size:0.875rem}
-.header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.header h1{color:#1f2937;font-size:1.5rem}
-.sync-status{font-size:0.875rem;color:#059669;background:#d1fae5;padding:0.5rem 1rem;border-radius:0.5rem}
-.logout-btn{background:#ef4444;color:#fff;border:none;padding:0.5rem 1rem;border-radius:0.5rem;cursor:pointer;font-size:0.875rem}
-.logout-btn:hover{background:#dc2626}
-.tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
-.tab{padding:1rem 1.5rem;border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;font-size:0.95rem;font-weight:500;color:#6b7280;white-space:nowrap}
-.tab.active{color:#2563eb;border-bottom-color:#2563eb}
-.content{padding:1.5rem;max-width:1200px;margin:0 auto}
-.card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
-.card h2{margin-bottom:1.5rem;color:#1f2937}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-bottom:1.5rem}
-.form-group label{display:block;font-size:0.875rem;font-weight:500;color:#374151;margin-bottom:0.25rem}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:0.375rem;font-size:1rem}
-.form-group textarea{min-height:80px;resize:vertical;font-family:inherit}
-.btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;font-weight:500;cursor:pointer;font-size:0.95rem}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-primary:hover{background:#1d4ed8}
-.btn-success{background:#10b981;color:#fff}
-.btn-success:hover{background:#059669}
-.btn-danger{background:#ef4444;color:#fff}
-.btn-danger:hover{background:#dc2626}
-.btn-gray{background:#6b7280;color:#fff}
-.btn-gray:hover{background:#4b5563}
-.action-btns{display:flex;gap:0.5rem;flex-wrap:wrap}
-table{width:100%;border-collapse:collapse;margin-top:1rem}
-th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.875rem;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb}
-td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.95rem}
-.add-section{background:#f9fafb;padding:1rem;border-radius:0.5rem;margin-bottom:1.5rem}
-.add-section h3{font-size:1rem;margin-bottom:0.75rem;color:#374151}
-.total-row{font-weight:600;font-size:1.25rem;padding-top:1rem;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
-.warning-box{background:#fef3c7;border-left:4px solid #f59e0b;padding:1rem;margin:1rem 0;border-radius:0.375rem}
-.warning-box p{color:#92400e;margin:0}
-.validation-error{background:#fee2e2;border-left:4px solid #ef4444;padding:1rem;margin:1rem 0;border-radius:0.375rem}
-.validation-error p{color:#991b1b;margin:0;font-weight:500}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;padding:1rem;align-items:center;justify-content:center}
-.modal.show{display:flex}
-.modal-content{background:#fff;border-radius:0.5rem;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 25px rgba(0,0,0,0.3)}
-.modal-header{padding:1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
-.modal-body{padding:2rem}
-.hidden{display:none}
-.checkbox-field{display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0}
-.checkbox-field input[type="checkbox"]{width:auto;cursor:pointer}
-@media print{body *{visibility:hidden}#printContent,#printContent *{visibility:visible}#printContent{position:absolute;left:0;top:0;width:100%}.no-print{display:none!important}}
-@media (max-width:768px){.form-grid{grid-template-columns:1fr}.header{flex-direction:column;align-items:flex-start}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice & Inventory System</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
+        .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+        .login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
+        .login-box h1{margin-bottom:2rem;color:#1f2937}
+        .login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
+        .login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
+        .error{color:#ef4444;margin-top:0.5rem;font-size:0.875rem}
+        .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
+        .sync-status{font-size:0.875rem;padding:0.5rem 1rem;border-radius:0.5rem}
+        .tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
+        .tab{padding:1rem 1.5rem;border:none;background:none;cursor:pointer;font-size:0.95rem;color:#6b7280}
+        .tab.active{color:#2563eb;border-bottom:2px solid #2563eb}
+        .content{padding:1.5rem;max-width:1200px;margin:0 auto}
+        .card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
+        .hidden{display:none}
+        table{width:100%;border-collapse:collapse;margin-top:1rem}
+        th,td{padding:0.75rem;text-align:left;border-bottom:1px solid #e5e7eb}
+        .btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;cursor:pointer;font-weight:600}
+        .btn-primary{background:#2563eb;color:#fff}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
+        input, select{width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:0.375rem}
+    </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
-<div class="login-box">
-<h1>Login</h1>
-<p style="color:#6b7280;margin-bottom:2rem">Invoice & Inventory System</p>
-<input type="text" id="username" placeholder="Username">
-<input type="password" id="password" placeholder="Password">
-<div id="loginError" class="error"></div>
-<div id="loginLoading" class="loading" style="display:none">Connecting to server...</div>
-<button onclick="login()">Login</button>
-</div>
+    <div class="login-box">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <div id="loginError" class="error"></div>
+        <button onclick="login()">Login</button>
+    </div>
 </div>
 
 <div id="mainApp" class="hidden">
-<div class="header">
-<h1>Invoice & Inventory System</h1>
-<div style="display:flex;gap:1rem;align-items:center">
-<div class="sync-status" id="syncStatus">Connected to Cloud ☁️</div>
-<button class="logout-btn" onclick="logout()">Logout</button>
-</div>
-</div>
-
-<div class="tabs">
-<button class="tab active" onclick="showTab('invoice')">Invoice Generator</button>
-<button class="tab" onclick="showTab('inventory')">Inventory</button>
-<button class="tab" onclick="showTab('customers')">Customers</button>
-<button class="tab" onclick="showTab('lookup')">Invoice Lookup</button>
-<button class="tab" onclick="showTab('admin')">Admin</button>
-</div>
-
-<div class="content">
-<div id="invoice" class="card">
-<h2>Create New Invoice</h2>
-<div class="form-grid">
-<div class="form-group"><label>Invoice Number</label><input type="text" id="invNum" readonly></div>
-<div class="form-group"><label>Date</label><input type="text" id="invDate"></div>
-<div class="form-group"><label>Customer Name</label><select id="invCustomer" onchange="updateCompany()"><option value="">Select Customer</option></select></div>
-<div class="form-group"><label>Company</label><select id="invCompany"><option value="">Select Company</option></select></div>
-<div class="form-group"><label>Employee</label><input type="text" id="invEmployee" readonly style="background:#f3f4f6;cursor:not-allowed"></div>
-</div>
-<div class="form-group"><label>Add Item by SKU</label><div style="display:flex;gap:0.5rem"><input type="text" id="skuInput" placeholder="Scan or enter SKU" style="flex:1"><button class="btn btn-primary" onclick="addToInvoice()">Add</button></div></div>
-<div id="skuWarning" class="warning-box" style="display:none"><p>Warning: <span id="warningText"></span></p></div>
-<div id="validationError" class="validation-error" style="display:none"><p>Error: <span id="validationText"></span></p></div>
-<table><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Tax Exempt</th><th>Total</th><th>Action</th></tr></thead><tbody id="invoiceItems"></tbody></table>
-<div class="total-row">
-<div>
-<div>Subtotal: $<span id="invoiceSubtotal">0.00</span></div>
-<div style="font-size:1rem">Tax (8.875%): $<span id="invoiceTax">0.00</span></div>
-<div style="margin-top:0.5rem">Total: $<span id="invoiceTotal">0.00</span></div>
-</div>
-<button class="btn btn-success" onclick="saveInvoice()">Save Invoice</button>
-</div>
+    <div class="header">
+        <h1>Invoice System</h1>
+        <div id="syncStatus" class="sync-status" style="background:#fee2e2;color:#ef4444">Connecting...</div>
+    </div>
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('invoice')">Invoice</button>
+        <button class="tab" onclick="showTab('inventory')">Inventory</button>
+        <button class="tab" onclick="showTab('customers')">Customers</button>
+    </div>
+    <div class="content">
+        <div id="invoice" class="card">
+            <h2>Create Invoice</h2>
+            <div class="form-grid">
+                <input type="text" id="invNum" readonly>
+                <select id="invCustomer"><option>Select Customer</option></select>
+            </div>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead><tbody id="invoiceItems"></tbody></table>
+        </div>
+        <div id="inventory" class="card hidden">
+            <h2>Inventory</h2>
+            <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div id="customers" class="card hidden">
+            <h2>Customers</h2>
+            <table id="customerList"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
 </div>
 
-<div id="inventory" class="card" style="display:none">
-<h2>Inventory Management</h2>
-<div class="add-section">
-<h3 id="invTitle">Add New Item</h3>
-<div class="form-grid">
-<input type="text" id="newSKU" placeholder="SKU">
-<input type="text" id="newItem" placeholder="Item Name">
-<input type="number" id="newPrice" placeholder="Price" step="0.01">
-<div class="form-group">
-<label>Size</label>
-<select id="newSize" onchange="toggleCustomSize()">
-<option value="">No Size</option>
-<option value="XS">XS</option>
-<option value="S">S</option>
-<option value="M">M</option>
-<option value="L">L</option>
-<option value="XL">XL</option>
-<option value="2XL">2XL</option>
-<option value="3XL">3XL</option>
-<option value="4XL">4XL</option>
-<option value="5XL">5XL</option>
-<option value="Other">Other (Custom Dimensions)</option>
-</select>
-</div>
-</div>
-<div id="customSizeFields" style="display:none;margin-top:1rem">
-<div class="form-grid" style="grid-template-columns:1fr 1fr">
-<div class="form-group">
-<label>Width</label>
-<input type="text" id="customWidth" placeholder="e.g., 24 inches">
-</div>
-<div class="form-group">
-<label>Height</label>
-<input type="text" id="customHeight" placeholder="e.g., 36 inches">
-</div>
-</div>
-</div>
-<div class="checkbox-field">
-<input type="checkbox" id="newTaxExempt">
-<label for="newTaxExempt">Tax Exempt Item</label>
-</div>
-<div class="action-btns">
-<button class="btn btn-primary" onclick="addInventoryItem()"><span id="invBtnText">+ Add Item</span></button>
-<button class="btn btn-gray" id="cancelInvBtn" style="display:none" onclick="cancelEditInventory()">Cancel</button>
-</div>
-</div>
-<table><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody id="inventoryList"></tbody></table>
-</div>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDdhbjx9JdSjGy7LySxWEhInQ6dsnYrZPadpXBDFS3gXJStDDIkh3abv7fUCsiEQbK/exec';
+let currentUser = null;
 
-<div id="customers" class="card" style="display:none">
-<h2>Customer Database</h2>
-<div class="add-section">
-<h3 id="custTitle">Add New Customer</h3>
-<div class="form-grid">
-<input type="text" id="custName" placeholder="Customer Name">
-<input type="text" id="custCompany" placeholder="Company">
-<input type="email" id="custEmail" placeholder="Email">
-<input type="tel" id="custPhone" placeholder="Phone">
-</div>
-<div class="action-btns">
-<button class="btn btn-primary" onclick="addCustomer()"><span id="custBtnText">+ Add Customer</span></button>
-<button class="btn btn-gray" id="cancelCustBtn" style="display:none" onclick="cancelEditCustomer()">Cancel</button>
-</div>
-</div>
-<table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="customerList"></tbody></table>
-</div>
+async function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const error = document.getElementById('loginError');
+    
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`);
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadData();
+        } else {
+            error.textContent = "Invalid Credentials";
+        }
+    } catch (e) {
+        error.textContent = "Connection Error";
+    }
+}
 
-<div id="lookup" class="card" style="display:none">
-<h2>Invoice Lookup</h2>
-<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-<div class="form-group"><label>Search by Date</label><input type="text" id="searchDate" placeholder="12/26/2024" oninput="filterInvoices()"></div>
-<div class="form-group"><label>Search by Year</label><input type="text" id="searchYear" placeholder="2024" oninput="filterInvoices()"></div>
-<div class="form-group"><label>Search by Customer</label><input type="text" id="searchCustomer" placeholder="Customer name" oninput="filterInvoices()"></div>
-<div class="form-group"><label>Search by Company</label><input type="text" id="searchCompany" placeholder="Company name" oninput="filterInvoices()"></div>
-<div class="form-group"><label>Search by Employee</label><select id="searchEmployee" onchange="filterInvoices()"><option value="">All Employees</option></select></div>
-</div>
-<button class="btn btn-gray" onclick="clearFilters()">Clear All Filters</button>
-<table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Total</th><th>Actions</th></tr></thead><tbody id="invoiceList"></tbody></table>
-</div>
+async function loadData() {
+    const status = document.getElementById('syncStatus');
+    try {
+        const response = await fetch(SCRIPT_URL + '?action=getAll');
+        const res = await response.json();
+        if (res.success) {
+            status.textContent = "Connected to Cloud ☁️";
+            status.style.background = "#d1fae5"; status.style.color = "#059669";
+            renderTable('inventoryList', res.data.inventory, ['sku', 'item', 'price']);
+            renderTable('customerList', res.data.customers, ['name', 'company']);
+            const custSelect = document.getElementById('invCustomer');
+            res.data.customers.forEach(c => custSelect.innerHTML += `<option>${c.name}</option>`);
+        }
+    } catch (e) {
+        status.textContent = "Offline";
+    }
+}
 
-<div id="admin" class="card" style="display:none">
-<h2>Admin Panel</h2>
-<div class="add-section">
-<h3>User Management</h3>
-<p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem">Add users and set their permissions</p>
-<div class="form-grid">
-<div class="form-group"><label>Username</label><input type="text" id="newUsername" placeholder="Username"></div>
-<div class="form-group"><label>Password</label><input type="password" id="newUserPass" placeholder="Password"></div>
-<div class="form-group"><label>Employee Name (Display Name)</label><input type="text" id="newDisplayName" placeholder="Full Name"></div>
-<div class="form-group">
-<label>Role</label>
-<select id="newUserRole" onchange="updatePermissionCheckboxes()">
-<option value="Admin">Admin (Full Access)</option>
-<option value="Manager">Manager (View & Edit All)</option>
-<option value="Employee">Employee (Limited Access)</option>
-</select>
-</div>
-</div>
-<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:0.375rem;padding:0.75rem;margin:1rem 0">
-<p style="font-size:0.875rem
+function renderTable(id, data, keys) {
+    const body = document.getElementById(id).querySelector('tbody');
+    body.innerHTML = data.map(row => `<tr>${keys.map(k => `<td>${row[k] || ''}</td>`).join('')}</tr>`).join('');
+}
+
+function showTab(tabId) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(tabId).classList.remove('hidden');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
