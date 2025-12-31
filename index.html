@@ -26,24 +26,24 @@
         .btn-green{background:#10b981;color:#fff}
         .btn-red{background:#ef4444;color:#fff}
         .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#3b82f6}
-        .login-box{background:#fff;padding:2.5rem;border-radius:12px;width:380px;text-align:center}
+        .login-box{background:#fff;padding:2.5rem;border-radius:12px;width:380px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
     </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
-        <h2 style="margin-bottom:1.5rem">System Login</h2>
+        <h2 style="margin-bottom:1.5rem; color:#1e3a8a">System Login</h2>
         <input type="text" id="username" placeholder="Username" style="width:100%;padding:0.8rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:6px">
         <input type="password" id="password" placeholder="Password" style="width:100%;padding:0.8rem;margin-bottom:1.5rem;border:1px solid #ddd;border-radius:6px">
-        <div id="loginError" style="color:red;margin-bottom:1rem;font-size:0.85rem"></div>
-        <button class="btn btn-blue" style="width:100%" onclick="login()">Sign In</button>
+        <div id="loginError" style="color:red;margin-bottom:1rem;font-size:0.85rem;min-height:1.2rem"></div>
+        <button class="btn btn-blue" style="width:100%" id="signInBtn" onclick="login()">Sign In</button>
     </div>
 </div>
 
 <div id="mainApp" class="hidden">
     <div class="header-top">
-        <h1>CraftyArt Design</h1>
+        <h1 style="color:#1e3a8a">CraftyArt Design</h1>
         <button class="btn btn-red" onclick="location.reload()">Logout</button>
     </div>
     
@@ -63,12 +63,7 @@
                 <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
                 <div class="form-group"><label>Customer</label><select id="invCustSelect"><option>Select Customer</option></select></div>
             </div>
-            <div id="invoiceItems">
-                <table>
-                    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                    <tbody id="invoiceTableBody"></tbody>
-                </table>
-            </div>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody id="invoiceTableBody"></tbody></table>
             <h3 style="text-align:right; margin-top:1rem">Total: <span id="grandTotal">$0.00</span></h3>
             <button class="btn btn-green" style="margin-top:1rem">Save & Print Invoice</button>
         </div>
@@ -93,7 +88,7 @@
                 <div class="form-group"><label>Width (in)</label><input type="number" id="invW"></div>
                 <div class="form-group"><label>Height (in)</label><input type="number" id="invH"></div>
             </div>
-            <div style="margin-bottom:1rem"><input type="checkbox" id="invTax"> <label>Tax Exempt Item</label></div>
+            <div style="margin-bottom:1rem"><input type="checkbox" id="invTax"> <label style="font-size:0.9rem">Tax Exempt Item</label></div>
             <button class="btn btn-blue" onclick="saveInventory()">+ Add to Inventory</button>
             <table id="inventoryTable"><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Price</th></tr></thead><tbody></tbody></table>
         </div>
@@ -128,16 +123,17 @@
         <div id="admin" class="card hidden">
             <h2>Admin Panel</h2>
             <div class="form-grid">
-                <div><label>Logo</label><div class="upload-zone">Small Logo Upload</div></div>
-                <div><label>Background</label><div class="upload-zone">Small BG Upload</div></div>
+                <div><label style="font-weight:bold; font-size:0.8rem">Logo</label><div class="upload-zone">Small Logo Upload</div></div>
+                <div><label style="font-weight:bold; font-size:0.8rem">Background</label><div class="upload-zone">Small BG Upload</div></div>
             </div>
-            <div style="margin-top:2rem">
+            <div style="margin-top:2rem; border-top: 1px solid #eee; padding-top:1rem">
                 <h3>User Management</h3>
                 <table>
                     <thead><tr><th>User</th><th>Role</th><th>Status</th></tr></thead>
                     <tbody>
-                        <tr><td>Owner</td><td>Owner</td><td>Protected</td></tr>
+                        <tr><td>Owner</td><td>Highest Power</td><td><span style="color:green">Protected</span></td></tr>
                         <tr><td>Alessio</td><td>Admin</td><td>Active</td></tr>
+                        <tr><td>TestUser</td><td>Employee</td><td>Active</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -146,28 +142,31 @@
 </div>
 
 <script>
-// --- CONFIGURATION ---
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhZJW78LNJzWZU1R_dKa_f118hnUOdltoaFwPLFdtx9-uwGL0X-HL51uq3gVu5rt4/exec';
 
+// SECURE CREDENTIALS
 const AUTH = [
     {u: "Owner", p: "Craftyowner123", r: "Owner"},
     {u: "Alessio", p: "Admin123", r: "Admin"},
     {u: "test", p: "user123", r: "Employee"}
 ];
 
-// --- HELPERS ---
-const fmt = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
-
 function login() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    const user = AUTH.find(x => x.u === u && x.p === p);
-    if(user) {
+    const uInput = document.getElementById('username').value.trim();
+    const pInput = document.getElementById('password').value.trim();
+    const errDisp = document.getElementById('loginError');
+
+    const found = AUTH.find(x => x.u === uInput && x.p === pInput);
+    
+    if (found) {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-        if(user.r === 'Employee') document.querySelector('[onclick*="admin"]').style.display = 'none';
+        if(found.r === 'Employee') {
+            const adminTab = document.querySelector('[onclick*="admin"]');
+            if(adminTab) adminTab.style.display = 'none';
+        }
     } else {
-        document.getElementById('loginError').innerText = "Invalid Login";
+        errDisp.innerText = "Invalid credentials. Try again.";
     }
 }
 
@@ -175,7 +174,7 @@ function showTab(id, e) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    e.target.classList.add('active');
+    if(e) e.target.classList.add('active');
 }
 
 function toggleSize() {
@@ -183,17 +182,17 @@ function toggleSize() {
     document.getElementById('customSizeInputs').classList.toggle('hidden', !isCustom);
 }
 
-// --- DATABASE ACTIONS ---
+// DATABASE SAVE FUNCTIONS
 async function saveInventory() {
     const data = [
         document.getElementById('invSKU').value,
         document.getElementById('invItemName').value,
         document.getElementById('invPrice').value,
         document.getElementById('invSize').value,
-        document.getElementById('invTax').checked
+        document.getElementById('invTax').checked ? "YES" : "NO"
     ];
     await sendToSheet('Inventory', data);
-    alert('Item Saved!');
+    alert('Inventory Updated!');
 }
 
 async function saveCustomer() {
@@ -202,25 +201,26 @@ async function saveCustomer() {
         document.getElementById('cComp').value,
         document.getElementById('cEmail').value,
         document.getElementById('cPhone').value,
-        document.getElementById('cStreet').value,
-        document.getElementById('cCity').value,
-        document.getElementById('cState').value,
-        document.getElementById('cZip').value
+        document.getElementById('cStreet').value + " " + document.getElementById('cCity').value + " " + document.getElementById('cState').value + " " + document.getElementById('cZip').value
     ];
     await sendToSheet('Customers', data);
-    alert('Customer Saved!');
+    alert('Customer Added!');
 }
 
 async function sendToSheet(sheetName, dataArray) {
-    await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ sheet: sheetName, data: dataArray })
-    });
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ sheet: sheetName, data: dataArray })
+        });
+    } catch (e) {
+        console.error("Save failed", e);
+    }
 }
 
+// Press Enter to Login
 document.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 </script>
 </body>
