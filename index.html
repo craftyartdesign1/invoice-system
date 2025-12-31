@@ -5,211 +5,1111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Invoice & Inventory System</title>
 <style>
-    /* ALL ORIGINAL TEST7 STYLES PRESERVED */
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
-    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
-    .login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
-    .login-box h1{margin-bottom:2rem;color:#1f2937}
-    .login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
-    .login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
-    .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-    .tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
-    .tab{padding:1rem 1.5rem;border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;font-size:0.95rem;font-weight:500;color:#6b7280;white-space:nowrap}
-    .tab.active{color:#2563eb;border-bottom-color:#2563eb}
-    .content{padding:1.5rem;max-width:1200px;margin:0 auto}
-    .card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
-    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-bottom:1.5rem}
-    .form-group label{display:block;font-size:0.875rem;font-weight:500;color:#374151;margin-bottom:0.25rem}
-    .form-group input, .form-group select, .form-group textarea{width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:0.375rem;font-size:1rem}
-    .btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;font-weight:500;cursor:pointer;font-size:0.95rem}
-    .btn-primary{background:#2563eb;color:#fff}
-    .btn-success{background:#10b981;color:#fff}
-    .btn-danger{background:#ef4444;color:#fff}
-    .hidden{display:none}
-    table{width:100%;border-collapse:collapse;margin-top:1rem}
-    th{background:#f9fafb;padding:0.75rem;text-align:left;border-bottom:1px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:#4b5563}
-    td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.95rem}
-    .total-display{text-align:right;margin-top:1.5rem;padding-top:1rem;border-top:2px solid #e5e7eb}
-    @media print{.no-print{display:none!important} body{background:white} .card{box-shadow:none;border:none;padding:0}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f3f4f6}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.login-box{background:#fff;padding:3rem;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:100%;text-align:center}
+.login-box h1{margin-bottom:2rem;color:#1f2937}
+.login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:1rem}
+.login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:0.5rem;font-size:1rem;font-weight:600;cursor:pointer}
+.login-box button:hover{background:#1d4ed8}
+.error{color:#ef4444;margin-top:0.5rem;font-size:0.875rem}
+.success{color:#10b981;margin-top:0.5rem;font-size:0.875rem}
+.loading{color:#2563eb;margin-top:0.5rem;font-size:0.875rem}
+.header{background:#fff;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.header h1{color:#1f2937;font-size:1.5rem}
+.sync-status{font-size:0.875rem;color:#059669;background:#d1fae5;padding:0.5rem 1rem;border-radius:0.5rem}
+.logout-btn{background:#ef4444;color:#fff;border:none;padding:0.5rem 1rem;border-radius:0.5rem;cursor:pointer;font-size:0.875rem}
+.logout-btn:hover{background:#dc2626}
+.tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:0.25rem;overflow-x:auto}
+.tab{padding:1rem 1.5rem;border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;font-size:0.95rem;font-weight:500;color:#6b7280;white-space:nowrap}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb}
+.content{padding:1.5rem;max-width:1200px;margin:0 auto}
+.card{background:#fff;border-radius:0.5rem;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
+.card h2{margin-bottom:1.5rem;color:#1f2937}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-bottom:1.5rem}
+.form-group label{display:block;font-size:0.875rem;font-weight:500;color:#374151;margin-bottom:0.25rem}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:0.375rem;font-size:1rem}
+.form-group textarea{min-height:80px;resize:vertical;font-family:inherit}
+.btn{padding:0.5rem 1rem;border-radius:0.375rem;border:none;font-weight:500;cursor:pointer;font-size:0.95rem}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-success{background:#10b981;color:#fff}
+.btn-success:hover{background:#059669}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-gray{background:#6b7280;color:#fff}
+.btn-gray:hover{background:#4b5563}
+.action-btns{display:flex;gap:0.5rem;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;margin-top:1rem}
+th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.875rem;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb}
+td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.95rem}
+.add-section{background:#f9fafb;padding:1rem;border-radius:0.5rem;margin-bottom:1.5rem}
+.add-section h3{font-size:1rem;margin-bottom:0.75rem;color:#374151}
+.total-row{font-weight:600;font-size:1.25rem;padding-top:1rem;border-top:2px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
+.warning-box{background:#fef3c7;border-left:4px solid #f59e0b;padding:1rem;margin:1rem 0;border-radius:0.375rem}
+.warning-box p{color:#92400e;margin:0}
+.validation-error{background:#fee2e2;border-left:4px solid #ef4444;padding:1rem;margin:1rem 0;border-radius:0.375rem}
+.validation-error p{color:#991b1b;margin:0;font-weight:500}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;padding:1rem;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:#fff;border-radius:0.5rem;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 25px rgba(0,0,0,0.3)}
+.modal-header{padding:1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:2rem}
+.hidden{display:none}
+.checkbox-field{display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0}
+.checkbox-field input[type="checkbox"]{width:auto;cursor:pointer}
+@media print{body *{visibility:hidden}#printContent,#printContent *{visibility:visible}#printContent{position:absolute;left:0;top:0;width:100%}.no-print{display:none!important}}
+@media (max-width:768px){.form-grid{grid-template-columns:1fr}.header{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
-    <div class="login-box">
-        <h1>CraftyArt Portal</h1>
-        <input type="text" id="username" placeholder="Username" value="craftyartdesign1">
-        <input type="password" id="password" placeholder="Password" value="Crafty1Art!">
-        <button onclick="login()">Login</button>
-    </div>
+<div class="login-box">
+<h1>Login</h1>
+<p style="color:#6b7280;margin-bottom:2rem">Invoice & Inventory System</p>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<div id="loginError" class="error"></div>
+<div id="loginLoading" class="loading" style="display:none">Connecting to server...</div>
+<button onclick="login()">Login</button>
+</div>
 </div>
 
 <div id="mainApp" class="hidden">
-    <div class="header no-print">
-        <div style="display:flex;align-items:center;gap:1rem">
-            <div style="background:#2563eb;color:white;padding:0.5rem;border-radius:0.5rem;font-weight:bold">CA</div>
-            <h1>Management System</h1>
-        </div>
-        <button class="btn btn-danger" onclick="location.reload()">Logout</button>
-    </div>
+<div class="header">
+<h1>Invoice & Inventory System</h1>
+<div style="display:flex;gap:1rem;align-items:center">
+<div class="sync-status" id="syncStatus">Connected to Cloud ☁️</div>
+<button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+</div>
 
-    <div class="tabs no-print">
-        <button class="tab active" onclick="showTab('invoice', event)">Invoice Generator</button>
-        <button class="tab" onclick="showTab('inventory', event)">Inventory</button>
-        <button class="tab" onclick="showTab('customers', event)">Customers</button>
-        <button class="tab" onclick="showTab('lookup', event)">Invoice Lookup</button>
-        <button class="tab" onclick="showTab('admin', event)">Admin</button>
-    </div>
+<div class="tabs">
+<button class="tab active" onclick="showTab('invoice')">Invoice Generator</button>
+<button class="tab" onclick="showTab('inventory')">Inventory</button>
+<button class="tab" onclick="showTab('customers')">Customers</button>
+<button class="tab" onclick="showTab('lookup')">Invoice Lookup</button>
+<button class="tab" onclick="showTab('admin')">Admin</button>
+</div>
 
-    <div class="content">
-        <div id="invoice" class="card">
-            <h2>Create New Invoice</h2>
-            <div class="form-grid">
-                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
-                <div class="form-group"><label>Date</label><input type="text" id="invDate" readonly></div>
-                <div class="form-group"><label>Customer</label><select id="invCustomer" onchange="updateCustInfo()"><option>Select Customer</option></select></div>
-            </div>
-            <div class="form-group"><label>Quick Add SKU</label><input type="text" id="skuInput" placeholder="Type SKU and press Enter" onkeypress="if(event.key==='Enter') addToInvoice()"></div>
-            <table><thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th class="no-print">Action</th></tr></thead><tbody id="invoiceItems"></tbody></table>
-            <div class="total-display">
-                <p>Tax (8.875%): <span id="taxDisplay">$0.00</span></p>
-                <h2 style="color:#2563eb">Total: <span id="totalDisplay">$0.00</span></h2>
-                <div style="margin-top:1rem" class="no-print">
-                    <button class="btn btn-success" onclick="saveAndSyncInvoice()">Save & Sync to Sheet</button>
-                    <button class="btn btn-primary" onclick="window.print()">Print Invoice</button>
-                </div>
-            </div>
-        </div>
+<div class="content">
+<div id="invoice" class="card">
+<h2>Create New Invoice</h2>
+<div class="form-grid">
+<div class="form-group"><label>Invoice Number</label><input type="text" id="invNum" readonly></div>
+<div class="form-group"><label>Date</label><input type="text" id="invDate"></div>
+<div class="form-group"><label>Customer Name</label><select id="invCustomer" onchange="updateCompany()"><option value="">Select Customer</option></select></div>
+<div class="form-group"><label>Company</label><select id="invCompany"><option value="">Select Company</option></select></div>
+<div class="form-group"><label>Employee</label><input type="text" id="invEmployee" readonly style="background:#f3f4f6;cursor:not-allowed"></div>
+</div>
+<div class="form-group"><label>Add Item by SKU</label><div style="display:flex;gap:0.5rem"><input type="text" id="skuInput" placeholder="Scan or enter SKU" style="flex:1"><button class="btn btn-primary" onclick="addToInvoice()">Add</button></div></div>
+<div id="skuWarning" class="warning-box" style="display:none"><p>Warning: <span id="warningText"></span></p></div>
+<div id="validationError" class="validation-error" style="display:none"><p>Error: <span id="validationText"></span></p></div>
+<table><thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Tax Exempt</th><th>Total</th><th>Action</th></tr></thead><tbody id="invoiceItems"></tbody></table>
+<div class="total-row">
+<div>
+<div>Subtotal: $<span id="invoiceSubtotal">0.00</span></div>
+<div style="font-size:1rem">Tax (8.875%): $<span id="invoiceTax">0.00</span></div>
+<div style="margin-top:0.5rem">Total: $<span id="invoiceTotal">0.00</span></div>
+</div>
+<button class="btn btn-success" onclick="saveInvoice()">Save Invoice</button>
+</div>
+</div>
 
-        <div id="inventory" class="card hidden">
-            <h2>Inventory Management</h2>
-            <div class="form-grid">
-                <div class="form-group"><label>SKU</label><input type="text" id="newSKU"></div>
-                <div class="form-group"><label>Product Name</label><input type="text" id="newItem"></div>
-                <div class="form-group"><label>Price ($)</label><input type="number" id="newPrice"></div>
-            </div>
-            <button class="btn btn-primary" onclick="addInventoryItem()">Add to Inventory</button>
-            <table style="margin-top:1.5rem"><thead><tr><th>SKU</th><th>Product</th><th>Price</th><th>Action</th></tr></thead><tbody id="inventoryList"></tbody></table>
-        </div>
+<div id="inventory" class="card" style="display:none">
+<h2>Inventory Management</h2>
+<div class="add-section">
+<h3 id="invTitle">Add New Item</h3>
+<div class="form-grid">
+<input type="text" id="newSKU" placeholder="SKU">
+<input type="text" id="newItem" placeholder="Item Name">
+<input type="number" id="newPrice" placeholder="Price" step="0.01">
+<div class="form-group">
+<label>Size</label>
+<select id="newSize" onchange="toggleCustomSize()">
+<option value="">No Size</option>
+<option value="XS">XS</option>
+<option value="S">S</option>
+<option value="M">M</option>
+<option value="L">L</option>
+<option value="XL">XL</option>
+<option value="2XL">2XL</option>
+<option value="3XL">3XL</option>
+<option value="4XL">4XL</option>
+<option value="5XL">5XL</option>
+<option value="Other">Other (Custom Dimensions)</option>
+</select>
+</div>
+</div>
+<div id="customSizeFields" style="display:none;margin-top:1rem">
+<div class="form-grid" style="grid-template-columns:1fr 1fr">
+<div class="form-group">
+<label>Width</label>
+<input type="text" id="customWidth" placeholder="e.g., 24 inches">
+</div>
+<div class="form-group">
+<label>Height</label>
+<input type="text" id="customHeight" placeholder="e.g., 36 inches">
+</div>
+</div>
+</div>
+<div class="checkbox-field">
+<input type="checkbox" id="newTaxExempt">
+<label for="newTaxExempt">Tax Exempt Item</label>
+</div>
+<div class="action-btns">
+<button class="btn btn-primary" onclick="addInventoryItem()"><span id="invBtnText">+ Add Item</span></button>
+<button class="btn btn-gray" id="cancelInvBtn" style="display:none" onclick="cancelEditInventory()">Cancel</button>
+</div>
+</div>
+<table><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody id="inventoryList"></tbody></table>
+</div>
 
-        <div id="customers" class="card hidden">
-            <h2>Customer Database</h2>
-            <div class="form-grid">
-                <div class="form-group"><label>Name</label><input type="text" id="cName"></div>
-                <div class="form-group"><label>Email</label><input type="text" id="cEmail"></div>
-                <div class="form-group"><label>Phone</label><input type="text" id="cPhone"></div>
-            </div>
-            <div class="form-group"><label>Full Shipping Address</label><textarea id="cAddress" rows="2" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:0.375rem"></textarea></div>
-            <button class="btn btn-primary" style="margin-top:1rem" onclick="addAndSyncCustomer()">Save & Sync Customer</button>
-            <table style="margin-top:1.5rem"><thead><tr><th>Name</th><th>Email</th><th>Address</th><th>Action</th></tr></thead><tbody id="customerList"></tbody></table>
-        </div>
+<div id="customers" class="card" style="display:none">
+<h2>Customer Database</h2>
+<div class="add-section">
+<h3 id="custTitle">Add New Customer</h3>
+<div class="form-grid">
+<input type="text" id="custName" placeholder="Customer Name">
+<input type="text" id="custCompany" placeholder="Company">
+<input type="email" id="custEmail" placeholder="Email">
+<input type="tel" id="custPhone" placeholder="Phone">
+</div>
+<div class="action-btns">
+<button class="btn btn-primary" onclick="addCustomer()"><span id="custBtnText">+ Add Customer</span></button>
+<button class="btn btn-gray" id="cancelCustBtn" style="display:none" onclick="cancelEditCustomer()">Cancel</button>
+</div>
+</div>
+<table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="customerList"></tbody></table>
+</div>
 
-        <div id="lookup" class="card hidden">
-            <h2>Invoice History</h2>
-            <table><thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead><tbody id="invoiceHistory"></tbody></table>
-        </div>
+<div id="lookup" class="card" style="display:none">
+<h2>Invoice Lookup</h2>
+<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+<div class="form-group"><label>Search by Date</label><input type="text" id="searchDate" placeholder="12/26/2024" oninput="filterInvoices()"></div>
+<div class="form-group"><label>Search by Year</label><input type="text" id="searchYear" placeholder="2024" oninput="filterInvoices()"></div>
+<div class="form-group"><label>Search by Customer</label><input type="text" id="searchCustomer" placeholder="Customer name" oninput="filterInvoices()"></div>
+<div class="form-group"><label>Search by Company</label><input type="text" id="searchCompany" placeholder="Company name" oninput="filterInvoices()"></div>
+<div class="form-group"><label>Search by Employee</label><select id="searchEmployee" onchange="filterInvoices()"><option value="">All Employees</option></select></div>
+</div>
+<button class="btn btn-gray" onclick="clearFilters()">Clear All Filters</button>
+<table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Total</th><th>Actions</th></tr></thead><tbody id="invoiceList"></tbody></table>
+</div>
 
-        <div id="admin" class="card hidden">
-            <h2>Admin Controls</h2>
-            <div style="background:#f8fafc; padding:1rem; border-radius:0.5rem; border:1px solid #e2e8f0">
-                <p><strong>Cloud Connection:</strong> Active ✅</p>
-                <p><strong>Sheet URL:</strong> ...Mm2ySSc7mlw/exec</p>
-            </div>
-            <button class="btn btn-danger" style="margin-top:1rem" onclick="localStorage.clear();location.reload();">Clear All Local Data</button>
-        </div>
-    </div>
+<div id="admin" class="card" style="display:none">
+<h2>Admin Panel</h2>
+<div class="add-section">
+<h3>User Management</h3>
+<p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem">Add users and set their permissions</p>
+<div class="form-grid">
+<div class="form-group"><label>Username</label><input type="text" id="newUsername" placeholder="Username"></div>
+<div class="form-group"><label>Password</label><input type="password" id="newUserPass" placeholder="Password"></div>
+<div class="form-group"><label>Employee Name (Display Name)</label><input type="text" id="newDisplayName" placeholder="Full Name"></div>
+<div class="form-group">
+<label>Role</label>
+<select id="newUserRole" onchange="updatePermissionCheckboxes()">
+<option value="Admin">Admin (Full Access)</option>
+<option value="Manager">Manager (View & Edit All)</option>
+<option value="Employee">Employee (Limited Access)</option>
+</select>
+</div>
+</div>
+<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:0.375rem;padding:0.75rem;margin:1rem 0">
+<p style="font-size:0.875rem;color:#0369a1;margin:0"><strong>Permission Levels:</strong></p>
+<p style="font-size:0.875rem;color:#0369a1;margin:0.25rem 0">• <strong>Admin:</strong> Full access to all features including user management</p>
+<p style="font-size:0.875rem;color:#0369a1;margin:0.25rem 0">• <strong>Manager:</strong> Can view and edit invoices, inventory, customers</p>
+<p style="font-size:0.875rem;color:#0369a1;margin:0.25rem 0">• <strong>Employee:</strong> Can create invoices and view data only</p>
+</div>
+<div class="checkbox-field">
+<input type="checkbox" id="canEditInventory">
+<label for="canEditInventory">Can Edit Inventory</label>
+</div>
+<div class="checkbox-field">
+<input type="checkbox" id="canEditCustomers">
+<label for="canEditCustomers">Can Edit Customers</label>
+</div>
+<button class="btn btn-primary" onclick="addUser()">+ Add User</button>
+<table style="margin-top:1.5rem"><thead><tr><th>Username</th><th>Employee Name</th><th>Role</th><th>Edit Inventory</th><th>Edit Customers</th><th>Actions</th></tr></thead><tbody id="userList"></tbody></table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="printModal" class="modal">
+<div class="modal-content">
+<div class="modal-header no-print">
+<h2>Invoice Preview</h2>
+<button onclick="closePrint()" style="background:none;border:none;font-size:1.5rem;cursor:pointer">×</button>
+</div>
+<div class="modal-body no-print" style="display:flex;gap:1rem">
+<button class="btn btn-primary" onclick="window.print()">Print</button>
+<button class="btn btn-gray" onclick="closePrint()">Close</button>
+</div>
+<div id="printContent" class="modal-body"></div>
+</div>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFnKv0LcAiZTRfQDItCXuoI5cT5i-aXWRKmDQAOIacJyR5uZ6Ns1R2Mm2ySSc7mlw/exec';
+// ============================================
+// GOOGLE SHEETS API CONNECTION
+// ============================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0r6LzOvsFDD47dAIMdQ8m8XudCfLkCoA9lOYiNAOCG1NqjpRrSWjbLWeHm1FSAX52/exec';
+
+let currentUser = null;
+let inventory = [];
+let customers = [];
+let invoices = [];
+let users = [];
+let settings = {};
+let currentInvoice = {items: [], subtotal: 0, tax: 0, total: 0};
+let editingInventoryIndex = -1;
+let editingCustomerIndex = -1;
+
+// ============================================
+// API HELPER FUNCTIONS
+// ============================================
+
+async function callAPI(action, data = {}) {
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action, ...data})
+    });
     
-    let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-    let customers = JSON.parse(localStorage.getItem('customers')) || [];
-    let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+    // Note: no-cors means we can't read the response, but the request will go through
+    // We'll handle this by re-fetching data after mutations
+    return {success: true};
+  } catch (error) {
+    console.error('API Error:', error);
+    return {success: false, message: error.toString()};
+  }
+}
 
-    function login() {
-        if(document.getElementById('username').value === 'craftyartdesign1') {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            initApp();
-        } else { alert('Incorrect Login'); }
+async function loadAllData() {
+  updateSyncStatus('Syncing with cloud...', '#2563eb');
+  
+  try {
+    const response = await fetch(SCRIPT_URL + '?action=getAll');
+    const result = await response.json();
+    
+    if (result.success) {
+      inventory = result.data.inventory || [];
+      customers = result.data.customers || [];
+      invoices = result.data.invoices || [];
+      users = result.data.users || [];
+      settings = result.data.settings || {};
+      updateSyncStatus('Connected to Cloud ☁️', '#059669');
+      return true;
     }
+  } catch (error) {
+    console.error('Load error:', error);
+    updateSyncStatus('Connection error', '#ef4444');
+    return false;
+  }
+}
 
-    function showTab(id, e) {
-        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        if(id === 'inventory') renderInventory();
-        if(id === 'customers') renderCustomers();
-        if(id === 'lookup') renderHistory();
-    }
+function updateSyncStatus(message, color) {
+  const statusEl = document.getElementById('syncStatus');
+  if (statusEl) {
+    statusEl.textContent = message;
+    statusEl.style.background = color === '#059669' ? '#d1fae5' : color === '#ef4444' ? '#fee2e2' : '#dbeafe';
+    statusEl.style.color = color;
+  }
+}
 
-    // SYNC FUNCTION
-    async function sync(sheet, data) {
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet, data }) });
-        } catch (e) { console.error("Sync Error", e); }
-    }
+// ============================================
+// LOGIN
+// ============================================
 
-    // CUSTOMERS
-    function addAndSyncCustomer() {
-        let n = document.getElementById('cName').value;
-        let e = document.getElementById('cEmail').value;
-        let p = document.getElementById('cPhone').value;
-        let a = document.getElementById('cAddress').value;
-        customers.push({n, e, p, a});
-        localStorage.setItem('customers', JSON.stringify(customers));
-        sync('Customers', [n, e, p, a]);
-        alert('Customer Saved & Synced');
-        renderCustomers();
+async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const errorEl = document.getElementById('loginError');
+  const loadingEl = document.getElementById('loginLoading');
+  
+  if (!username || !password) {
+    errorEl.textContent = 'Please enter username and password';
+    return;
+  }
+  
+  errorEl.textContent = '';
+  loadingEl.style.display = 'block';
+  
+  try {
+    const response = await fetch(SCRIPT_URL + '?action=login&username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password));
+    const result = await response.json();
+    
+    loadingEl.style.display = 'none';
+    
+    if (result.success) {
+      currentUser = result.data;
+      sessionStorage.setItem('loggedIn', 'true');
+      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      await loadAllData();
+      
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      updateTabVisibility();
+      showTab('invoice');
+      setupInvoice();
+    } else {
+      errorEl.textContent = result.message || 'Invalid username or password';
     }
+  } catch (error) {
+    loadingEl.style.display = 'none';
+    errorEl.textContent = 'Connection error. Please try again.';
+    console.error('Login error:', error);
+  }
+}
 
-    function renderCustomers() {
-        let h = '';
-        customers.forEach(c => h += `<tr><td>${c.n}</td><td>${c.e}</td><td>${c.a}</td><td><button onclick="deleteCust()">Del</button></td></tr>`);
-        document.getElementById('customerList').innerHTML = h;
-    }
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('loggedIn');
+  sessionStorage.removeItem('currentUser');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
 
-    // INVOICE
-    function initApp() {
-        document.getElementById('invNum').value = 'INV-' + Date.now().toString().slice(-6);
-        document.getElementById('invDate').value = new Date().toLocaleDateString();
-        let sel = document.getElementById('invCustomer');
-        sel.innerHTML = '<option>Select Customer</option>';
-        customers.forEach(c => sel.innerHTML += `<option>${c.n}</option>`);
+function checkAuth() {
+  if (sessionStorage.getItem('loggedIn') === 'true') {
+    const userData = sessionStorage.getItem('currentUser');
+    if (userData) {
+      currentUser = JSON.parse(userData);
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      updateTabVisibility();
+      loadAllData().then(() => {
+        showTab('invoice');
+      });
     }
+  }
+}
 
-    function saveAndSyncInvoice() {
-        let num = document.getElementById('invNum').value;
-        let cust = document.getElementById('invCustomer').value;
-        let tot = document.getElementById('totalDisplay').innerText;
-        invoices.push({num, date: new Date().toLocaleDateString(), cust, tot});
-        localStorage.setItem('invoices', JSON.stringify(invoices));
-        sync('Invoices', [num, cust, tot]);
-        alert('Invoice Synced to Sheet');
-        location.reload();
-    }
+// ============================================
+// TAB MANAGEMENT
+// ============================================
 
-    // INVENTORY & OTHER RE-RENDERERS (Kept from Test7)
-    function addInventoryItem() {
-        inventory.push({sku: document.getElementById('newSKU').value, item: document.getElementById('newItem').value, price: document.getElementById('newPrice').value});
-        localStorage.setItem('inventory', JSON.stringify(inventory));
-        renderInventory();
-    }
+function updateTabVisibility() {
+  const adminTab = document.querySelector('.tabs button:nth-child(5)');
+  if (currentUser.role !== 'Admin') {
+    adminTab.style.display = 'none';
+  } else {
+    adminTab.style.display = 'block';
+  }
+}
 
-    function renderInventory() {
-        let h = '';
-        inventory.forEach(i => h += `<tr><td>${i.sku}</td><td>${i.item}</td><td>$${i.price}</td><td><button>Del</button></td></tr>`);
-        document.getElementById('inventoryList').innerHTML = h;
+function showTab(tab) {
+  document.querySelectorAll('.card').forEach(c => c.style.display = 'none');
+  document.getElementById(tab).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  
+  const tabButtons = document.querySelectorAll('.tab');
+  tabButtons.forEach(t => {
+    if (t.textContent.toLowerCase().includes(tab.toLowerCase())) {
+      t.classList.add('active');
     }
+  });
+  
+  if (tab === 'admin' && currentUser.role !== 'Admin') {
+    alert('Access denied. Admin privileges required.');
+    showTab('invoice');
+    return;
+  }
+  
+  if (tab === 'invoice') setupInvoice();
+  if (tab === 'inventory') renderInventory();
+  if (tab === 'customers') renderCustomers();
+  if (tab === 'lookup') renderInvoiceList();
+  if (tab === 'admin') renderUserList();
+}
 
-    function renderHistory() {
-        let h = '';
-        invoices.forEach(i => h += `<tr><td>${i.num}</td><td>${i.date}</td><td>${i.cust}</td><td>${i.tot}</td><td><button>Print</button></td></tr>`);
-        document.getElementById('invoiceHistory').innerHTML = h;
+// ============================================
+// INVOICE FUNCTIONS
+// ============================================
+
+function generateInvoiceNumber() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayInvoices = invoices.filter(inv => inv.date === `${month}/${day}/${year}`);
+  const sequence = String(todayInvoices.length + 1).padStart(3, '0');
+  return `INV-${year}${month}${day}${sequence}`;
+}
+
+function setupInvoice() {
+  document.getElementById('invNum').value = generateInvoiceNumber();
+  document.getElementById('invDate').value = new Date().toLocaleDateString('en-US');
+  
+  let custSel = document.getElementById('invCustomer');
+  custSel.innerHTML = '<option value="">Select Customer</option>';
+  customers.forEach((c, i) => custSel.innerHTML += `<option value="${i}">${c.name}</option>`);
+  
+  document.getElementById('invCompany').innerHTML = '<option value="">Select Company</option>';
+  customers.forEach(c => document.getElementById('invCompany').innerHTML += `<option value="${c.company}">${c.company}</option>`);
+  
+  let employeeField = document.getElementById('invEmployee');
+  if (currentUser && currentUser.displayName) {
+    employeeField.value = currentUser.displayName;
+  } else if (currentUser) {
+    employeeField.value = currentUser.username;
+  }
+  
+  currentInvoice = {items: [], subtotal: 0, tax: 0, total: 0};
+  renderInvoiceItems();
+  document.getElementById('validationError').style.display = 'none';
+}
+
+function updateCompany() {
+  let idx = document.getElementById('invCustomer').value;
+  if (idx !== '') {
+    document.getElementById('invCompany').value = customers[idx].company;
+  }
+}
+
+function addToInvoice() {
+  let sku = document.getElementById('skuInput').value.toUpperCase().trim();
+  if (!sku) return;
+  
+  let item = inventory.find(i => i.sku === sku);
+  let warningDiv = document.getElementById('skuWarning');
+  
+  if (!item) {
+    document.getElementById('warningText').textContent = `SKU "${sku}" not found in inventory`;
+    warningDiv.style.display = 'block';
+    setTimeout(() => warningDiv.style.display = 'none', 3000);
+    return;
+  }
+  
+  let existing = currentInvoice.items.find(i => i.sku === sku);
+  if (existing) {
+    document.getElementById('warningText').textContent = `SKU "${sku}" is already in this invoice`;
+    warningDiv.style.display = 'block';
+    setTimeout(() => warningDiv.style.display = 'none', 3000);
+    return;
+  }
+  
+  currentInvoice.items.push({
+    sku: item.sku,
+    item: item.item,
+    size: item.size || '',
+    quantity: 1,
+    price: item.price,
+    taxExempt: item.taxExempt || false
+  });
+  
+  renderInvoiceItems();
+  document.getElementById('skuInput').value = '';
+  document.getElementById('validationError').style.display = 'none';
+}
+
+function renderInvoiceItems() {
+  let html = '';
+  currentInvoice.subtotal = 0;
+  
+  currentInvoice.items.forEach((item, i) => {
+    let lineTotal = item.quantity * item.price;
+    currentInvoice.subtotal += lineTotal;
+    let taxExemptCheckbox = item.taxExempt ? 'checked' : '';
+    let taxExemptDisabled = currentUser.role !== 'Admin' ? 'disabled' : '';
+    let sizeDisplay = item.size || '-';
+    
+    html += `<tr>
+      <td>${item.sku}</td>
+      <td>${item.item}</td>
+      <td>${sizeDisplay}</td>
+      <td><input type="number" value="${item.quantity}" min="1" style="width:60px" onchange="updateQty(${i},this.value)"></td>
+      <td>${item.price.toFixed(2)}</td>
+      <td><input type="checkbox" ${taxExemptCheckbox} ${taxExemptDisabled} onchange="toggleTaxExempt(${i},this.checked)"></td>
+      <td>${lineTotal.toFixed(2)}</td>
+      <td><button class="btn btn-danger" onclick="removeInvoiceItem(${i})">X</button></td>
+    </tr>`;
+  });
+  
+  document.getElementById('invoiceItems').innerHTML = html;
+  calculateInvoiceTotal();
+}
+
+function toggleTaxExempt(idx, checked) {
+  if (currentUser.role !== 'Admin') {
+    alert('Only Admin users can modify tax exempt status.');
+    renderInvoiceItems();
+    return;
+  }
+  currentInvoice.items[idx].taxExempt = checked;
+  calculateInvoiceTotal();
+}
+
+function calculateInvoiceTotal() {
+  currentInvoice.tax = 0;
+  currentInvoice.items.forEach(item => {
+    if (!item.taxExempt) {
+      let itemTotal = item.quantity * item.price;
+      currentInvoice.tax += itemTotal * 0.08875;
     }
+  });
+  currentInvoice.total = currentInvoice.subtotal + currentInvoice.tax;
+  document.getElementById('invoiceSubtotal').textContent = currentInvoice.subtotal.toFixed(2);
+  document.getElementById('invoiceTax').textContent = currentInvoice.tax.toFixed(2);
+  document.getElementById('invoiceTotal').textContent = currentInvoice.total.toFixed(2);
+}
+
+function updateQty(idx, qty) {
+  currentInvoice.items[idx].quantity = parseInt(qty) || 1;
+  renderInvoiceItems();
+}
+
+function removeInvoiceItem(idx) {
+  currentInvoice.items.splice(idx, 1);
+  renderInvoiceItems();
+}
+
+async function saveInvoice() {
+  let custIdx = document.getElementById('invCustomer').value;
+  let employee = document.getElementById('invEmployee').value;
+  let missingFields = [];
+  let errorDiv = document.getElementById('validationError');
+  
+  if (custIdx === '') missingFields.push('Customer Name');
+  if (employee === '') missingFields.push('Employee Name');
+  if (currentInvoice.items.length === 0) missingFields.push('Invoice Items');
+  
+  if (missingFields.length > 0) {
+    let errorMsg = 'Please fill in the following to continue: ' + missingFields.join(', ');
+    document.getElementById('validationText').textContent = errorMsg;
+    errorDiv.style.display = 'block';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return;
+  }
+  
+  updateSyncStatus('Saving invoice...', '#2563eb');
+  
+  const invoice = {
+    invoiceNum: document.getElementById('invNum').value,
+    date: document.getElementById('invDate').value,
+    customer: customers[custIdx].name,
+    company: customers[custIdx].company,
+    employee: employee,
+    items: [...currentInvoice.items],
+    subtotal: currentInvoice.subtotal,
+    tax: currentInvoice.tax,
+    total: currentInvoice.total
+  };
+  
+  await callAPI('saveInvoice', {invoice});
+  await loadAllData();
+  
+  errorDiv.style.display = 'none';
+  alert('Invoice saved to cloud!');
+  setupInvoice();
+}
+
+// ============================================
+// INVENTORY FUNCTIONS
+// ============================================
+
+function toggleCustomSize() {
+  let sizeSelect = document.getElementById('newSize');
+  let customFields = document.getElementById('customSizeFields');
+  if (sizeSelect.value === 'Other') {
+    customFields.style.display = 'block';
+  } else {
+    customFields.style.display = 'none';
+    document.getElementById('customWidth').value = '';
+    document.getElementById('customHeight').value = '';
+  }
+}
+
+async function addInventoryItem() {
+  if (!currentUser.canEditInventory) {
+    alert('You do not have permission to edit inventory.');
+    return;
+  }
+  
+  let sku = document.getElementById('newSKU').value.toUpperCase().trim();
+  let item = document.getElementById('newItem').value.trim();
+  let price = parseFloat(document.getElementById('newPrice').value);
+  let taxExempt = document.getElementById('newTaxExempt').checked;
+  let sizeSelect = document.getElementById('newSize').value;
+  let size = '';
+  
+  if (sizeSelect === 'Other') {
+    let width = document.getElementById('customWidth').value.trim();
+    let height = document.getElementById('customHeight').value.trim();
+    if (width && height) {
+      size = `${width} x ${height}`;
+    } else if (width || height) {
+      alert('Please enter both width and height for custom dimensions');
+      return;
+    }
+  } else {
+    size = sizeSelect;
+  }
+  
+  if (!sku || !item || !price) {
+    alert('Fill all fields');
+    return;
+  }
+  
+  if (editingInventoryIndex === -1) {
+    let existing = inventory.find(i => i.sku === sku);
+    if (existing) {
+      alert(`SKU "${sku}" already exists!`);
+      return;
+    }
+  }
+  
+  updateSyncStatus('Saving inventory...', '#2563eb');
+  
+  await callAPI('saveInventory', {
+    item: {sku, item, price, taxExempt, size},
+    index: editingInventoryIndex
+  });
+  
+  await loadAllData();
+  
+  editingInventoryIndex = -1;
+  document.getElementById('newSKU').value = '';
+  document.getElementById('newItem').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newTaxExempt').checked = false;
+  document.getElementById('newSize').value = '';
+  document.getElementById('customWidth').value = '';
+  document.getElementById('customHeight').value = '';
+  document.getElementById('customSizeFields').style.display = 'none';
+  document.getElementById('invTitle').textContent = 'Add New Item';
+  document.getElementById('invBtnText').textContent = '+ Add Item';
+  document.getElementById('cancelInvBtn').style.display = 'none';
+  
+  renderInventory();
+}
+
+function editInventory(idx) {
+  if (!currentUser.canEditInventory) {
+    alert('You do not have permission to edit inventory.');
+    return;
+  }
+  
+  let item = inventory[idx];
+  document.getElementById('newSKU').value = item.sku;
+  document.getElementById('newItem').value = item.item;
+  document.getElementById('newPrice').value = item.price;
+  document.getElementById('newTaxExempt').checked = item.taxExempt || false;
+  
+  let size = item.size || '';
+  if (size && size.includes(' x ')) {
+    document.getElementById('newSize').value = 'Other';
+    let parts = size.split(' x ');
+    document.getElementById('customWidth').value = parts[0];
+    document.getElementById('customHeight').value = parts[1];
+    document.getElementById('customSizeFields').style.display = 'block';
+  } else {
+    document.getElementById('newSize').value = size;
+    document.getElementById('customSizeFields').style.display = 'none';
+  }
+  
+  editingInventoryIndex = idx;
+  document.getElementById('invTitle').textContent = 'Edit Item';
+  document.getElementById('invBtnText').textContent = 'Update Item';
+  document.getElementById('cancelInvBtn').style.display = 'inline-block';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function cancelEditInventory() {
+  editingInventoryIndex = -1;
+  document.getElementById('newSKU').value = '';
+  document.getElementById('newItem').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newTaxExempt').checked = false;
+  document.getElementById('newSize').value = '';
+  document.getElementById('customWidth').value = '';
+  document.getElementById('customHeight').value = '';
+  document.getElementById('customSizeFields').style.display = 'none';
+  document.getElementById('invTitle').textContent = 'Add New Item';
+  document.getElementById('invBtnText').textContent = '+ Add Item';
+  document.getElementById('cancelInvBtn').style.display = 'none';
+}
+
+async function deleteInventory(idx) {
+  if (!currentUser.canEditInventory) {
+    alert('You do not have permission to delete inventory items.');
+    return;
+  }
+  
+  if (confirm('Delete this item from inventory?')) {
+    updateSyncStatus('Deleting...', '#2563eb');
+    await callAPI('deleteItem', {sheetName: 'Inventory', index: idx});
+    await loadAllData();
+    renderInventory();
+  }
+}
+
+function renderInventory() {
+  let html = '';
+  let canEdit = currentUser.canEditInventory;
+  
+  inventory.forEach((item, i) => {
+    let taxStatus = item.taxExempt ? 'Yes' : '';
+    let sizeDisplay = item.size || '-';
+    let actionButtons = canEdit ? 
+      `<button class="btn btn-primary" onclick="editInventory(${i})" style="padding:0.25rem 0.75rem;font-size:0.85rem">Edit</button> 
+       <button class="btn btn-danger" onclick="deleteInventory(${i})" style="padding:0.25rem 0.75rem;font-size:0.85rem">Delete</button>` :
+      `<span style="color:#6b7280;font-size:0.875rem">View Only</span>`;
+    
+    html += `<tr>
+      <td>${item.sku}</td>
+      <td>${item.item}</td>
+      <td>${item.price.toFixed(2)}</td>
+      <td>${sizeDisplay}</td>
+      <td style="text-align:center">${taxStatus}</td>
+      <td>${actionButtons}</td>
+    </tr>`;
+  });
+  
+  document.getElementById('inventoryList').innerHTML = html;
+}
+
+// ============================================
+// CUSTOMER FUNCTIONS
+// ============================================
+
+async function addCustomer() {
+  let name = document.getElementById('custName').value.trim();
+  let company = document.getElementById('custCompany').value.trim();
+  let email = document.getElementById('custEmail').value.trim();
+  let phone = document.getElementById('custPhone').value.trim();
+  
+  if (!name || !company) {
+    alert('Name and Company required');
+    return;
+  }
+  
+  if (editingCustomerIndex >= 0 && !currentUser.canEditCustomers) {
+    alert('You do not have permission to edit customers.');
+    return;
+  }
+  
+  updateSyncStatus('Saving customer...', '#2563eb');
+  
+  await callAPI('saveCustomer', {
+    customer: {name, company, email, phone},
+    index: editingCustomerIndex
+  });
+  
+  await loadAllData();
+  
+  editingCustomerIndex = -1;
+  document.getElementById('custName').value = '';
+  document.getElementById('custCompany').value = '';
+  document.getElementById('custEmail').value = '';
+  document.getElementById('custPhone').value = '';
+  document.getElementById('custTitle').textContent = 'Add New Customer';
+  document.getElementById('custBtnText').textContent = '+ Add Customer';
+  document.getElementById('cancelCustBtn').style.display = 'none';
+  
+  renderCustomers();
+}
+
+function editCustomer(idx) {
+  if (!currentUser.canEditCustomers) {
+    alert('You do not have permission to edit customers.');
+    return;
+  }
+  
+  let c = customers[idx];
+  document.getElementById('custName').value = c.name;
+  document.getElementById('custCompany').value = c.company;
+  document.getElementById('custEmail').value = c.email;
+  document.getElementById('custPhone').value = c.phone;
+  editingCustomerIndex = idx;
+  document.getElementById('custTitle').textContent = 'Edit Customer';
+  document.getElementById('custBtnText').textContent = 'Update Customer';
+  document.getElementById('cancelCustBtn').style.display = 'inline-block';
+}
+
+function cancelEditCustomer() {
+  editingCustomerIndex = -1;
+  document.getElementById('custName').value = '';
+  document.getElementById('custCompany').value = '';
+  document.getElementById('custEmail').value = '';
+  document.getElementById('custPhone').value = '';
+  document.getElementById('custTitle').textContent = 'Add New Customer';
+  document.getElementById('custBtnText').textContent = '+ Add Customer';
+  document.getElementById('cancelCustBtn').style.display = 'none';
+}
+
+async function deleteCustomer(idx) {
+  if (!currentUser.canEditCustomers) {
+    alert('You do not have permission to delete customers.');
+    return;
+  }
+  
+  if (confirm('Delete this customer?')) {
+    updateSyncStatus('Deleting...', '#2563eb');
+    await callAPI('deleteItem', {sheetName: 'Customers', index: idx});
+    await loadAllData();
+    renderCustomers();
+  }
+}
+
+function renderCustomers() {
+  let html = '';
+  let canEdit = currentUser.canEditCustomers;
+  
+  customers.forEach((c, i) => {
+    let actionButtons = canEdit ?
+      `<button class="btn btn-primary" onclick="editCustomer(${i})">Edit</button> 
+       <button class="btn btn-danger" onclick="deleteCustomer(${i})">Delete</button>` :
+      `<span style="color:#6b7280;font-size:0.875rem">View Only</span>`;
+    
+    html += `<tr>
+      <td>${c.name}</td>
+      <td>${c.company}</td>
+      <td>${c.email}</td>
+      <td>${c.phone}</td>
+      <td>${actionButtons}</td>
+    </tr>`;
+  });
+  
+  document.getElementById('customerList').innerHTML = html;
+}
+
+// ============================================
+// INVOICE LOOKUP
+// ============================================
+
+function renderInvoiceList() {
+  let employeeSelect = document.getElementById('searchEmployee');
+  let currentValue = employeeSelect.value;
+  employeeSelect.innerHTML = '<option value="">All Employees</option>';
+  
+  let uniqueEmployees = new Set();
+  invoices.forEach(inv => {
+    if (inv.employee) uniqueEmployees.add(inv.employee);
+  });
+  
+  Array.from(uniqueEmployees).sort().forEach(emp => {
+    employeeSelect.innerHTML += `<option value="${emp}">${emp}</option>`;
+  });
+  
+  employeeSelect.value = currentValue;
+  
+  let filtered = invoices.filter(inv => {
+    let d = document.getElementById('searchDate').value;
+    let y = document.getElementById('searchYear').value;
+    let c = document.getElementById('searchCustomer').value.toLowerCase();
+    let co = document.getElementById('searchCompany').value.toLowerCase();
+    let e = document.getElementById('searchEmployee').value;
+    return (!d || inv.date.includes(d)) &&
+           (!y || inv.date.includes(y)) &&
+           (!c || inv.customer.toLowerCase().includes(c)) &&
+           (!co || inv.company.toLowerCase().includes(co)) &&
+           (!e || (inv.employee && inv.employee === e));
+  });
+  
+  let html = '';
+  filtered.forEach(inv => {
+    html += `<tr>
+      <td>${inv.invoiceNum}</td>
+      <td>${inv.date}</td>
+      <td>${inv.customer}</td>
+      <td>${inv.company}</td>
+      <td>${inv.employee || '-'}</td>
+      <td>${inv.total.toFixed(2)}</td>
+      <td><button class="btn btn-primary" onclick="printInvoice(${invoices.indexOf(inv)})">Print</button></td>
+    </tr>`;
+  });
+  
+  document.getElementById('invoiceList').innerHTML = html;
+}
+
+function filterInvoices() {
+  renderInvoiceList();
+}
+
+function clearFilters() {
+  document.getElementById('searchDate').value = '';
+  document.getElementById('searchYear').value = '';
+  document.getElementById('searchCustomer').value = '';
+  document.getElementById('searchCompany').value = '';
+  document.getElementById('searchEmployee').value = '';
+  renderInvoiceList();
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+function updatePermissionCheckboxes() {
+  let role = document.getElementById('newUserRole').value;
+  let canEditInv = document.getElementById('canEditInventory');
+  let canEditCust = document.getElementById('canEditCustomers');
+  
+  if (role === 'Admin' || role === 'Manager') {
+    canEditInv.checked = true;
+    canEditInv.disabled = true;
+    canEditCust.checked = true;
+    canEditCust.disabled = true;
+  } else {
+    canEditInv.disabled = false;
+    canEditCust.disabled = false;
+  }
+}
+
+async function addUser() {
+  let username = document.getElementById('newUsername').value.trim();
+  let password = document.getElementById('newUserPass').value;
+  let displayName = document.getElementById('newDisplayName').value.trim();
+  let role = document.getElementById('newUserRole').value;
+  let canEditInventory = document.getElementById('canEditInventory').checked;
+  let canEditCustomers = document.getElementById('canEditCustomers').checked;
+  
+  if (!username || !password) {
+    alert('Username and password required');
+    return;
+  }
+  
+  if (users.find(u => u.username === username)) {
+    alert('Username already exists');
+    return;
+  }
+  
+  if (role === 'Admin' || role === 'Manager') {
+    canEditInventory = true;
+    canEditCustomers = true;
+  }
+  
+  updateSyncStatus('Adding user...', '#2563eb');
+  
+  await callAPI('saveUser', {
+    user: {username, password, role, displayName, canEditInventory, canEditCustomers}
+  });
+  
+  await loadAllData();
+  
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newUserPass').value = '';
+  document.getElementById('newDisplayName').value = '';
+  document.getElementById('newUserRole').value = 'Admin';
+  document.getElementById('canEditInventory').checked = false;
+  document.getElementById('canEditCustomers').checked = false;
+  
+  renderUserList();
+}
+
+function renderUserList() {
+  let html = '';
+  
+  users.forEach((user, i) => {
+    let editInvStatus = user.canEditInventory ? 'Yes' : 'No';
+    let editCustStatus = user.canEditCustomers ? 'Yes' : 'No';
+    let displayName = user.displayName || '-';
+    
+    html += `<tr>
+      <td>${user.username}</td>
+      <td>${displayName}</td>
+      <td>${user.role}</td>
+      <td style="text-align:center">${editInvStatus}</td>
+      <td style="text-align:center">${editCustStatus}</td>
+      <td><span style="color:#6b7280;font-size:0.875rem">Managed in Google Sheets</span></td>
+    </tr>`;
+  });
+  
+  document.getElementById('userList').innerHTML = html;
+}
+
+// ============================================
+// PRINT INVOICE
+// ============================================
+
+function printInvoice(idx) {
+  let inv = invoices[idx];
+  let companyName = settings['Company Name'] || 'Crafty Art Design';
+  let tagline = settings['Tagline'] || "Let's stay crafty.";
+  
+  let itemsHtml = '';
+  inv.items.forEach(item => {
+    let sizeDisplay = item.size || '';
+    let taxExemptBadge = item.taxExempt ? '<span style="color:#059669;font-weight:600;font-size:0.75rem;margin-left:0.5rem;background:#d1fae5;padding:0.15rem 0.4rem;border-radius:0.25rem">Tax Exempt</span>' : '';
+    itemsHtml += `<tr>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb">${item.sku}</td>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb">${item.item}${taxExemptBadge}</td>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb">${sizeDisplay}</td>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:center">${item.quantity}</td>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:right">${item.price.toFixed(2)}</td>
+      <td style="padding:0.5rem;border:1px solid #e5e7eb;text-align:right">${(item.quantity * item.price).toFixed(2)}</td>
+    </tr>`;
+  });
+  
+  document.getElementById('printContent').innerHTML = `
+    <div style="padding:2rem;font-family:Arial,sans-serif">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2rem">
+        <div>
+          <div style="font-size:1.5rem;font-weight:bold">${companyName}</div>
+        </div>
+        <div style="text-align:right">
+          <h1 style="font-size:2rem;margin:0;color:#00537a">Invoice</h1>
+          <p style="font-size:0.9rem;color:#00537a;margin:0;font-weight:bold;font-style:italic">${tagline}</p>
+        </div>
+      </div>
+      <div style="background:#00537a;color:white;padding:0.5rem 1rem;font-weight:bold;margin-bottom:1rem">Bill To:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem">
+        <div>
+          <p style="margin:0.25rem 0;font-weight:600">${inv.customer}</p>
+          <p style="margin:0.25rem 0">${inv.company}</p>
+        </div>
+        <div>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Invoice #:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.invoiceNum}</td></tr>
+            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Date:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.date}</td></tr>
+            <tr><td style="padding:0.25rem;border:1px solid #ccc;background:#f9f9f9">Employee:</td><td style="padding:0.25rem;border:1px solid #ccc">${inv.employee || '-'}</td></tr>
+          </table>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin:2rem 0">
+        <thead><tr style="background:#00537a;color:white">
+          <th style="padding:0.5rem;text-align:left">SKU</th>
+          <th style="padding:0.5rem;text-align:left">Description</th>
+          <th style="padding:0.5rem;text-align:left">Size</th>
+          <th style="padding:0.5rem;text-align:center">Quantity</th>
+          <th style="padding:0.5rem;text-align:right">Price</th>
+          <th style="padding:0.5rem;text-align:right">Total</th>
+        </tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <div style="text-align:right;margin-top:2rem">
+        <table style="margin-left:auto;border-collapse:collapse">
+          <tr><td style="padding:0.5rem;text-align:right">Subtotal</td><td style="padding:0.5rem;text-align:right;border-bottom:1px solid #ccc">${inv.subtotal.toFixed(2)}</td></tr>
+          <tr><td style="padding:0.5rem;text-align:right">Tax (8.875%)</td><td style="padding:0.5rem;text-align:right;border-bottom:1px solid #ccc">${inv.tax.toFixed(2)}</td></tr>
+          <tr style="background:#f9f9f9"><td style="padding:0.75rem;text-align:right;font-weight:bold;border:2px solid #000">Total</td><td style="padding:0.75rem;text-align:right;font-weight:bold;border:2px solid #000">${inv.total.toFixed(2)}</td></tr>
+        </table>
+      </div>
+      <div style="text-align:center;margin-top:2rem;padding-top:1rem;border-top:2px solid #000">
+        <p style="font-weight:bold;font-size:1.1rem">Thank you for your business!</p>
+      </div>
+    </div>`;
+  
+  document.getElementById('printModal').classList.add('show');
+}
+
+function closePrint() {
+  document.getElementById('printModal').classList.remove('show');
+}
+
+// ============================================
+// INIT
+// ============================================
+
+window.onload = function() {
+  checkAuth();
+};
 </script>
 </body>
 </html>
