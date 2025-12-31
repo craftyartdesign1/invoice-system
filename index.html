@@ -23,7 +23,6 @@
         input, select{width:100%;padding:0.625rem;margin:0.25rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.875rem}
         .btn{padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;border:none;transition: 0.2s}
         .btn-primary{background:#4f46e5;color:#fff;width:100%}
-        .btn-blue{background:#2563eb;color:#fff}
         .hidden{display:none}
     </style>
 </head>
@@ -42,57 +41,45 @@
     <div id="mainApp" class="hidden">
         <div class="header">
             <h1 style="font-size:1.25rem;font-weight:700">Invoice System</h1>
-            <div class="sync-status">Connected to Cloud ☁️</div>
+            <div class="sync-status" id="cloudStatus">Connecting...</div>
         </div>
         <div class="tabs">
-            <button class="tab active" onclick="showTab('invoice')">Invoice Generator</button>
-            <button class="tab" onclick="showTab('inventory')">Inventory</button>
-            <button class="tab" onclick="showTab('customers')">Customers</button>
-            <button class="tab" onclick="showTab('lookup')">Invoice Lookup</button>
-            <button class="tab" onclick="showTab('admin')">Admin</button>
+            <button class="tab active" onclick="showTab('invoice', event)">Invoice Generator</button>
+            <button class="tab" onclick="showTab('inventory', event)">Inventory</button>
+            <button class="tab" onclick="showTab('customers', event)">Customers</button>
+            <button class="tab" onclick="showTab('admin', event)">Admin</button>
         </div>
         <div class="content">
             <div id="invoice" class="card">
                 <h2>Create Invoice</h2>
                 <div class="form-grid">
                     <div><label>Customer</label><select id="invCustomer"><option>Select Customer</option></select></div>
-                    <div><label>Invoice #</label><input type="text" id="invNum" readonly placeholder="Auto-gen"></div>
+                    <div><label>Invoice #</label><input type="text" id="invNumDisplay" readonly placeholder="Auto-gen"></div>
                 </div>
-                <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody id="invoiceItems"></tbody></table>
+                <table id="invoiceTable"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody></tbody></table>
             </div>
 
             <div id="inventory" class="card hidden">
                 <h2>Inventory Management</h2>
-                <div class="form-grid"><input type="text" placeholder="Search Inventory..." onkeyup="filterTable('inventoryList', 1, this.value)"></div>
-                <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody></tbody></table>
+                <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th></tr></thead><tbody></tbody></table>
             </div>
 
             <div id="customers" class="card hidden">
-                <h2>Customer database</h2>
-                <table id="customerList"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody></tbody></table>
-            </div>
-
-            <div id="lookup" class="card hidden">
-                <h2>Invoice Lookup</h2>
-                <div class="form-grid">
-                    <input type="text" placeholder="Search by Date">
-                    <input type="text" placeholder="Search by Customer">
-                </div>
-                <table id="lookupTable"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead><tbody></tbody></table>
+                <h2>Customer Database</h2>
+                <table id="customerList"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th></tr></thead><tbody></tbody></table>
             </div>
 
             <div id="admin" class="card hidden">
                 <h2>Admin Panel</h2>
-                <p style="color:#6b7280;margin-bottom:1rem">System settings and user management.</p>
-                <div class="form-grid">
-                    <button class="btn btn-blue" onclick="loadData()">Refresh All Data</button>
-                </div>
+                <p style="margin-bottom:10px; color:#6b7280">System Management</p>
+                <button class="btn btn-primary" style="width:auto" onclick="loadData()">Force Refresh Data from Cloud</button>
             </div>
         </div>
     </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDdhbjx9JdSjGy7LySxWEhInQ6dsnYrZPadpXBDFS3gXJStDDIkh3abv7fUCsiEQbK/exec';
+// YOUR GOOGLE WEB APP URL IS PRE-LOADED BELOW
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMIfyohyaJaBijL5ARqdWTste8D8fm1lMQHDiZ5p0MvJ96GVClyhUY4QUWC0dGPoU/exec';
 
 async function login() {
     const u = document.getElementById('username').value;
@@ -104,6 +91,7 @@ async function login() {
         if(data.success) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('cloudStatus').textContent = "Connected ☁️";
             loadData();
         } else { err.textContent = "Invalid credentials"; }
     } catch(e) { err.textContent = "Connection Error"; }
@@ -114,8 +102,8 @@ async function loadData() {
         const res = await fetch(SCRIPT_URL + '?action=getAll');
         const d = await res.json();
         if(d.success) {
-            renderTable('inventoryList', d.data.inventory, ['sku', 'item', 'price']);
-            renderTable('customerList', d.data.customers, ['name', 'company']);
+            renderTable('inventoryList', d.data.inventory, ['sku', 'item', 'price', 'size']);
+            renderTable('customerList', d.data.customers, ['name', 'company', 'email', 'phone']);
             const sel = document.getElementById('invCustomer');
             sel.innerHTML = '<option>Select Customer</option>';
             d.data.customers.forEach(c => {
@@ -132,15 +120,7 @@ function renderTable(id, data, keys) {
     b.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
 }
 
-function filterTable(tableId, colIdx, val) {
-    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
-    rows.forEach(r => {
-        const text = r.cells[colIdx].textContent.toLowerCase();
-        r.style.display = text.includes(val.toLowerCase()) ? '' : 'none';
-    });
-}
-
-function showTab(t) {
+function showTab(t, event) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(t).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
