@@ -1,42 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice & Inventory System</title>
     <style>
-        body{font-family:sans-serif;background:#f3f4f6;display:flex;justify-content:center;padding-top:50px}
-        .box{background:#fff;padding:40px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.1);width:300px;text-align:center}
-        input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:5px}
-        button{width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:5px;cursor:pointer}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:sans-serif;background:#f3f4f6}
+        .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#667eea}
+        .login-box{background:#fff;padding:2rem;border-radius:10px;width:350px;text-align:center}
+        .header{background:#fff;padding:1rem;display:flex;justify-content:space-between;border-bottom:1px solid #ddd}
+        .tabs{background:#fff;display:flex;gap:10px;padding:0 1rem;border-bottom:1px solid #ddd}
+        .tab{padding:1rem;border:none;background:none;cursor:pointer;font-weight:600;color:#666}
+        .tab.active{color:#2563eb;border-bottom:2px solid #2563eb}
+        .content{padding:20px;max-width:1100px;margin:0 auto}
+        .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:20px}
         .hidden{display:none}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        th,td{padding:10px;text-align:left;border-bottom:1px solid #eee}
+        input,select{width:100%;padding:8px;margin:5px 0;border:1px solid #ccc;border-radius:4px}
+        .btn{padding:10px 20px;border:none;border-radius:4px;cursor:pointer;font-weight:600}
+        .btn-blue{background:#2563eb;color:#fff}
     </style>
 </head>
 <body>
-    <div id="loginScreen" class="box">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <div id="err" style="color:red;font-size:12px"></div>
-        <button onclick="login()">Login</button>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1>Login</h1>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <div id="loginError" style="color:red;margin-bottom:10px"></div>
+            <button class="btn btn-blue" onclick="login()">Login</button>
+        </div>
     </div>
-    <div id="mainApp" class="box hidden">
-        <h2 style="color:green">Success!</h2>
-        <p>Connected to Cloud ☁️</p>
+
+    <div id="mainApp" class="hidden">
+        <div class="header">
+            <h2>Invoice System</h2>
+            <div id="syncStatus" style="color:green">Connected ☁️</div>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('invoice')">Invoice</button>
+            <button class="tab" onclick="showTab('inventory')">Inventory</button>
+            <button class="tab" onclick="showTab('customers')">Customers</button>
+        </div>
+        <div class="content">
+            <div id="invoice" class="card">
+                <h3>Create Invoice</h3>
+                <select id="invCustomer"><option>Select Customer</option></select>
+                <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead><tbody id="invoiceItems"></tbody></table>
+            </div>
+            <div id="inventory" class="card hidden">
+                <h3>Inventory Management</h3>
+                <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody></tbody></table>
+            </div>
+            <div id="customers" class="card hidden">
+                <h3>Customer List</h3>
+                <table id="customerList"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
     </div>
+
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDdhbjx9JdSjGy7LySxWEhInQ6dsnYrZPadpXBDFS3gXJStDDIkh3abv7fUCsiEQbK/exec';
-async function login(){
+
+async function login() {
     const u = document.getElementById('username').value;
     const p = document.getElementById('password').value;
-    const e = document.getElementById('err');
+    const err = document.getElementById('loginError');
     try {
         const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
         const data = await res.json();
-        if(data.success){
+        if(data.success) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-        } else { e.textContent = "Wrong login details"; }
-    } catch(err) { e.textContent = "Connection Error"; }
+            loadData();
+        } else { err.textContent = "Invalid Login"; }
+    } catch(e) { err.textContent = "Connection Error"; }
+}
+
+async function loadData() {
+    try {
+        const res = await fetch(SCRIPT_URL + '?action=getAll');
+        const d = await res.json();
+        if(d.success) {
+            renderTable('inventoryList', d.data.inventory, ['sku', 'item', 'price']);
+            renderTable('customerList', d.data.customers, ['name', 'company']);
+            const sel = document.getElementById('invCustomer');
+            d.data.customers.forEach(c => sel.innerHTML += `<option>${c.name}</option>`);
+        }
+    } catch(e) { console.log("Load error"); }
+}
+
+function renderTable(id, data, keys) {
+    const b = document.getElementById(id).querySelector('tbody');
+    b.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
+}
+
+function showTab(t) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(t).classList.remove('hidden');
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
 }
 </script>
 </body>
