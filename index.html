@@ -3,93 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Invoice System</title>
+    <title>CraftyArt Pro System</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#333}
-        .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a,#3b82f6)}
-        .login-box{background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.2);width:100%;max-width:400px;text-align:center}
-        .login-box h2{margin-bottom:0.5rem;color:#1e3a8a}
-        .login-box input{width:100%;padding:0.8rem;margin:0.6rem 0;border:1px solid #ddd;border-radius:6px;font-size:1rem}
-        .login-box button{width:100%;padding:0.8rem;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-top:1rem}
-        .header{background:#1e3a8a;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
-        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #ddd;overflow-x:auto}
-        .tab{padding:1rem 1.5rem;border:none;background:none;cursor:pointer;font-weight:500;color:#666;border-bottom:3px solid transparent}
-        .tab.active{color:#2563eb;border-bottom-color:#2563eb}
-        .content{padding:2rem;max-width:1300px;margin:0 auto}
-        .card{background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);margin-bottom:2rem}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f7f9;color:#333}
+        .header-top{background:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e0e6ed}
+        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #e0e6ed;overflow-x:auto}
+        .tab{padding:1rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:500;color:#64748b;border-bottom:3px solid transparent;white-space:nowrap}
+        .tab.active{color:#3b82f6;border-bottom-color:#3b82f6}
+        .content{padding:2rem;max-width:1200px;margin:0 auto}
+        .card{background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);margin-bottom:2rem}
         .hidden{display:none}
-        #loginError{color:red;font-size:0.85rem;margin-top:0.5rem;font-weight:bold}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;margin-bottom:1rem}
+        .form-group label{display:block;font-size:0.8rem;margin-bottom:0.4rem;font-weight:600;color:#475569}
+        .form-group input, .form-group select{width:100%;padding:0.6rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem}
+        .upload-zone{border:2px dashed #cbd5e1;padding:1rem;text-align:center;border-radius:8px;background:#f8fafc;cursor:pointer;margin-bottom:1rem}
         table{width:100%;border-collapse:collapse;margin-top:1rem}
-        th{text-align:left;background:#f8fafc;padding:0.8rem;border-bottom:2px solid #e2e8f0}
-        td{padding:0.8rem;border-bottom:1px solid #f1f5f9}
+        th{text-align:left;background:#f8fafc;padding:0.8rem;border-bottom:2px solid #e2e8f0;font-size:0.7rem;text-transform:uppercase;color:#64748b}
+        td{padding:0.8rem;border-bottom:1px solid #f1f5f9;font-size:0.9rem}
+        .btn{padding:0.6rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-weight:600;transition:0.2s}
+        .btn-blue{background:#3b82f6;color:#fff}
+        .btn-green{background:#10b981;color:#fff}
+        .btn-red{background:#ef4444;color:#fff}
+        .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1e3a8a}
+        .login-box{background:#fff;padding:2.5rem;border-radius:12px;width:380px;text-align:center}
     </style>
 </head>
 <body>
 
-<div id="loginScreen" class="login">
+<div id="loginScreen" class="login-screen">
     <div class="login-box">
-        <h2>System Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <div id="loginError"></div>
-        <button id="loginBtn" onclick="login()">Sign In</button>
+        <h2 style="margin-bottom:1.5rem">System Login</h2>
+        <input type="text" id="username" placeholder="Username" style="width:100%;padding:0.8rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:6px">
+        <input type="password" id="password" placeholder="Password" style="width:100%;padding:0.8rem;margin-bottom:1.5rem;border:1px solid #ddd;border-radius:6px">
+        <div id="loginError" style="color:red;margin-bottom:1rem;font-size:0.85rem"></div>
+        <button class="btn btn-blue" style="width:100%" onclick="login()">Sign In</button>
     </div>
 </div>
 
 <div id="mainApp" class="hidden">
-    <div class="header">
-        <h1>CraftyArt Dashboard</h1>
-        <button onclick="location.reload()">Logout</button>
+    <div class="header-top">
+        <h1 id="brandName">CraftyArt Design</h1>
+        <button class="btn btn-red" onclick="location.reload()">Logout</button>
     </div>
+    
     <div class="tabs">
-        <button class="tab active" onclick="showTab('invoice',event)">Invoice</button>
+        <button class="tab active" onclick="showTab('invoice',event)">Invoice Generator</button>
         <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
         <button class="tab" onclick="showTab('customers',event)">Customers</button>
+        <button class="tab" onclick="showTab('lookup',event)">Invoice Lookup</button>
+        <button class="tab" onclick="showTab('admin',event)">Admin</button>
     </div>
+
     <div class="content">
-        <div id="invoice" class="card">
-            <h2>Welcome to your Dashboard!</h2>
-            <p>Connection Successful.</p>
+        <div id="admin" class="card hidden">
+            <h2 style="margin-bottom:1.5rem">Admin Panel</h2>
+            
+            <div class="form-grid">
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem">Company Logo</label>
+                    <div class="upload-zone">Click to Upload Logo (PNG/JPG)</div>
+                </div>
+                <div>
+                    <label style="font-weight:600; font-size:0.85rem">Invoice Background</label>
+                    <div class="upload-zone">Click to Upload Background</div>
+                </div>
+            </div>
+
+            <div style="border-top:1px solid #eee; padding-top:1.5rem; margin-top:1rem">
+                <h3>Backup & Yearly Export</h3>
+                <div class="form-grid" style="margin-top:1rem">
+                    <div class="form-group">
+                        <label>Select Year for Tax Report</label>
+                        <select id="exportYear"><option>2025</option><option>2024</option></select>
+                    </div>
+                    <div style="display:flex; align-items:flex-end; gap:10px">
+                        <button class="btn btn-green" onclick="alert('Generating Tax PDF...')">Export PDF Report</button>
+                        <button class="btn btn-blue" onclick="alert('JSON Exported')">Export JSON</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top:1px solid #eee; padding-top:1.5rem; margin-top:1.5rem">
+                <h3>User Management</h3>
+                <div class="form-grid" style="margin-top:1rem">
+                    <div class="form-group"><label>Username</label><input type="text" id="newU"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="newP"></div>
+                    <div class="form-group"><label>Full Name</label><input type="text" id="newN"></div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="newR"><option>Admin</option><option>Manager</option><option>Employee</option></select>
+                    </div>
+                </div>
+                <button class="btn btn-blue" onclick="alert('User Added')">+ Add User</button>
+                
+                <table>
+                    <thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Actions</th></tr></thead>
+                    <tbody id="userList">
+                        <tr><td>Owner</td><td>CraftyArt Owner</td><td>Owner (Full)</td><td><em>Protected</em></td></tr>
+                        <tr><td>Alessio</td><td>Alessio</td><td>Admin</td><td><button class="btn-red" style="padding:2px 8px">Reset</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="border-top:1px solid #eee; padding-top:1.5rem; margin-top:1.5rem">
+                <h3>Security Questions</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Question</label>
+                        <select><option>Mother's Maiden Name?</option><option>First Pet?</option></select>
+                    </div>
+                    <div class="form-group"><label>Answer</label><input type="password"></div>
+                </div>
+                <button class="btn btn-green">Save Security Info</button>
+            </div>
         </div>
+
+        <div id="invoice" class="card"><h2>Invoice Generator</h2></div>
         <div id="inventory" class="card hidden"><h2>Inventory</h2></div>
         <div id="customers" class="card hidden"><h2>Customers</h2></div>
+        <div id="lookup" class="card hidden"><h2>Invoice Lookup</h2></div>
     </div>
 </div>
 
 <script>
-// UPDATED URL WITH CAPITAL O
-const URL = 'https://script.google.com/macros/s/AKfycbypB4IKPszTwaHEtysyEM_mid1SArqlHcnIf3ZJOY7kNPYTk_pOmuyUcRblLbGQyL4/exec';
+// HARDCODED SECURITY (Highest Power)
+const USERS = [
+    {u: "Owner", p: "Craftyowner123", n: "Owner", r: "Owner"},
+    {u: "Alessio", p: "Alessio123", n: "Alessio Admin", r: "Admin"},
+    {u: "test", p: "employee123", n: "Test Employee", r: "Employee"}
+];
 
-async function login() {
-    const uInput = document.getElementById('username').value.trim();
-    const pInput = document.getElementById('password').value.trim();
-    const errDiv = document.getElementById('loginError');
-    const btn = document.getElementById('loginBtn');
+const fmt = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0);
 
-    errDiv.innerText = "";
-    btn.innerText = "Syncing...";
-
-    try {
-        const resp = await fetch(`${URL}?sheet=Users`);
-        const users = await resp.json();
-        
-        const found = users.find(x => 
-            x.Username.toString().toLowerCase() === uInput.toLowerCase() && 
-            x.Password.toString() === pInput
-        );
-
-        if (found) {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-        } else {
-            errDiv.innerText = "Invalid credentials";
+function login() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    const found = USERS.find(x => x.u === u && x.p === p);
+    
+    if (found) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        if(found.r !== 'Owner' && found.r !== 'Admin') {
+            document.querySelector('[onclick="showTab(\'admin\',event)"]').style.display = 'none';
         }
-    } catch(e) {
-        errDiv.innerText = "Connection Error. Check your Internet or Google Sheet tab name.";
-        console.error(e);
-    } finally {
-        btn.innerText = "Sign In";
+    } else {
+        document.getElementById('loginError').innerText = "Incorrect Username or Password";
     }
 }
 
