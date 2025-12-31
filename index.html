@@ -5,66 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CraftyArt Management System</title>
     <style>
-        :root { --primary: #1e3a8a; --secondary: #3b82f6; --success: #10b981; --bg: #f4f7f9; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: #333; }
-        
-        /* Header & Logo */
-        .header-top { background: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e6ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        :root { --primary: #1e3a8a; --secondary: #3b82f6; --success: #10b981; --bg: #f8fafc; --text: #1e293b; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); }
+        .header-top { background: #fff; padding: 1.2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; }
         .logo-area { display: flex; align-items: center; gap: 15px; }
-        .logo-placeholder { width: 50px; height: 50px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
-        
-        /* Navigation */
-        .tabs { background: #fff; display: flex; padding: 0 2rem; border-bottom: 1px solid #e0e6ed; }
-        .tab { padding: 1rem 1.5rem; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .tab.active { color: var(--secondary); border-bottom-color: var(--secondary); }
-        
-        /* Content Cards */
-        .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Form Layout */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600; color: #475569; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; }
-        
-        /* Buttons */
-        .btn { padding: 0.8rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-blue { background: var(--secondary); color: #fff; }
-        .btn-green { background: var(--success); color: #fff; }
-        .btn-red { background: #ef4444; color: #fff; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
+        .logo-box { width: 50px; height: 50px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.4rem; }
+        .tabs { background: #fff; display: flex; padding: 0 2.5rem; border-bottom: 1px solid #e2e8f0; gap: 10px; overflow-x: auto; }
+        .tab { padding: 1.2rem 1.8rem; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 4px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .tab.active { color: var(--secondary); border-bottom-color: var(--secondary); background: #f0f7ff; }
+        .content { padding: 2.5rem; max-width: 1300px; margin: 0 auto; }
+        .card { background: #fff; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
         .hidden { display: none; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.8rem; margin-bottom: 2rem; }
+        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.6rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        .form-group input, .form-group select { width: 100%; padding: 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 1rem; }
+        .form-group input[readonly] { background: #f8fafc; cursor: not-allowed; border-style: dashed; }
+        .tax-exempt-group { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f1f5f9; border-radius: 10px; width: fit-content; }
+        .btn { padding: 1rem 2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px; }
+        .btn-blue { background: var(--secondary); color: #fff; }
+        .btn-green { background: var(--success); color: #fff; width: 100%; justify-content: center; }
+        .btn-red { background: #ef4444; color: #fff; }
         .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--primary); }
-        .login-box { background: #fff; padding: 3rem; border-radius: 16px; width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .login-box { background: #fff; padding: 3.5rem; border-radius: 24px; width: 420px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
-        <h2 style="margin-bottom:2rem; color: var(--primary)">CraftyArt Login</h2>
-        <div class="form-group" style="text-align:left; margin-bottom:1rem">
-            <label>Username</label>
-            <input type="text" id="username" placeholder="Enter Owner Username">
-        </div>
+        <h1 style="color: var(--primary); margin-bottom: 2rem;">CraftyArt Portal</h1>
         <div class="form-group" style="text-align:left; margin-bottom:1.5rem">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Owner">
+        </div>
+        <div class="form-group" style="text-align:left; margin-bottom:2rem">
             <label>Password</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
-        <div id="loginError" style="color:red; margin-bottom:1rem; font-size:0.85rem"></div>
         <button class="btn btn-blue" style="width:100%; justify-content:center" onclick="login()">Sign In</button>
     </div>
 </div>
 
 <div id="mainApp" class="hidden">
     <div class="header-top">
-        <div class="logo-area">
-            <div class="logo-placeholder">CA</div>
-            <h1 style="color: var(--primary); font-size: 1.5rem;">CraftyArt Design</h1>
-        </div>
+        <div class="logo-area"><div class="logo-box">CA</div><h1>CraftyArt Design</h1></div>
         <button class="btn btn-red" onclick="location.reload()">Logout</button>
     </div>
     
@@ -72,88 +57,102 @@
         <button class="tab active" onclick="showTab('invoice',event)">Invoice Generator</button>
         <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
         <button class="tab" onclick="showTab('customers',event)">Customers</button>
-        <button class="tab" id="adminTab" onclick="showTab('admin',event)">Admin Panel</button>
+        <button class="tab" onclick="showTab('admin',event)">Admin Panel</button>
     </div>
 
     <div class="content">
         <div id="invoice" class="card">
-            <h2 style="margin-bottom:1.5rem">Generate New Invoice</h2>
+            <h2>📄 New Invoice</h2>
             <div class="form-grid">
-                <div class="form-group"><label>Customer Name</label><input type="text" id="invCustName"></div>
-                <div class="form-group"><label>Invoice Date</label><input type="date" id="invDate"></div>
-                <div class="form-group"><label>Item/Service</label><input type="text" id="invItem"></div>
-                <div class="form-group"><label>Quantity</label><input type="number" id="invQty" value="1"></div>
-                <div class="form-group"><label>Unit Price ($)</label><input type="number" id="invUnitPrice"></div>
+                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="INV-101"></div>
+                <div class="form-group"><label>Customer Name</label><input type="text" id="invCust"></div>
+                <div class="form-group"><label>Date</label><input type="date" id="invDate"></div>
             </div>
-            <button class="btn btn-green" onclick="saveToSheet('Invoices')">Save & Log Invoice</button>
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: span 2;"><label>Description</label><input type="text" id="invDesc"></div>
+                <div class="form-group"><label>Qty</label><input type="number" id="invQty" value="1" oninput="calcInv()"></div>
+                <div class="form-group"><label>Price ($)</label><input type="number" id="invPrice" oninput="calcInv()"></div>
+                <div class="form-group"><label>Total ($)</label><input type="text" id="invTotal" readonly value="0.00"></div>
+            </div>
+            <div class="tax-exempt-group">
+                <input type="checkbox" id="invTax">
+                <label style="margin:0; font-size:0.9rem;">Tax Exempt Client</label>
+            </div>
+            <button class="btn btn-green" style="margin-top:2rem" onclick="save('Invoices')">Save Invoice to Sheet</button>
         </div>
 
         <div id="inventory" class="card hidden">
-            <h2 style="margin-bottom:1.5rem">Add to Inventory</h2>
+            <h2>📦 Add Stock</h2>
             <div class="form-grid">
-                <div class="form-group"><label>SKU Number</label><input type="text" id="stockSKU"></div>
-                <div class="form-group"><label>Product Name</label><input type="text" id="stockName"></div>
-                <div class="form-group"><label>Size/Dimensions</label><input type="text" id="stockSize"></div>
-                <div class="form-group"><label>Category/Type</label>
-                    <select id="stockType">
-                        <option>Material</option>
-                        <option>Apparel</option>
-                        <option>Finished Artwork</option>
-                        <option>Custom Tool</option>
-                    </select>
+                <div class="form-group"><label>SKU</label><input type="text" id="stSKU"></div>
+                <div class="form-group"><label>Product</label><input type="text" id="stProd"></div>
+                <div class="form-group"><label>Size</label><input type="text" id="stSize"></div>
+                <div class="form-group"><label>Type</label>
+                    <select id="stType"><option>Material</option><option>Apparel</option><option>Finished Good</option></select>
                 </div>
-                <div class="form-group"><label>Unit Price ($)</label><input type="number" id="stockPrice"></div>
+                <div class="form-group"><label>Cost ($)</label><input type="number" id="stCost"></div>
             </div>
-            <button class="btn btn-blue" onclick="saveToSheet('Inventory')">Add Product</button>
+            <button class="btn btn-blue" onclick="save('Inventory')">Add to Inventory</button>
         </div>
 
         <div id="customers" class="card hidden">
-            <h2 style="margin-bottom:1.5rem">Customer Database</h2>
+            <h2>👥 Register Customer</h2>
             <div class="form-grid">
                 <div class="form-group"><label>Full Name</label><input type="text" id="cName"></div>
-                <div class="form-group"><label>Email Address</label><input type="email" id="cEmail"></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" id="cPhone"></div>
-                <div class="form-group"><label>Shipping Address</label><input type="text" id="cAddr"></div>
+                <div class="form-group"><label>Company</label><input type="text" id="cComp"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="cEmail"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="cPhone"></div>
+                <div class="form-group" style="grid-column: span 2;"><label>Address</label><input type="text" id="cAddr"></div>
             </div>
-            <button class="btn btn-blue" onclick="saveToSheet('Customers')">Register Customer</button>
+            <button class="btn btn-blue" onclick="save('Customers')">Save Customer Profile</button>
         </div>
 
         <div id="admin" class="card hidden">
-            <h2 style="margin-bottom:1.5rem">Admin Control Panel</h2>
-            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
-                <p>Welcome, <b>Owner</b>.</p>
-                <p style="font-size: 0.9rem; color: #64748b; margin-top: 5px;">Your connection to <b>Invoice System Database</b> is active.</p>
-            </div>
+            <h2>⚙️ System Status</h2>
+            <p>Database: <b>Online</b> | Logged in as: <b>Owner</b></p>
         </div>
     </div>
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD-PR1pNnLvbqS7Cp0Mas9w39FrPFYMln6Dx8I3N4pe2ceovn48CZK26D9L0D6cqc/exec';
+const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD5VxX4ldV2KLAaE2GDW7zPHEvNCq5pLzHvkR545Gt3M/exec';
 
 function login() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-    if (user === "Owner" && pass === "Craftyowner123") {
-        document.getElementById('loginScreen').style.display = 'none';
+    if(document.getElementById('username').value === "Owner" && document.getElementById('password').value === "Craftyowner123") {
+        document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-    } else {
-        document.getElementById('loginError').innerText = "Incorrect credentials. Please try again.";
-    }
+    } else { alert("Wrong credentials"); }
 }
 
 function showTab(id, e) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if(e) e.target.classList.add('active');
+    e.target.classList.add('active');
 }
 
-async function saveToSheet(tabName) {
+function calcInv() {
+    const q = document.getElementById('invQty').value || 0;
+    const p = document.getElementById('invPrice').value || 0;
+    document.getElementById('invTotal').value = (q * p).toFixed(2);
+}
+
+async function save(tab) {
     let data = [];
-    if(tabName === 'Invoices') {
-        data = [document.getElementById('invCustName').value, document.getElementById('invDate').value, document.getElementById('invItem').value, document.getElementById('invQty').value, document.getElementById('invUnitPrice').value];
-    } else if(tabName === 'Inventory') {
-        data = [document.getElementById('stockSKU').value, document.getElementById('stockName').value, document.getElementById('stockSize').value, document.getElementById('stockType').value, document.getElementById('stockPrice').value];
-    } else if(tabName === 'Customers') {
-        data = [document.
+    if(tab === 'Invoices') {
+        data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('invDate').value, document.getElementById('invDesc').value, document.getElementById('invQty').value, document.getElementById('invPrice').value, document.getElementById('invTotal').value, document.getElementById('invTax').checked ? "YES" : "NO"];
+    } else if(tab === 'Inventory') {
+        data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stSize').value, document.getElementById('stType').value, document.getElementById('stCost').value];
+    } else if(tab === 'Customers') {
+        data = [document.getElementById('cName').value, document.getElementById('cComp').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value, document.getElementById('cAddr').value];
+    }
+
+    try {
+        await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: tab, data: data }) });
+        alert("Data sent to " + tab + "!");
+        location.reload();
+    } catch (e) { alert("Error connecting to sheet"); }
+}
+</script>
+</body>
+</html>
