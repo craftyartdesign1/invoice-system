@@ -133,7 +133,7 @@
                     <tbody>
                         <tr><td>Owner</td><td>Highest Power</td><td><span style="color:green">Protected</span></td></tr>
                         <tr><td>Alessio</td><td>Admin</td><td>Active</td></tr>
-                        <tr><td>TestUser</td><td>Employee</td><td>Active</td></tr>
+                        <tr><td>test</td><td>Employee</td><td>Active</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -144,7 +144,6 @@
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhZJW78LNJzWZU1R_dKa_f118hnUOdltoaFwPLFdtx9-uwGL0X-HL51uq3gVu5rt4/exec';
 
-// SECURE CREDENTIALS
 const AUTH = [
     {u: "Owner", p: "Craftyowner123", r: "Owner"},
     {u: "Alessio", p: "Admin123", r: "Admin"},
@@ -174,7 +173,7 @@ function showTab(id, e) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if(e) e.target.classList.add('active');
+    if(e && e.target) e.target.classList.add('active');
 }
 
 function toggleSize() {
@@ -182,7 +181,6 @@ function toggleSize() {
     document.getElementById('customSizeInputs').classList.toggle('hidden', !isCustom);
 }
 
-// DATABASE SAVE FUNCTIONS
 async function saveInventory() {
     const data = [
         document.getElementById('invSKU').value,
@@ -220,7 +218,6 @@ async function sendToSheet(sheetName, dataArray) {
     }
 }
 
-// Press Enter to Login
 document.addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 </script>
 </body>
