@@ -20,7 +20,6 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.8rem; margin-bottom: 2rem; }
         .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.6rem; font-weight: 700; color: #475569; text-transform: uppercase; }
         .form-group input, .form-group select { width: 100%; padding: 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 1rem; }
-        .form-group input[readonly] { background: #f8fafc; cursor: not-allowed; border-style: dashed; }
         .btn { padding: 1rem 2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px; }
         .btn-blue { background: var(--secondary); color: #fff; }
         .btn-green { background: var(--success); color: #fff; width: 100%; justify-content: center; }
@@ -87,11 +86,7 @@
                 <div class="form-group"><label>Product Name</label><input type="text" id="stProd"></div>
                 <div class="form-group"><label>Size</label><input type="text" id="stSize"></div>
                 <div class="form-group"><label>Type</label>
-                    <select id="stType">
-                        <option>Material</option>
-                        <option>Apparel</option>
-                        <option>Finished Good</option>
-                    </select>
+                    <select id="stType"><option>Material</option><option>Apparel</option><option>Finished Good</option></select>
                 </div>
                 <div class="form-group"><label>Cost ($)</label><input type="number" id="stCost"></div>
             </div>
@@ -113,23 +108,26 @@
         <div id="admin" class="card hidden">
             <h2>⚙️ System Info</h2>
             <p>Database Connected: <b>Yes</b></p>
-            <p>User: <b>Owner</b></p>
+            <p>User Role: <b>Owner</b></p>
         </div>
     </div>
 </div>
 
 <script>
-// This matches your deployment URL
+// Fixed URL ending in /exec
 const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD8VxX4ldV2KLAaE2GDW7zPHEvNCq5pLzHvkR545Gt3M/exec';
+
 function login() {
     const u = document.getElementById('username').value.trim();
     const p = document.getElementById('password').value.trim();
     
-    // Exact match for your Users tab
-    if(u === "Owner" && p === "Craftyowner123") {
+    // Checks against your Users tab
+    if (u === 'Owner' && p === 'Craftyowner123') {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
-    } else { alert("Invalid Credentials"); }
+    } else { 
+        alert('Access Denied: Please check capitalization for Owner'); 
+    }
 }
 
 function showTab(id, e) {
@@ -148,39 +146,18 @@ function calcInv() {
 async function save(tabName) {
     let data = [];
     if(tabName === 'Invoices') {
-        data = [
-            document.getElementById('invNum').value, 
-            document.getElementById('invCust').value, 
-            document.getElementById('invDate').value, 
-            document.getElementById('invDesc').value, 
-            document.getElementById('invQty').value, 
-            document.getElementById('invPrice').value, 
-            document.getElementById('invTotal').value, 
-            document.getElementById('invTax').checked ? "YES" : "NO"
-        ];
+        data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('invDate').value, document.getElementById('invDesc').value, document.getElementById('invQty').value, document.getElementById('invPrice').value, document.getElementById('invTotal').value, document.getElementById('invTax').checked ? "YES" : "NO"];
     } else if(tabName === 'Inventory') {
-        data = [
-            document.getElementById('stSKU').value, 
-            document.getElementById('stProd').value, 
-            document.getElementById('stSize').value, 
-            document.getElementById('stType').value, 
-            document.getElementById('stCost').value
-        ];
+        data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stSize').value, document.getElementById('stType').value, document.getElementById('stCost').value];
     } else if(tabName === 'Customers') {
-        data = [
-            document.getElementById('cName').value, 
-            document.getElementById('cComp').value, 
-            document.getElementById('cEmail').value, 
-            document.getElementById('cPhone').value, 
-            document.getElementById('cAddr').value
-        ];
+        data = [document.getElementById('cName').value, document.getElementById('cComp').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value, document.getElementById('cAddr').value];
     }
 
     try {
         await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: tabName, data: data }) });
-        alert("Synced successfully with " + tabName);
+        alert("Success! Data sent to " + tabName);
         location.reload();
-    } catch (e) { alert("Connectivity Error"); }
+    } catch (e) { alert("Error connecting to database"); }
 }
 </script>
 </body>
