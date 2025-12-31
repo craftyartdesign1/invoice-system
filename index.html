@@ -1,414 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice System</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f5f5f5}
-.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea,#764ba2)}
-.login-box{background:#fff;padding:2rem;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);width:100%;max-width:400px;text-align:center}
-.login-box h1{margin-bottom:1.5rem}
-.login-box input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #ddd;border-radius:4px;font-size:1rem}
-.login-box button{width:100%;padding:0.75rem;margin-top:1rem;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:1rem;cursor:pointer}
-.error{color:#ef4444;margin-top:0.5rem;font-size:0.875rem}
-.header{background:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb}
-.tabs{background:#fff;padding:0 1.5rem;display:flex;gap:0.5rem;border-bottom:1px solid #e5e7eb}
-.tab{padding:1rem;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent}
-.tab.active{border-bottom-color:#2563eb;color:#2563eb}
-.content{padding:1.5rem;max-width:1200px;margin:0 auto}
-.card{background:#fff;border-radius:8px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1rem 0}
-.form-group label{display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.25rem}
-.form-group input,.form-group select{width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px}
-.btn{padding:0.5rem 1rem;border-radius:4px;border:none;cursor:pointer;margin:0.25rem}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-success{background:#10b981;color:#fff}
-.btn-danger{background:#ef4444;color:#fff}
-.btn-gray{background:#6b7280;color:#fff}
-.btn-info{background:#06b6d4;color:#fff}
-table{width:100%;border-collapse:collapse;margin-top:1rem}
-th{background:#f9fafb;padding:0.75rem;text-align:left;font-weight:600;border-bottom:1px solid #e5e7eb}
-td{padding:0.75rem;border-bottom:1px solid #f3f4f6}
-.hidden{display:none}
-.warning{background:#fef3c7;border-left:4px solid #f59e0b;padding:1rem;margin:1rem 0;display:none}
-.error-box{background:#fee2e2;border-left:4px solid #ef4444;padding:1rem;margin:1rem 0;display:none}
-.custom-size{display:grid;grid-template-columns:1fr auto 1fr;gap:0.5rem;margin-top:0.5rem;align-items:center}
-.custom-size input{width:80px;padding:0.5rem;text-align:center}
-.img-preview{max-width:200px;max-height:150px;margin-top:10px;border:2px solid #ddd;border-radius:4px}
-.media-section{background:#f9fafb;padding:1.5rem;border-radius:8px;margin:1.5rem 0}
-.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1rem}
-.media-box{border:2px dashed #ddd;border-radius:8px;padding:1.5rem;text-align:center;background:#fff}
-.media-box h4{margin-bottom:0.5rem;color:#333}
-.media-box p{font-size:0.875rem;color:#666;margin-bottom:1rem}
-.upload-area{border:2px dashed #2563eb;background:#eff6ff;padding:2rem;border-radius:8px;cursor:pointer;transition:all 0.3s}
-.upload-area:hover{background:#dbeafe}
-.upload-area input[type="file"]{display:none}
-.preview-container{margin-top:1rem}
-.preview-image{max-width:100%;max-height:200px;border-radius:4px;border:2px solid #e5e7eb}
-</style>
-</head><body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Invoice System</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#333}
+        .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a,#3b82f6)}
+        .login-box{background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.2);width:100%;max-width:400px;text-align:center}
+        .login-box input{width:100%;padding:0.8rem;margin:0.6rem 0;border:1px solid #ddd;border-radius:6px}
+        .login-box button{width:100%;padding:0.8rem;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600}
+        .header{background:#1e3a8a;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #ddd;overflow-x:auto}
+        .tab{padding:1rem 1.5rem;border:none;background:none;cursor:pointer;font-weight:500;color:#666;border-bottom:3px solid transparent}
+        .tab.active{color:#2563eb;border-bottom-color:#2563eb}
+        .content{padding:2rem;max-width:1300px;margin:0 auto}
+        .card{background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);margin-bottom:2rem}
+        .hidden{display:none}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+        .form-group label{display:block;font-size:0.85rem;margin-bottom:0.3rem;font-weight:600}
+        .form-group input, .form-group select{width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:4px}
+        table{width:100%;border-collapse:collapse;margin-top:1rem}
+        th{text-align:left;background:#f8fafc;padding:0.8rem;border-bottom:2px solid #e2e8f0}
+        td{padding:0.8rem;border-bottom:1px solid #f1f5f9}
+        .btn{padding:0.6rem 1.2rem;border-radius:4px;border:none;cursor:pointer;font-weight:500;transition:0.2s}
+        .btn-primary{background:#2563eb;color:#fff}
+        .btn-success{background:#10b981;color:#fff}
+        .btn-danger{background:#ef4444;color:#fff}
+        .error-box{background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:6px;margin-bottom:1rem;display:none}
+        .custom-size-box{display:flex;gap:0.5rem;align-items:center;margin-top:0.5rem}
+        .custom-size-box input{width:70px}
+    </style>
+</head>
+<body>
+
 <div id="loginScreen" class="login">
-<div class="login-box">
-<h1>Login</h1>
-<input type="text" id="username" placeholder="Username" value="admin">
-<input type="password" id="password" placeholder="Password" value="admin123">
-<div id="loginError" class="error"></div>
-<button onclick="login()">Login</button>
-</div>
+    <div class="login-box">
+        <h2>System Login</h2>
+        <p style="color:#666;margin-bottom:1.5rem">Enter credentials to sync data</p>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <div id="loginError" style="color:red;font-size:0.8rem;margin-top:0.5rem"></div>
+        <button id="loginBtn" onclick="login()">Sign In</button>
+    </div>
 </div>
 
 <div id="mainApp" class="hidden">
-<div class="header">
-<h1>Invoice & Inventory System</h1>
-<div>
-<button class="btn btn-danger" onclick="logout()">Logout</button>
+    <div class="header">
+        <h1>CraftyArt Inventory</h1>
+        <button class="btn btn-danger" onclick="location.reload()">Logout</button>
+    </div>
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('invoice',event)">Invoice</button>
+        <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
+        <button class="tab" onclick="showTab('customers',event)">Customers</button>
+        <button class="tab" onclick="showTab('lookup',event)">History</button>
+        <button class="tab" onclick="showTab('admin',event)">Admin</button>
+    </div>
+
+    <div class="content">
+        <div id="invoice" class="card">
+            <h2>New Transaction</h2>
+            <div id="errorBox" class="error-box"></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
+                <div class="form-group"><label>Customer</label><select id="invCustomer" onchange="updateCompany()"></select></div>
+                <div class="form-group"><label>Company</label><input type="text" id="invCompany" readonly></div>
+                <div class="form-group"><label>Employee</label><input type="text" id="invEmployee" readonly></div>
+            </div>
+            <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1rem">
+                <label>Scan/Type SKU</label>
+                <div style="display:flex;gap:1rem">
+                    <input type="text" id="skuInput" style="flex:1;padding:0.6rem" placeholder="Enter Product SKU">
+                    <button class="btn btn-primary" onclick="addItem()">+ Add Item</button>
+                </div>
+            </div>
+            <table>
+                <thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead>
+                <tbody id="invoiceItems"></tbody>
+            </table>
+            <div style="text-align:right;margin-top:2rem">
+                <p>Subtotal: $<span id="subtotal">0.00</span></p>
+                <p>Tax (8.875%): $<span id="tax">0.00</span></p>
+                <h2 style="margin:1rem 0">Total: $<span id="total">0.00</span></h2>
+                <button class="btn btn-success" onclick="saveInvoice()" style="font-size:1.1rem;padding:1rem 2rem">Complete Order</button>
+            </div>
+        </div>
+
+        <div id="inventory" class="card hidden">
+            <h2>Inventory Management</h2>
+            <div class="form-grid">
+                <input type="text" id="newSKU" placeholder="SKU">
+                <input type="text" id="newItem" placeholder="Item Name">
+                <input type="number" id="newPrice" placeholder="Price">
+                <select id="newSize" onchange="toggleSize()">
+                    <option value="">No Size</option>
+                    <option value="S">Small</option><option value="M">Medium</option>
+                    <option value="L">Large</option><option value="Custom">Custom</option>
+                </select>
+                <div id="customInputs" class="custom-size-box" style="display:none">
+                    <input type="number" id="customW" placeholder="W"><span>x</span><input type="number" id="customH" placeholder="H">
+                </div>
+            </div>
+            <button id="invBtn" class="btn btn-primary" onclick="addInventory()">Save Product</button>
+            <table>
+                <thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Actions</th></tr></thead>
+                <tbody id="inventoryList"></tbody>
+            </table>
+        </div>
+
+        <div id="customers" class="card hidden">
+            <h2>Customer Directory</h2>
+            <div class="form-grid">
+                <input type="text" id="custName" placeholder="Full Name">
+                <input type="text" id="custCompany" placeholder="Company">
+                <input type="tel" id="custPhone" placeholder="Phone">
+                <input type="email" id="custEmail" placeholder="Email">
+            </div>
+            <button class="btn btn-primary" onclick="addCustomer()">Add Customer</button>
+            <table id="customerTable">
+                <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Actions</th></tr></thead>
+                <tbody id="customerList"></tbody>
+            </table>
+        </div>
+
+        <div id="lookup" class="card hidden">
+            <h2>Invoice History</h2>
+            <table>
+                <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
+                <tbody id="lookupList"></tbody>
+            </table>
+        </div>
+
+        <div id="admin" class="card hidden">
+            <h2>System Administration</h2>
+            <div class="form-grid">
+                <input type="text" id="newUser" placeholder="Username">
+                <input type="text" id="newPass" placeholder="Password">
+                <input type="text" id="newDisp" placeholder="Display Name">
+                <select id="newRole"><option>Admin</option><option>Employee</option></select>
+            </div>
+            <button class="btn btn-primary" onclick="addUser()">Create User Account</button>
+            <table>
+                <thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Actions</th></tr></thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
-</div>
-<div class="tabs">
-<button class="tab active" onclick="showTab('invoice',event)">Invoice</button>
-<button class="tab" onclick="showTab('inventory',event)">Inventory</button>
-<button class="tab" onclick="showTab('customers',event)">Customers</button>
-<button class="tab" onclick="showTab('lookup',event)">Lookup</button>
-<button class="tab" onclick="showTab('admin',event)">Admin</button>
-</div>
-<div class="content"><div id="lookup" class="card hidden">
-<h2>Invoice Lookup</h2>
-<div class="form-grid">
-<input type="text" id="sDate" placeholder="Date" oninput="filter()">
-<input type="text" id="sCust" placeholder="Customer" oninput="filter()">
-<input type="text" id="sComp" placeholder="Company" oninput="filter()">
-</div>
-<button class="btn btn-gray" onclick="clearFilter()">Clear</button>
-<table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Total</th><th>Actions</th></tr></thead><tbody id="lookupList"></tbody></table>
-</div>
 
-<div id="admin" class="card hidden">
-<h2>Admin Panel</h2>
-<h3>Company Info</h3>
-<div class="form-grid">
-<input type="text" id="compName" placeholder="Company Name">
-<input type="text" id="compTag" placeholder="Tagline">
-<input type="email" id="compEmail" placeholder="Email">
-<input type="tel" id="compPhone" placeholder="Phone (718) 555-5555">
-</div>
-<button class="btn btn-success" onclick="saveCompany()">Save Company</button>
+<script>
+const URL = 'https://script.google.com/macros/s/AKfycbycKxTpO2DpS51RS66DGg7WMO_wj1oBkuOUewGsixNSiEk0TovrlTi55U3gTTKPBcn2/exec';
+let user, inv=[], cust=[], invs=[], users=[], curr={items:[]}, ei=-1;
 
-<div style="margin-top:2rem;background:#f9fafb;padding:1.5rem;border-radius:8px">
-<h3 style="margin-bottom:1rem">Invoice Media Settings</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem">
-<div>
-<p style="font-weight:500;margin-bottom:0.5rem">Upload Company Logo</p>
-<input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)" style="width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px">
-<div id="logoPreviewContainer" style="margin-top:1rem;display:none">
-<img id="logoPreview" style="max-width:200px;max-height:150px;border:2px solid #ddd;border-radius:4px">
-<br><button class="btn btn-danger" style="margin-top:0.5rem" onclick="removeLogo()">Remove Logo</button>
-</div>
-</div>
-<div>
-<p style="font-weight:500;margin-bottom:0.5rem">Upload Invoice Background</p>
-<input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload(event)" style="width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px">
-<div id="bgPreviewContainer" style="margin-top:1rem;display:none">
-<img id="bgPreview" style="max-width:200px;max-height:150px;border:2px solid #ddd;border-radius:4px">
-<br><button class="btn btn-danger" style="margin-top:0.5rem" onclick="removeBg()">Remove Background</button>
-</div>
-</div>
-</div>
-</div>
-
-<h3 style="margin-top:2rem">Users</h3>
-<div class="form-grid">
-<input type="text" id="newUser" placeholder="Username">
-<input type="password" id="newPass" placeholder="Password">
-<input type="text" id="newDisplay" placeholder="Display Name">
-<select id="newRole"><option>Admin</option><option>Employee</option></select>
-</div>
-<button class="btn btn-primary" onclick="addUser()">+ Add User</button>
-<table><thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Actions</th></tr></thead><tbody id="userList"></tbody></table>
-</div>
-</div>
-</div><script>
-const URL='https://script.google.com/macros/s/AKfycbycKxTpO2DpS51RS66DGg7WMO_wj1oBkuOUewGsixNSiEk0TovrlTi55U3gTTKPBcn2/exec';
-let user,inv=[],cust=[],invs=[],users=[],comp={},curr={items:[],sub:0,tax:0,tot:0},ei=-1,ec=-1,filtered=[];
-let invoiceLogo=null;
-let invoiceBg=null;
-
-async function get(s){try{const r=await fetch(`${URL}?sheet=${s}`);const d=await r.json();return d.error?[]:d}catch(e){return[]}}
-async function post(s,a,d,i){try{const p={sheet:s,action:a,data:d};if(i!=null)p.index=i;const r=await fetch(URL,{method:'POST',body:JSON.stringify(p)});return await r.json()}catch(e){alert('Save failed');return{}}}
-
-async function loadAll(){inv=await get('Inventory');cust=await get('Customers');invs=await get('Invoices');users=await get('Users');const c=await get('Company');if(c.length)comp=c[0]}
-
-async function login(){
-const u=document.getElementById('username').value;
-const p=document.getElementById('password').value;
-if(!u||!p)return;
-await loadAll();
-const usr=users.find(x=>x.Username.toLowerCase()===u.toLowerCase()&&x.Password===p);
-if(usr){
-user=usr;
-document.getElementById('loginScreen').classList.add('hidden');
-document.getElementById('mainApp').classList.remove('hidden');
-setupInvoice();
-}else{
-document.getElementById('loginError').textContent='Invalid credentials';
-}
-}
-
-function logout(){document.getElementById('loginScreen').classList.remove('hidden');document.getElementById('mainApp').classList.add('hidden')}
-
-function showTab(t,e){document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));document.getElementById(t).classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));e.target.classList.add('active');if(t==='invoice')setupInvoice();if(t==='inventory')renderInv();if(t==='customers')renderCust();if(t==='lookup')renderLookup();if(t==='admin')loadAdmin()}
-
-function genNum(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');const today=invs.filter(i=>i.Date===`${m}/${da}/${y}`);return`INV-${y}${m}${da}${String(today.length+1).padStart(3,'0')}`}
-
-function setupInvoice(){document.getElementById('invNum').value=genNum();document.getElementById('invDate').value=new Date().toLocaleDateString();let cs=document.getElementById('invCustomer');cs.innerHTML='<option value="">Select</option>';cust.forEach((c,i)=>cs.innerHTML+=`<option value="${i}">${c.Name}</option>`);let co=document.getElementById('invCompany');co.innerHTML='<option value="">Select</option>';cust.forEach(c=>co.innerHTML+=`<option value="${c.Company}">${c.Company}</option>`);document.getElementById('invEmployee').value=user?user.DisplayName||user.Username:'';curr={items:[],sub:0,tax:0,tot:0};renderItems();document.getElementById('errorBox').style.display='none'}
-
-function updateCompany(){const i=document.getElementById('invCustomer').value;if(i)document.getElementById('invCompany').value=cust[i].Company}
-
-function toggleCustomSize(){const s=document.getElementById('newSize').value;document.getElementById('customSizeInputs').style.display=s==='Custom'?'grid':'none'}
-
-function addItem(){const sku=document.getElementById('skuInput').value.toUpperCase().trim();if(!sku)return;const it=inv.find(i=>i.SKU===sku);const w=document.getElementById('warning');if(!it){w.textContent='SKU not found';w.style.display='block';setTimeout(()=>w.style.display='none',3000);return}if(curr.items.find(i=>i.sku===sku)){w.textContent='Already added';w.style.display='block';setTimeout(()=>w.style.display='none',3000);return}curr.items.push({sku:it.SKU,item:it.Item,size:it.Size||'',customWidth:it.CustomWidth||'',customHeight:it.CustomHeight||'',qty:1,price:+it.Price,taxEx:it.TaxExempt==='true'||it.TaxExempt===true});renderItems();document.getElementById('skuInput').value=''}
-
-function renderItems(){let h='';curr.sub=0;curr.items.forEach((it,i)=>{const lt=it.qty*it.price;curr.sub+=lt;const sizeDisplay=it.size==='Custom'?`${it.customWidth}" x ${it.customHeight}"`:it.size||'-';h+=`<tr><td>${it.sku}</td><td>${it.item}</td><td>${sizeDisplay}</td><td><input type="number" value="${it.qty}" min="1" style="width:50px" onchange="curr.items[${i}].qty=+this.value;renderItems()"></td><td>$${it.price.toFixed(2)}</td><td><input type="checkbox" ${it.taxEx?'checked':''} onchange="curr.items[${i}].taxEx=this.checked;renderItems()"></td><td>$${lt.toFixed(2)}</td><td><button class="btn btn-danger" onclick="curr.items.splice(${i},1);renderItems()">×</button></td></tr>`});document.getElementById('invoiceItems').innerHTML=h;curr.tax=0;curr.items.forEach(it=>{if(!it.taxEx)curr.tax+=(it.qty*it.price)*0.08875});curr.tot=curr.sub+curr.tax;document.getElementById('subtotal').textContent=curr.sub.toFixed(2);document.getElementById('tax').textContent=curr.tax.toFixed(2);document.getElementById('total').textContent=curr.tot.toFixed(2)}
-
-async function saveInvoice(){const ci=document.getElementById('invCustomer').value,e=document.getElementById('invEmployee').value,err=document.getElementById('errorBox');if(!ci||!e||!curr.items.length){err.textContent='Missing required fields';err.style.display='block';return}const d={InvoiceNum:document.getElementById('invNum').value,Date:document.getElementById('invDate').value,Customer:cust[ci].Name,Company:cust[ci].Company,Employee:e,Items:JSON.stringify(curr.items),Subtotal:curr.sub.toFixed(2),Tax:curr.tax.toFixed(2),Total:curr.tot.toFixed(2)};await post('Invoices','add',d);invs.push(d);alert('Invoice saved!');setupInvoice()}
-
-async function addInventory(){
-const sku=document.getElementById('newSKU').value.toUpperCase().trim();
-const item=document.getElementById('newItem').value.trim();
-const price=document.getElementById('newPrice').value;
-const size=document.getElementById('newSize').value;
-const taxEx=document.getElementById('newTaxEx').checked;
-const customWidth=document.getElementById('customWidth').value;
-const customHeight=document.getElementById('customHeight').value;
-if(!sku||!item||!price){alert('Fill required fields');return}
-if(size==='Custom'&&(!customWidth||!customHeight||customWidth<=0||customHeight<=0)){alert('Enter valid custom dimensions');return}
-const d={SKU:sku,Item:item,Price:price,Size:size,CustomWidth:customWidth||'',CustomHeight:customHeight||'',TaxExempt:taxEx};
-if(ei>=0){await post('Inventory','update',d,ei);inv[ei]=d;ei=-1;document.getElementById('invBtn').textContent='+ Add';document.getElementById('cancelInv').style.display='none'}else{await post('Inventory','add',d);inv.push(d)}
-document.getElementById('newSKU').value='';document.getElementById('newItem').value='';document.getElementById('newPrice').value='';document.getElementById('newSize').value='';document.getElementById('customWidth').value='';document.getElementById('customHeight').value='';document.getElementById('newTaxEx').checked=false;document.getElementById('customSizeInputs').style.display='none';renderInv()}
-
-function editInv(i){const it=inv[i];document.getElementById('newSKU').value=it.SKU;document.getElementById('newItem').value=it.Item;document.getElementById('newPrice').value=it.Price;document.getElementById('newSize').value=it.Size||'';document.getElementById('customWidth').value=it.CustomWidth||'';document.getElementById('customHeight').value=it.CustomHeight||'';document.getElementById('newTaxEx').checked=it.TaxExempt==='true'||it.TaxExempt===true;if(it.Size==='Custom')document.getElementById('customSizeInputs').style.display='grid';ei=i;document.getElementById('invBtn').textContent='Update';document.getElementById('cancelInv').style.display='inline'}
-
-function cancelInv(){ei=-1;document.getElementById('newSKU').value='';document.getElementById('newItem').value='';document.getElementById('newPrice').value='';document.getElementById('newSize').value='';document.getElementById('customWidth').value='';document.getElementById('customHeight').value='';document.getElementById('newTaxEx').checked=false;document.getElementById('invBtn').textContent='+ Add';document.getElementById('cancelInv').style.display='none';document.getElementById('customSizeInputs').style.display='none'}
-
-async function delInv(i){if(confirm('Delete?')){await post('Inventory','delete',{},i);inv.splice(i,1);renderInv()}}
-
-function renderInv(){let h='';inv.forEach((it,i)=>{const sizeDisplay=it.Size==='Custom'?`${it.CustomWidth}" x ${it.CustomHeight}"`:it.Size||'-';h+=`<tr><td>${it.SKU}</td><td>${it.Item}</td><td>$${(+it.Price).toFixed(2)}</td><td>${sizeDisplay}</td><td>${it.TaxExempt==='true'||it.TaxExempt===true?'Yes':'No'}</td><td><button class="btn btn-primary" onclick="editInv(${i})">Edit</button> <button class="btn btn-danger" onclick="delInv(${i})">Del</button></td></tr>`});document.getElementById('inventoryList').innerHTML=h}
-
-function formatPhone(phone){
-const digits=phone.replace(/\D/g,'');
-if(digits.length===10){
-return`(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-}
-return phone;
+// --- API CORE ---
+async function api(sheet, action, data = {}, index = null) {
+    const payload = { sheet, action, data, index };
+    const resp = await fetch(URL, { method: 'POST', body: JSON.stringify(payload) });
+    return await resp.json();
 }
 
-async function addCustomer(){
-const n=document.getElementById('custName').value.trim(),c=document.getElementById('custCompany').value.trim(),e=document.getElementById('custEmail').value.trim();
-let p=document.getElementById('custPhone').value.trim();
-const street=document.getElementById('custStreet').value.trim();
-const city=document.getElementById('custCity').value.trim();
-const state=document.getElementById('custState').value.trim();
-const zip=document.getElementById('custZip').value.trim();
-if(!n||!c){alert('Name and company required');return}
-p=formatPhone(p);
-const d={Name:n,Company:c,Email:e,Phone:p,Street:street,City:city,State:state,Zip:zip};
-if(ec>=0){await post('Customers','update',d,ec);cust[ec]=d;ec=-1;document.getElementById('custBtn').textContent='+ Add';document.getElementById('cancelCust').style.display='none'}else{await post('Customers','add',d);cust.push(d)}
-document.getElementById('custName').value='';document.getElementById('custCompany').value='';document.getElementById('custEmail').value='';document.getElementById('custPhone').value='';document.getElementById('custStreet').value='';document.getElementById('custCity').value='';document.getElementById('custState').value='';document.getElementById('custZip').value='';renderCust()}
-
-function editCust(i){const c=cust[i];document.getElementById('custName').value=c.Name;document.getElementById('custCompany').value=c.Company;document.getElementById('custEmail').value=c.Email||'';document.getElementById('custPhone').value=c.Phone||'';document.getElementById('custStreet').value=c.Street||'';document.getElementById('custCity').value=c.City||'';document.getElementById('custState').value=c.State||'';document.getElementById('custZip').value=c.Zip||'';ec=i;document.getElementById('custBtn').textContent='Update';document.getElementById('cancelCust').style.display='inline'}
-
-function cancelCust(){ec=-1;document.getElementById('custName').value='';document.getElementById('custCompany').value='';document.getElementById('custEmail').value='';document.getElementById('custPhone').value='';document.getElementById('custStreet').value='';document.getElementById('custCity').value='';document.getElementById('custState').value='';document.getElementById('custZip').value='';document.getElementById('custBtn').textContent='+ Add';document.getElementById('cancelCust').style.display='none'}
-
-async function delCust(i){if(confirm('Delete?')){await post('Customers','delete',{},i);cust.splice(i,1);renderCust()}}
-
-function renderCust(){let h='';cust.forEach((c,i)=>{const street=c.Street||'';const city=c.City||'';const state=c.State||'';const zip=c.Zip||'';let addr='';if(street)addr+=street;if(city||state||zip){if(addr)addr+=' ';addr+=`${city}${city&&(state||zip)?', ':''}${state} ${zip}`.trim();}const shortAddr=addr.length>40?addr.substring(0,40)+'...':addr;h+=`<tr><td>${c.Name}</td><td>${c.Company}</td><td>${c.Email||''}</td><td>${c.Phone||''}</td><td>${shortAddr}</td><td><button class="btn btn-primary" onclick="editCust(${i})">Edit</button> <button class="btn btn-danger" onclick="delCust(${i})">Del</button></td></tr>`});document.getElementById('customerList').innerHTML=h}
-
-function filter(){const d=document.getElementById('sDate').value.toLowerCase(),c=document.getElementById('sCust').value.toLowerCase(),co=document.getElementById('sComp').value.toLowerCase();filtered=invs.filter(i=>(!d||i.Date.toLowerCase().includes(d))&&(!c||i.Customer.toLowerCase().includes(c))&&(!co||i.Company.toLowerCase().includes(co)));renderLookup()}
-
-function clearFilter(){document.getElementById('sDate').value='';document.getElementById('sCust').value='';document.getElementById('sComp').value='';filtered=[];renderLookup()}
-
-async function deleteInvoice(idx){if(confirm('Delete this invoice?')){await post('Invoices','delete',{},idx);invs.splice(idx,1);renderLookup()}}
-
-function renderLookup(){const list=filtered.length?filtered:invs;let h='';list.forEach((i,idx)=>{const isAdmin=user.Role==='Admin';const deleteBtn=isAdmin?`<button class="btn btn-danger" onclick="deleteInvoice(${idx})">🗑️ Delete</button>`:'';const formattedDate=i.Date.includes('T')?new Date(i.Date).toLocaleDateString():i.Date;h+=`<tr><td>${i.InvoiceNum}</td><td>${formattedDate}</td><td>${i.Customer}</td><td>${i.Company}</td><td>${i.Employee}</td><td>$${(+i.Total).toFixed(2)}</td><td><button class="btn btn-info" onclick="printInvoice(${idx})">🖨️ Print</button>${deleteBtn}</td></tr>`});document.getElementById('lookupList').innerHTML=h}function printInvoice(idx){
-const inv=invs[idx];
-const w=window.open('','','width=800,height=600');
-const items=JSON.parse(inv.Items);
-let itemsHtml='';
-items.forEach(it=>{
-const sizeDisplay=it.size==='Custom'?`${it.customWidth}" x ${it.customHeight}"`:it.size||'-';
-const taxLabel=it.taxEx?'<span style="background:#10b981;color:white;padding:2px 6px;border-radius:3px;font-size:0.75rem;margin-left:5px">Tax Exempt</span>':'';
-itemsHtml+=`<tr><td>${it.sku}</td><td>${it.item}${taxLabel}</td><td>${sizeDisplay}</td><td>${it.qty}</td><td>$${it.price.toFixed(2)}</td><td>$${(it.qty*it.price).toFixed(2)}</td></tr>`;
-});
-const bgStyle=invoiceBg?`background-image:url(${invoiceBg});background-size:cover;background-position:center;`:'background:#fff;';
-const logoHtml=invoiceLogo?`<img src="${invoiceLogo}" style="max-height:120px;max-width:300px">`:'';
-const companyName=comp.Name||'';
-const companyTagline=comp.Tagline||'';
-const customerData=cust.find(c=>c.Name===inv.Customer)||{};
-const street=customerData.Street||'';
-const city=customerData.City||'';
-const state=customerData.State||'';
-const zip=customerData.Zip||'';
-let addressLine2='';
-if(city||state||zip){
-addressLine2=`${city}${city&&(state||zip)?', ':''}${state} ${zip}`.trim();
-}
-const rawDate=inv.Date;
-let formattedDate=rawDate;
-if(rawDate.includes('/')){
-const parts=rawDate.split('/');
-if(parts.length===3){
-formattedDate=`${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[2]}`;
-}
-}
-const companyOrStreet=inv.Company||(street?street:'');
-w.document.write(`<html><head><title>Invoice ${inv.InvoiceNum}</title><style>
-body{font-family:Arial;padding:40px;background:#f0f0f0}
-.container{max-width:800px;margin:0 auto;${bgStyle}padding:40px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
-.header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
-.logo-section{flex:0 0 auto}
-.company-section{text-align:right;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}
-.company-section h1{color:#2563eb;margin:0;font-size:2.5rem;line-height:1.2}
-.company-section h2{color:#000;margin:5px 0 0 0;font-size:1.8rem;line-height:1.2}
-.company-section p{color:#2563eb;margin:5px 0 0 0;font-size:1.4rem;font-style:italic;line-height:1.2}
-.bill-to{background:#2c5282;color:white;padding:10px 15px;margin:20px 0;font-weight:bold;font-size:1.1rem}
-.customer-info{margin:10px 0 20px 0;line-height:1.6}
-.info-row{display:flex;justify-content:space-between;margin:3px 0}
-.info-left{flex:1}
-.info-right{text-align:right;min-width:200px}
-table{width:100%;border-collapse:collapse;margin:20px 0}
-th{background:#2c5282;color:white;padding:12px;text-align:left;font-weight:bold}
-td{padding:12px;border-bottom:1px solid #ddd;background:rgba(255,255,255,0.9)}
-.totals{text-align:right;margin-top:20px;font-size:1.1rem}
-.totals div{margin:8px 0}
-.final-total{font-size:1.5rem;font-weight:bold;color:#000;border-top:3px solid #2c5282;padding-top:10px;margin-top:10px}
-.footer{text-align:center;margin-top:40px;padding-top:20px;border-top:2px solid #333}
-.footer h3{margin:10px 0}
-.footer p{margin:2px 0}
-</style></head><body><div class="container">
-<div class="header-row">
-<div class="logo-section">${logoHtml}</div>
-<div class="company-section">
-<h1>Invoice</h1>
-<h2>${companyName}</h2>
-<p>${companyTagline}</p>
-</div>
-</div>
-<div class="bill-to">Bill To:</div>
-<div class="customer-info">
-<div class="info-row">
-<div class="info-left" style="font-weight:bold;font-size:1.1rem">${inv.Customer}</div>
-<div class="info-right"><strong>Invoice #:</strong> ${inv.InvoiceNum}</div>
-</div>
-<div class="info-row">
-<div class="info-left">${companyOrStreet}</div>
-<div class="info-right"><strong>Date:</strong> ${formattedDate}</div>
-</div>
-${street&&inv.Company?`<div class="info-row"><div class="info-left">${street}</div><div class="info-right"><strong>Employee:</strong> ${inv.Employee}</div></div>`:!inv.Company?`<div class="info-row"><div class="info-left">${addressLine2}</div><div class="info-right"><strong>Employee:</strong> ${inv.Employee}</div></div>`:`<div class="info-row"><div class="info-left"></div><div class="info-right"><strong>Employee:</strong> ${inv.Employee}</div></div>`}
-${street&&inv.Company&&addressLine2?`<div class="info-row"><div class="info-left">${addressLine2}</div><div class="info-right"></div></div>`:''}
-</div>
-<table><thead><tr><th>SKU</th><th>Description</th><th>Size</th><th>Quantity</th><th>Price</th><th>Total</th></tr></thead>
-<tbody>${itemsHtml}</tbody></table>
-<div class="totals">
-<div>Subtotal: <strong>$${inv.Subtotal}</strong></div>
-<div>Tax (8.875%): <strong>$${inv.Tax}</strong></div>
-<div class="final-total">Total: $${inv.Total}</div>
-</div>
-<div class="footer">
-<h3>Thank you for your business!</h3>
-<p>Email: ${comp.Email||'info@company.com'}</p>
-<p>Phone: ${comp.Phone||'(555) 123-4567'}</p>
-</div>
-</div></body></html>`);
-w.document.close();
-w.print();
+async function loadAll() {
+    const r = await fetch(`${URL}?sheet=all`); // Modified to get all sheets in one call if your script supports it
+    const d = await r.json();
+    inv = d.Inventory || [];
+    cust = d.Customers || [];
+    invs = d.Invoices || [];
+    users = d.Users || [];
 }
 
-function loadAdmin(){
-document.getElementById('compName').value=comp.Name||'';
-document.getElementById('compTag').value=comp.Tagline||'';
-document.getElementById('compEmail').value=comp.Email||'';
-document.getElementById('compPhone').value=comp.Phone||'';
-if(invoiceLogo){
-document.getElementById('logoPreview').src=invoiceLogo;
-document.getElementById('logoPreviewContainer').style.display='block';
-}
-if(invoiceBg){
-document.getElementById('bgPreview').src=invoiceBg;
-document.getElementById('bgPreviewContainer').style.display='block';
-}
-renderUsers();
+// --- AUTH ---
+async function login() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const btn = document.getElementById('loginBtn');
+    
+    btn.disabled = true;
+    btn.innerText = "Syncing...";
+
+    try {
+        const r = await fetch(`${URL}?sheet=Users`);
+        users = await r.json();
+
+        const found = users.find(x => 
+            x.Username.toString().toLowerCase() === u.toLowerCase() && 
+            x.Password.toString() === p
+        );
+
+        if (found) {
+            user = found;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            setupInvoice();
+            loadAll();
+        } else {
+            document.getElementById('loginError').innerText = "Access Denied: Check Username/Password";
+        }
+    } catch(e) {
+        document.getElementById('loginError').innerText = "Server Timeout. Try again.";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Sign In";
+    }
 }
 
-async function saveCompany(){
-let p=document.getElementById('compPhone').value.trim();
-p=formatPhone(p);
-comp={
-Name:document.getElementById('compName').value,
-Tagline:document.getElementById('compTag').value,
-Email:document.getElementById('compEmail').value,
-Phone:p
-};
-await post('Company','update',comp,0);
-alert('Saved!');
+// --- TABS ---
+function showTab(id, e) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    if(id === 'inventory') renderInv();
+    if(id === 'customers') renderCust();
+    if(id === 'lookup') renderLookup();
+    if(id === 'admin') renderUsers();
 }
 
-async function addUser(){
-const u=document.getElementById('newUser').value.trim();
-const p=document.getElementById('newPass').value.trim();
-const d=document.getElementById('newDisplay').value.trim();
-const r=document.getElementById('newRole').value;
-if(!u||!p||!d){alert('Fill all fields');return}
-const data={Username:u,Password:p,DisplayName:d,Role:r};
-await post('Users','add',data);
-users.push(data);
-document.getElementById('newUser').value='';
-document.getElementById('newPass').value='';
-document.getElementById('newDisplay').value='';
-renderUsers();
+// --- INVENTORY LOGIC (Fixing Custom Sizes) ---
+function toggleSize() {
+    document.getElementById('customInputs').style.display = document.getElementById('newSize').value === 'Custom' ? 'flex' : 'none';
 }
 
-async function delUser(i){if(confirm('Delete?')){await post('Users','delete',{},i);users.splice(i,1);renderUsers()}}
-
-function renderUsers(){let h='';users.forEach((u,i)=>{h+=`<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td><td><button class="btn btn-danger" onclick="delUser(${i})">Delete</button></td></tr>`});document.getElementById('userList').innerHTML=h}
-
-function handleLogoUpload(e){
-const f=e.target.files[0];
-if(f){
-const r=new FileReader();
-r.onload=function(ev){
-invoiceLogo=ev.target.result;
-document.getElementById('logoPreview').src=invoiceLogo;
-document.getElementById('logoPreviewContainer').style.display='block';
-};
-r.readAsDataURL(f);
-}
+async function addInventory() {
+    const data = {
+        SKU: document.getElementById('newSKU').value.toUpperCase(),
+        Item: document.getElementById('newItem').value,
+        Price: document.getElementById('newPrice').value,
+        Size: document.getElementById('newSize').value,
+        CustomWidth: document.getElementById('customW').value,
+        CustomHeight: document.getElementById('customH').value
+    };
+    
+    await api('Inventory', 'add', data);
+    alert("Saved successfully!");
+    location.reload(); // Refresh to sync iPad/Mac
 }
 
-function removeLogo(){
-invoiceLogo=null;
-document.getElementById('logoPreviewContainer').style.display='none';
-document.getElementById('logoUpload').value='';
+function renderInv() {
+    let h = '';
+    inv.forEach((it, i) => {
+        const sizeDisp = it.Size === 'Custom' ? `${it.CustomWidth}x${it.CustomHeight}` : it.Size;
+        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>$${it.Price}</td><td>${sizeDisp}</td><td><button onclick="delInv(${i})">Del</button></td></tr>`;
+    });
+    document.getElementById('inventoryList').innerHTML = h;
 }
 
-function handleBgUpload(e){
-const f=e.target.files[0];
-if(f){
-const r=new FileReader();
-r.onload=function(ev){
-invoiceBg=ev.target.result;
-document.getElementById('bgPreview').src=invoiceBg;
-document.getElementById('bgPreviewContainer').style.display='block';
-};
-r.readAsDataURL(f);
-}
+// --- INVOICE LOGIC ---
+function setupInvoice() {
+    document.getElementById('invNum').value = 'INV-' + Date.now().toString().slice(-6);
+    document.getElementById('invEmployee').value = user.DisplayName;
+    let sel = document.getElementById('invCustomer');
+    sel.innerHTML = '<option>Select Customer</option>';
+    cust.forEach((c, i) => sel.innerHTML += `<option value="${i}">${c.Name}</option>`);
 }
 
-function removeBg(){
-invoiceBg=null;
-document.getElementById('bgPreviewContainer').style.display='none';
-document.getElementById('bgUpload').value='';
+function updateCompany() {
+    const i = document.getElementById('invCustomer').value;
+    document.getElementById('invCompany').value = cust[i] ? cust[i].Company : '';
 }
+
+function addItem() {
+    const sku = document.getElementById('skuInput').value.toUpperCase();
+    const it = inv.find(x => x.SKU === sku);
+    if(!it) return alert("SKU Not Found");
+    
+    curr.items.push({ ...it, qty: 1 });
+    renderItems();
+    document.getElementById('skuInput').value = '';
+}
+
+function renderItems() {
+    let h = '', sub = 0;
+    curr.items.forEach((it, i) => {
+        const line = it.qty * it.Price;
+        sub += line;
+        const sizeDisp = it.Size === 'Custom' ? `${it.CustomWidth}x${it.CustomHeight}` : it.Size;
+        h += `<tr><td>${it.SKU}</td><td>${it.Item}</td><td>${sizeDisp}</td><td>${it.qty}</td><td>$${it.Price}</td><td>$${line}</td><td><button onclick="curr.items.splice(${i},1);renderItems()">X</button></td></tr>`;
+    });
+    document.getElementById('invoiceItems').innerHTML = h;
+    document.getElementById('subtotal').innerText = sub.toFixed(2);
+    document.getElementById('tax').innerText = (sub * 0.08875).toFixed(2);
+    document.getElementById('total').innerText = (sub * 1.08875).toFixed(2);
+}
+
+async function saveInvoice() {
+    const data = {
+        InvoiceNum: document.getElementById('invNum').value,
+        Customer: cust[document.getElementById('invCustomer').value].Name,
+        Total: document.getElementById('total').innerText,
+        Items: JSON.stringify(curr.items),
+        Date: new Date().toLocaleDateString()
+    };
+    await api('Invoices', 'add', data);
+    alert("Invoice Generated!");
+    location.reload();
+}
+
+// --- ADMIN / USERS ---
+async function addUser() {
+    const d = {
+        Username: document.getElementById('newUser').value,
+        Password: document.getElementById('newPass').value,
+        DisplayName: document.getElementById('newDisp').value,
+        Role: document.getElementById('newRole').value
+    };
+    await api('Users', 'add', d);
+    alert("User Created!");
+    renderUsers();
+}
+
+function renderUsers() {
+    let h = '';
+    users.forEach((u, i) => {
+        h += `<tr><td>${u.Username}</td><td>${u.DisplayName}</td><td>${u.Role}</td><td><button onclick="api('Users','delete',{},${i})">Del</button></td></tr>`;
+    });
+    document.getElementById('userList').innerHTML = h;
+}
+
+// Initialize
+window.onload = loadAll;
 </script>
 </body>
 </html>
