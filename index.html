@@ -16,14 +16,13 @@
         .tab.active { color: var(--secondary); border-bottom-color: var(--secondary); background: #f0f7ff; }
         .content { padding: 2.5rem; max-width: 1300px; margin: 0 auto; }
         .card { background: #fff; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
-        
-        /* THE CRITICAL FIX FOR YOUR SCREENSHOT ERROR */
         .app-hidden { display: none !important; }
-        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.8rem; margin-bottom: 2rem; }
         .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.6rem; font-weight: 700; color: #475569; text-transform: uppercase; }
-        .form-group input { width: 100%; padding: 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 1rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 1rem; }
         .btn { padding: 1rem 2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-blue { background: var(--secondary); color: #fff; width: 100%; }
+        .btn-green { background: var(--success); color: #fff; width: 100%; }
         .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--primary); }
         .login-box { background: #fff; padding: 3.5rem; border-radius: 24px; width: 420px; text-align: center; }
     </style>
@@ -59,14 +58,38 @@
 
     <div class='content'>
         <div id='invoice' class='card'>
-            <h2>📄 Invoice Center</h2>
-            <p>Database: Connected ✅</p>
+            <h2 style="margin-bottom:20px;">📄 Generate New Invoice</h2>
+            <div class='form-grid'>
+                <div class='form-group'><label>Invoice #</label><input type='text' id='invNum' placeholder="INV-100"></div>
+                <div class='form-group'><label>Customer Name</label><input type='text' id='invCust'></div>
+                <div class='form-group'><label>Date</label><input type='date' id='invDate'></div>
+            </div>
+            <div class='form-grid'>
+                <div class='form-group'><label>Quantity</label><input type='number' id='invQty' value="1" oninput="calcInv()"></div>
+                <div class='form-group'><label>Price Per Item ($)</label><input type='number' id='invPrice' placeholder="0.00" oninput="calcInv()"></div>
+                <div class='form-group'><label>Total Amount ($)</label><input type='text' id='invTotal' readonly style="background:#f1f5f9;"></div>
+            </div>
+            <button class='btn btn-green' onclick="save('Invoices')">Sync Invoice to Google Sheet</button>
         </div>
+
         <div id='inventory' class='card app-hidden'>
-            <h2>📦 Inventory</h2>
+            <h2 style="margin-bottom:20px;">📦 Inventory Management</h2>
+            <div class='form-grid'>
+                <div class='form-group'><label>SKU / Item ID</label><input type='text' id='stSKU'></div>
+                <div class='form-group'><label>Product Name</label><input type='text' id='stProd'></div>
+                <div class='form-group'><label>Stock Level</label><input type='number' id='stQty'></div>
+            </div>
+            <button class='btn btn-blue' onclick="save('Inventory')">Add to Inventory</button>
         </div>
+
         <div id='customers' class='card app-hidden'>
-            <h2>👥 Customers</h2>
+            <h2 style="margin-bottom:20px;">👥 Customer Registry</h2>
+            <div class='form-grid'>
+                <div class='form-group'><label>Full Name</label><input type='text' id='cName'></div>
+                <div class='form-group'><label>Email Address</label><input type='email' id='cEmail'></div>
+                <div class='form-group'><label>Phone Number</label><input type='text' id='cPhone'></div>
+            </div>
+            <button class='btn btn-blue' onclick="save('Customers')">Save Customer Details</button>
         </div>
     </div>
 </div>
@@ -78,13 +101,11 @@ const URL = 'https://script.google.com/macros/s/AKfycbz6tucuZ0HMChNlSq8wu14vD8Vx
 function login() {
     const u = document.getElementById('username').value.trim();
     const p = document.getElementById('password').value.trim();
-    
-    // Exact match for your sheet
     if (u === 'Owner' && p === 'Craftyowner123') {
         document.getElementById('loginScreen').classList.add('app-hidden');
         document.getElementById('mainApp').classList.remove('app-hidden');
     } else { 
-        alert('Try: Owner / Craftyowner123'); 
+        alert('Access Denied'); 
     }
 }
 
@@ -93,6 +114,36 @@ function showTab(id, e) {
     document.getElementById(id).classList.remove('app-hidden');
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
     e.target.classList.add('active');
+}
+
+function calcInv() {
+    const q = document.getElementById('invQty').value || 0;
+    const p = document.getElementById('invPrice').value || 0;
+    document.getElementById('invTotal').value = (q * p).toFixed(2);
+}
+
+async function save(tabName) {
+    let data = [];
+    if(tabName === 'Invoices') {
+        data = [document.getElementById('invNum').value, document.getElementById('invCust').value, document.getElementById('invDate').value, document.getElementById('invTotal').value];
+    } else if(tabName === 'Inventory') {
+        data = [document.getElementById('stSKU').value, document.getElementById('stProd').value, document.getElementById('stQty').value];
+    } else if(tabName === 'Customers') {
+        data = [document.getElementById('cName').value, document.getElementById('cEmail').value, document.getElementById('cPhone').value];
+    }
+
+    try {
+        const btn = event.target;
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+
+        await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ sheet: tabName, data: data }) });
+        
+        alert('Success! Sent to Google Sheets.');
+        location.reload(); 
+    } catch (e) { 
+        alert('Error connecting to database'); 
+    }
 }
 </script>
 </body>
