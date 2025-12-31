@@ -6,26 +6,24 @@
     <title>Invoice & Inventory System</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f3f4f6;color:#1f2937}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f3f4f6;color:#1f2937}
         .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)}
-        .login-box{background:#fff;padding:2.5rem;border-radius:1rem;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);width:100%;max-width:400px;text-align:center}
-        .login-box h1{font-size:1.875rem;margin-bottom:0.5rem;font-weight:700}
-        .login-box p{color:#6b7280;margin-bottom:2rem}
-        input, select, textarea{width:100%;padding:0.625rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.875rem}
-        .btn{display:inline-flex;align-items:center;justify-content:center;padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;transition:all 0.2s;border:none}
-        .btn-primary{background:#4f46e5;color:#fff;width:100%}
-        .btn-primary:hover{background:#4338ca}
+        .login-box{background:#fff;padding:2.5rem;border-radius:1rem;box-shadow:0 20px 25px rgba(0,0,0,0.1);width:100%;max-width:400px;text-align:center}
         .header{background:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb}
-        .sync-status{font-size:0.75rem;font-weight:600;padding:0.25rem 0.75rem;border-radius:9999px;background:#d1fae5;color:#065f46;display:flex;align-items:center;gap:0.375rem}
-        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #e5e7eb;gap:1.5rem}
-        .tab{padding:1rem 0;border:none;background:none;cursor:pointer;font-size:0.875rem;font-weight:500;color:#6b7280;border-bottom:2px solid transparent}
+        .sync-status{font-size:0.75rem;font-weight:600;padding:0.25rem 0.75rem;border-radius:9999px;background:#d1fae5;color:#065f46}
+        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #e5e7eb;gap:1.5rem;overflow-x:auto}
+        .tab{padding:1rem 0;border:none;background:none;cursor:pointer;font-size:0.875rem;font-weight:500;color:#6b7280;white-space:nowrap;border-bottom:2px solid transparent}
         .tab.active{color:#4f46e5;border-bottom-color:#4f46e5}
         .content{padding:2rem;max-width:1200px;margin:0 auto}
         .card{background:#fff;padding:1.5rem;border-radius:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
-        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
         table{width:100%;border-collapse:collapse;margin-top:1rem}
-        th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #e5e7eb}
+        th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
         td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.875rem}
+        input, select{width:100%;padding:0.625rem;margin:0.25rem 0;border:1px solid #d1d5db;border-radius:0.5rem;font-size:0.875rem}
+        .btn{padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;border:none;transition: 0.2s}
+        .btn-primary{background:#4f46e5;color:#fff;width:100%}
+        .btn-blue{background:#2563eb;color:#fff}
         .hidden{display:none}
     </style>
 </head>
@@ -33,11 +31,10 @@
 
     <div id="loginScreen" class="login-screen">
         <div class="login-box">
-            <h1>Welcome Back</h1>
-            <p>Invoice & Inventory System</p>
+            <h1>Welcome</h1>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
-            <div id="loginError" style="color:#ef4444;font-size:0.75rem;margin-bottom:1rem"></div>
+            <div id="loginError" style="color:#ef4444;font-size:0.75rem;margin:0.5rem 0"></div>
             <button class="btn btn-primary" onclick="login()">Sign In</button>
         </div>
     </div>
@@ -52,31 +49,44 @@
             <button class="tab" onclick="showTab('inventory')">Inventory</button>
             <button class="tab" onclick="showTab('customers')">Customers</button>
             <button class="tab" onclick="showTab('lookup')">Invoice Lookup</button>
+            <button class="tab" onclick="showTab('admin')">Admin</button>
         </div>
         <div class="content">
             <div id="invoice" class="card">
-                <h2 style="margin-bottom:1rem">Create New Invoice</h2>
+                <h2>Create Invoice</h2>
                 <div class="form-grid">
-                    <div><label style="font-size:0.75rem;font-weight:600">Customer</label><select id="invCustomer"><option>Select Customer</option></select></div>
-                    <div><label style="font-size:0.75rem;font-weight:600">Invoice #</label><input type="text" placeholder="Auto-generated" readonly></div>
+                    <div><label>Customer</label><select id="invCustomer"><option>Select Customer</option></select></div>
+                    <div><label>Invoice #</label><input type="text" id="invNum" readonly placeholder="Auto-gen"></div>
                 </div>
                 <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody id="invoiceItems"></tbody></table>
             </div>
+
             <div id="inventory" class="card hidden">
                 <h2>Inventory Management</h2>
+                <div class="form-grid"><input type="text" placeholder="Search Inventory..." onkeyup="filterTable('inventoryList', 1, this.value)"></div>
                 <table id="inventoryList"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody></tbody></table>
             </div>
+
             <div id="customers" class="card hidden">
-                <h2>Customer Database</h2>
+                <h2>Customer database</h2>
                 <table id="customerList"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody></tbody></table>
             </div>
+
             <div id="lookup" class="card hidden">
                 <h2>Invoice Lookup</h2>
                 <div class="form-grid">
                     <input type="text" placeholder="Search by Date">
                     <input type="text" placeholder="Search by Customer">
                 </div>
-                <table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead><tbody></tbody></table>
+                <table id="lookupTable"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead><tbody></tbody></table>
+            </div>
+
+            <div id="admin" class="card hidden">
+                <h2>Admin Panel</h2>
+                <p style="color:#6b7280;margin-bottom:1rem">System settings and user management.</p>
+                <div class="form-grid">
+                    <button class="btn btn-blue" onclick="loadData()">Refresh All Data</button>
+                </div>
             </div>
         </div>
     </div>
@@ -95,7 +105,7 @@ async function login() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             loadData();
-        } else { err.textContent = "Invalid username or password"; }
+        } else { err.textContent = "Invalid credentials"; }
     } catch(e) { err.textContent = "Connection Error"; }
 }
 
@@ -107,13 +117,14 @@ async function loadData() {
             renderTable('inventoryList', d.data.inventory, ['sku', 'item', 'price']);
             renderTable('customerList', d.data.customers, ['name', 'company']);
             const sel = document.getElementById('invCustomer');
+            sel.innerHTML = '<option>Select Customer</option>';
             d.data.customers.forEach(c => {
                 const opt = document.createElement('option');
                 opt.textContent = c.name;
                 sel.appendChild(opt);
             });
         }
-    } catch(e) { console.error("Data load failed"); }
+    } catch(e) { console.error("Data fetch failed"); }
 }
 
 function renderTable(id, data, keys) {
@@ -121,11 +132,19 @@ function renderTable(id, data, keys) {
     b.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
 }
 
+function filterTable(tableId, colIdx, val) {
+    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(r => {
+        const text = r.cells[colIdx].textContent.toLowerCase();
+        r.style.display = text.includes(val.toLowerCase()) ? '' : 'none';
+    });
+}
+
 function showTab(t) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(t).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
 }
 </script>
 </body>
