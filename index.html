@@ -3,145 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Invoice System</title>
+    <title>Crafty Art Design | Management System</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,sans-serif;background:#f3f4f6;color:#1f2937}
-        .header{background:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb}
-        .sync-status{font-size:0.75rem;font-weight:600;padding:0.25rem 0.75rem;border-radius:9999px;background:#d1fae5;color:#065f46}
-        .tabs{background:#fff;display:flex;padding:0 2rem;border-bottom:1px solid #e5e7eb;gap:1.5rem;overflow-x:auto}
-        .tab{padding:1rem 0;border:none;background:none;cursor:pointer;font-size:0.875rem;font-weight:500;color:#6b7280;white-space:nowrap;border-bottom:2px solid transparent}
-        .tab.active{color:#4f46e5;border-bottom-color:#4f46e5}
-        .content{padding:2rem;max-width:1100px;margin:0 auto}
-        .card{background:#fff;padding:1.5rem;border-radius:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:1.5rem}
-        table{width:100%;border-collapse:collapse;margin-top:1rem}
-        th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
-        td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.875rem}
-        input, select{width:100%;padding:0.625rem;margin:0.25rem 0;border:1px solid #d1d5db;border-radius:0.5rem}
-        .btn{padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;border:none;background:#4f46e5;color:#fff;margin-top:10px}
-        .btn-green{background:#10b981}
-        .hidden{display:none}
+        :root { --primary: #4f46e5; --bg: #f3f4f6; --text: #1f2937; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
+        .header { background: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 10; }
+        .tabs { background: #fff; display: flex; padding: 0 2rem; border-bottom: 1px solid #e5e7eb; gap: 1.5rem; overflow-x: auto; }
+        .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 500; color: #6b7280; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .card { background: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; align-items: end; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; color: #4b5563; }
+        input, select { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { background: #f9fafb; padding: 10px; text-align: left; font-size: 0.7rem; color: #6b7280; border-bottom: 2px solid #e5e7eb; text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; }
+        .btn { padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; background: var(--primary); color: #fff; }
+        .btn-success { background: #10b981; }
+        .hidden { display: none; }
+        #syncStatus { font-size: 0.7rem; font-weight: bold; color: #059669; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="header">
-            <h1 id="companyHeading">Crafty Art Design</h1>
-            <div class="sync-status" id="cloudStatus">Connected ☁️</div>
+
+    <div class="header">
+        <h2>Crafty Art Design</h2>
+        <div id="syncStatus">CONNECTED ☁️</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('invoice', event)">Invoice Builder</button>
+        <button class="tab" onclick="switchTab('inventory', event)">Inventory</button>
+        <button class="tab" onclick="switchTab('customers', event)">Customers</button>
+    </div>
+
+    <div class="content">
+        <div id="invoice" class="card">
+            <h3>New Invoice</h3>
+            <div class="form-row">
+                <div><label>Customer</label><select id="custSelect"><option>Loading...</option></select></div>
+                <div><label>Add Item</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose --</option></select></div>
+            </div>
+            <table id="invoiceTable">
+                <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div style="text-align:right; margin-top:20px;">
+                <h4>Total: <span id="grandTotal">$0.00</span></h4>
+                <button class="btn btn-success" style="margin-top:10px" onclick="saveInvoice()">Save Invoice</button>
+            </div>
         </div>
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('invoice', event)">Invoice Generator</button>
-            <button class="tab" onclick="showTab('inventory', event)">Inventory</button>
-            <button class="tab" onclick="showTab('customers', event)">Customers</button>
-            <button class="tab" onclick="showTab('admin', event)">Admin</button>
+
+        <div id="inventory" class="card hidden">
+            <h3>Manage Inventory</h3>
+            <div class="form-row" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+                <div><label>SKU</label><input type="text" id="newSku"></div>
+                <div><label>Item Name</label><input type="text" id="newItemName"></div>
+                <div><label>Price</label><input type="number" id="newPrice"></div>
+                <div><label>Size</label><input type="text" id="newSize"></div>
+                <button class="btn" onclick="addNewData('inventory')">Add Item</button>
+            </div>
+            <table id="invTable"><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody></tbody></table>
         </div>
-        <div class="content">
-            <div id="invoice" class="card">
-                <h2>Create Invoice</h2>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                    <div><label>Customer</label><select id="invCustomer"><option>Select Customer</option></select></div>
-                    <div><label>Select Item to Add</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose Item --</option></select></div>
-                </div>
-                <table id="invoiceTable">
-                    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-                <div style="text-align:right; margin-top:1rem;">
-                    <h3>Total: $<span id="grandTotal">0.00</span></h3>
-                    <button class="btn btn-green" onclick="saveInvoice()">Save to Google Sheets</button>
-                </div>
-            </div>
 
-            <div id="inventory" class="card hidden">
-                <h2>Inventory Management</h2>
-                <table id="inventoryList"><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody></tbody></table>
+        <div id="customers" class="card hidden">
+            <h3>Manage Customers</h3>
+            <div class="form-row" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+                <div><label>Name</label><input type="text" id="newCustName"></div>
+                <div><label>Company</label><input type="text" id="newCustComp"></div>
+                <div><label>Email</label><input type="text" id="newCustEmail"></div>
+                <button class="btn" onclick="addNewData('customer')">Add Customer</button>
             </div>
-
-            <div id="customers" class="card hidden">
-                <h2>Customer Database</h2>
-                <table id="customerList"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th></tr></thead><tbody></tbody></table>
-            </div>
-
-            <div id="admin" class="card hidden">
-                <h2>Admin</h2>
-                <button class="btn" onclick="loadData()">Refresh All Data</button>
-            </div>
+            <table id="custTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th></tr></thead><tbody></tbody></table>
         </div>
     </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhRtX93iSLuj1vk7pacnueHx7OZTyU6JM6O0fR1OBdXffRbAtCsUyTijvWZARqF9sn/exec';
-let inventoryData = [];
-let invoiceItems = [];
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXg577xVgBRTmn1b5xJm3XNEASVX-t5m_3KfNqsKUxU6Sh6eZRPx9B6S3Olo7l_xGd/exec';
+    let DATA = { inventory: [], customers: [] };
+    let currentInvoice = [];
 
-async function loadData() {
-    document.getElementById('cloudStatus').textContent = "Syncing...";
-    try {
+    async function load() {
+        document.getElementById('syncStatus').innerText = "SYNCING...";
         const res = await fetch(SCRIPT_URL + '?action=getAll');
-        const d = await res.json();
-        if(d.success) {
-            inventoryData = d.data.inventory;
-            renderTable('inventoryList', d.data.inventory, ['sku', 'itemname', 'price', 'size']);
-            renderTable('customerList', d.data.customers, ['name', 'company', 'email', 'phone']);
-            
-            // Fill Customer Select
-            const custSel = document.getElementById('invCustomer');
-            custSel.innerHTML = '<option>Select Customer</option>';
-            d.data.customers.forEach(c => custSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-
-            // Fill Item Picker
-            const itemSel = document.getElementById('itemPicker');
-            itemSel.innerHTML = '<option value="">-- Choose Item --</option>';
-            inventoryData.forEach(i => itemSel.innerHTML += `<option value="${i.sku}">${i.itemname}</option>`);
-
-            document.getElementById('cloudStatus').textContent = "Connected ☁️";
+        const r = await res.json();
+        if(r.success) {
+            DATA = r.data;
+            updateUI();
+            document.getElementById('syncStatus').innerText = "CONNECTED ☁️";
         }
-    } catch(e) { document.getElementById('cloudStatus').textContent = "Sync Error"; }
-}
-
-function addItem() {
-    const sku = document.getElementById('itemPicker').value;
-    const item = inventoryData.find(i => i.sku == sku);
-    if(item) {
-        invoiceItems.push({ name: item.itemname, price: item.price, qty: 1 });
-        updateInvoiceTable();
     }
-}
 
-function updateInvoiceTable() {
-    const tbody = document.getElementById('invoiceTable').querySelector('tbody');
-    let total = 0;
-    tbody.innerHTML = invoiceItems.map((item, index) => {
-        const rowTotal = item.price * item.qty;
-        total += rowTotal;
-        return `<tr><td>${item.name}</td><td>${item.qty}</td><td>$${item.price}</td><td>$${rowTotal.toFixed(2)}</td></tr>`;
-    }).join('');
-    document.getElementById('grandTotal').textContent = total.toFixed(2);
-}
-
-async function saveInvoice() {
-    const customer = document.getElementById('invCustomer').value;
-    if(customer === "Select Customer" || invoiceItems.length === 0) {
-        alert("Please select a customer and add items first!");
-        return;
+    function updateUI() {
+        fillTable('invTable', DATA.inventory, ['sku', 'itemname', 'price', 'size']);
+        fillTable('custTable', DATA.customers, ['name', 'company', 'email']);
+        const cSel = document.getElementById('custSelect');
+        cSel.innerHTML = '<option>-- Select --</option>';
+        DATA.customers.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        const iSel = document.getElementById('itemPicker');
+        iSel.innerHTML = '<option value="">-- Choose --</option>';
+        DATA.inventory.forEach(i => iSel.innerHTML += `<option value="${i.sku}">${i.itemname}</option>`);
     }
-    // Saving logic would go here
-    alert("System Ready! We can now add the post logic to send this to Sheets.");
-}
 
-function renderTable(id, data, keys) {
-    const b = document.getElementById(id).querySelector('tbody');
-    b.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
-}
+    function fillTable(id, data, keys) {
+        const b = document.getElementById(id).querySelector('tbody');
+        b.innerHTML = data.map(row => `<tr>${keys.map(k => `<td>${row[k]||''}</td>`).join('')}</tr>`).join('');
+    }
 
-function showTab(t, event) {
-    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-    document.getElementById(t).classList.remove('hidden');
-    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-}
+    async function addNewData(type) {
+        document.getElementById('syncStatus').innerText = "ADDING...";
+        let payload = { action: type === 'inventory' ? 'saveInventory' : 'saveCustomer' };
+        if(type === 'inventory') {
+            payload.data = [ document.getElementById('newSku').value, document.getElementById('newItemName').value, document.getElementById('newPrice').value, document.getElementById('newSize').value ];
+        } else {
+            payload.data = [ document.getElementById('newCustName').value, document.getElementById('newCustComp').value, document.getElementById('newCustEmail').value ];
+        }
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Added Successfully!");
+        load();
+    }
 
-loadData();
+    function addItem() {
+        const sku = document.getElementById('itemPicker').value;
+        const item = DATA.inventory.find(i => i.sku == sku);
+        if(item) {
+            currentInvoice.push({...item, qty: 1});
+            renderInvoice();
+        }
+    }
+
+    function renderInvoice() {
+        const b = document.getElementById('invoiceTable').querySelector('tbody');
+        let total = 0;
+        b.innerHTML = currentInvoice.map(i => {
+            total += (i.price * i.qty);
+            return `<tr><td>${i.itemname}</td><td>${i.qty}</td><td>$${i.price}</td><td>$${(i.price * i.qty).toFixed(2)}</td></tr>`;
+        }).join('');
+        document.getElementById('grandTotal').innerText = `$${total.toFixed(2)}`;
+    }
+
+    async function saveInvoice() {
+        const customer = document.getElementById('custSelect').value;
+        const total = document.getElementById('grandTotal').innerText;
+        if(customer === "-- Select --" || currentInvoice.length === 0) {
+            alert("Please pick a customer and add items.");
+            return;
+        }
+        document.getElementById('syncStatus').innerText = "SAVING...";
+        const payload = {
+            action: 'saveInvoice',
+            invoiceData: {
+                invoiceNumber: "INV-" + Date.now().toString().slice(-5),
+                date: new Date().toLocaleDateString(),
+                customer: customer,
+                total: total,
+                items: currentInvoice
+            }
+        };
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Invoice Saved!");
+        currentInvoice = [];
+        renderInvoice();
+        load();
+    }
+
+    function switchTab(id, e) {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+    }
+    load();
 </script>
 </body>
 </html>
