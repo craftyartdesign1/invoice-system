@@ -3,88 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Design | Master System</title>
+    <title>Crafty Art Design | Management System</title>
     <style>
-        :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f3f4f6; --text: #1f2937; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
-        .header { background: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 10; }
-        .tabs { background: #fff; display: flex; padding: 0 2rem; border-bottom: 1px solid #e5e7eb; gap: 1.5rem; overflow-x: auto; }
+        :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f3f4f6; --text: #1f2937; --white: #ffffff; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); }
+
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .login-logo { width: 120px; margin-bottom: 1rem; }
+        .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        
+        /* App Layout */
+        .header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 100; }
+        .brand { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 40px; width: auto; }
+        .tabs { background: var(--white); display: flex; padding: 0 2rem; border-bottom: 1px solid #e5e7eb; gap: 1.5rem; }
         .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        
         .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; align-items: end; }
-        label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 5px; color: #4b5563; }
-        input, select { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+        .card { background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        
+        /* Tables & UI */
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; align-items: end; }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { background: #f9fafb; padding: 12px; text-align: left; font-size: 0.7rem; color: #6b7280; border-bottom: 2px solid #e5e7eb; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; }
-        .btn { padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; background: var(--primary); color: #fff; }
-        .btn-del { background: var(--danger); font-size: 0.7rem; padding: 4px 8px; }
+        th { background: #f9fafb; padding: 12px; text-align: left; font-size: 0.75rem; color: #6b7280; border-bottom: 2px solid #e5e7eb; }
+        td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+        
+        .btn { padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; background: var(--primary); color: var(--white); }
         .btn-success { background: #10b981; }
-        .hidden { display: none; }
-        #syncStatus { font-size: 0.7rem; font-weight: bold; color: #059669; }
+        .btn-del { background: var(--danger); padding: 5px 10px; font-size: 0.8rem; }
+        
+        .hidden { display: none !important; }
+        
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #invoice, #invoice * { visibility: visible; }
+            #invoice { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+            .btn, .form-row, .tabs, .header { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>Crafty Art Design</h2>
-        <div id="syncStatus">CONNECTED ☁️</div>
+    <div id="loginOverlay">
+        <div class="login-box">
+            <img src="https://via.placeholder.com/150?text=LOGO" id="displayLogoLogin" class="login-logo">
+            <h2>Crafty Art Design</h2>
+            <p style="margin-bottom: 1.5rem; color: #6b7280;">Secure Staff Portal</p>
+            <input type="text" id="user" placeholder="Username">
+            <input type="password" id="pass" placeholder="Password">
+            <button class="btn" style="width:100%" onclick="handleLogin()">Sign In</button>
+            <p id="loginErr" style="color:var(--danger); font-size:0.85rem; margin-top:10px;"></p>
+        </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('invoice', event)">Invoice Builder</button>
-        <button class="tab" onclick="switchTab('inventory', event)">Inventory</button>
-        <button class="tab" onclick="switchTab('customers', event)">Customers</button>
-    </div>
-
-    <div class="content">
-        <div id="invoice" class="card">
-            <h3>New Invoice</h3>
-            <div class="form-row">
-                <div><label>Customer</label><select id="custSelect"><option>Loading...</option></select></div>
-                <div><label>Add Item</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose --</option></select></div>
+    <div id="mainApp" class="hidden">
+        <div class="header">
+            <div class="brand">
+                <img src="https://via.placeholder.com/150?text=LOGO" id="displayLogoNav" class="logo-img">
+                <h2 style="font-size: 1.2rem;">Crafty Art Design</h2>
             </div>
-            <table id="invoiceTable">
-                <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <div style="text-align:right; margin-top:20px;">
-                <h4>Total: <span id="grandTotal">$0.00</span></h4>
-                <button class="btn btn-success" style="margin-top:10px" onclick="saveInvoice()">Complete Sale</button>
-            </div>
+            <div id="syncStatus" style="font-size: 0.7rem; color: #10b981; font-weight: bold;">CONNECTED ☁️</div>
         </div>
 
-        <div id="inventory" class="card hidden">
-            <h3>Inventory Management</h3>
-            <div class="form-row" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
-                <div><label>SKU</label><input type="text" id="newSku"></div>
-                <div><label>Item Name</label><input type="text" id="newItemName"></div>
-                <div><label>Price</label><input type="number" id="newPrice"></div>
-                <div><label>Size</label><input type="text" id="newSize"></div>
-                <button class="btn" onclick="addNewData('inventory')">Add to Stock</button>
-            </div>
-            <table id="invTable"><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('invoice', event)">Invoice Builder</button>
+            <button class="tab" onclick="switchTab('inventory', event)">Inventory</button>
+            <button class="tab" onclick="switchTab('customers', event)">Customers</button>
         </div>
 
-        <div id="customers" class="card hidden">
-            <h3>Customer List</h3>
-            <div class="form-row" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
-                <div><label>Name</label><input type="text" id="newCustName"></div>
-                <div><label>Company</label><input type="text" id="newCustComp"></div>
-                <div><label>Email</label><input type="text" id="newCustEmail"></div>
-                <button class="btn" onclick="addNewData('customer')">Add Customer</button>
+        <div class="content">
+            <div id="invoice" class="card">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:2rem;">
+                    <div>
+                        <h2 id="invTitle">INVOICE</h2>
+                        <p id="invNumDisplay">#INV-0000</p>
+                    </div>
+                    <div style="text-align:right">
+                        <strong>Crafty Art Design</strong><br>
+                        Staff: <span id="currentUser">---</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div><label>Customer</label><select id="custSelect"><option>Loading...</option></select></div>
+                    <div><label>Add Item</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose Item --</option></select></div>
+                </div>
+
+                <table id="invoiceTable">
+                    <thead><tr><th>Item Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+
+                <div style="text-align:right; margin-top:2rem; border-top: 2px solid #eee; padding-top: 1rem;">
+                    <h3>Grand Total: <span id="grandTotal">$0.00</span></h3>
+                    <div style="margin-top:1.5rem;" class="no-print">
+                        <button class="btn" onclick="window.print()" style="background:#6b7280">Print / PDF</button>
+                        <button class="btn btn-success" onclick="saveInvoice()">Finalize & Save</button>
+                    </div>
+                </div>
             </div>
-            <table id="custTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Action</th></tr></thead><tbody></tbody></table>
+
+            <div id="inventory" class="card hidden">
+                <h3>Inventory Management</h3>
+                <div class="form-row">
+                    <div><label>SKU</label><input type="text" id="newSku"></div>
+                    <div><label>Item Name</label><input type="text" id="newItemName"></div>
+                    <div><label>Price</label><input type="number" id="newPrice"></div>
+                    <div><label>Size</label><input type="text" id="newSize"></div>
+                    <button class="btn" onclick="addNewData('inventory')">Add Stock</button>
+                </div>
+                <table id="invTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table>
+            </div>
+
+            <div id="customers" class="card hidden">
+                <h3>Customer Records</h3>
+                <div class="form-row">
+                    <div><label>Name</label><input type="text" id="newCustName"></div>
+                    <div><label>Company</label><input type="text" id="newCustComp"></div>
+                    <div><label>Email</label><input type="text" id="newCustEmail"></div>
+                    <button class="btn" onclick="addNewData('customer')">Add Customer</button>
+                </div>
+                <table id="custTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Action</th></tr></thead><tbody></tbody></table>
+            </div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbza8fodJBQBS7yM4wfX52DBojjscOxFR1BcSW6bcbkYaQm4nJPucUlgHajSbxNOQoKE/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzviCex-8kansCAW5SJ7m7ZpoPu4fdvukPOgtCeHTMuvndMWT0iRNH4JgJN993RU1LU/exec';
     let DATA = { inventory: [], customers: [] };
     let currentInvoice = [];
+    let activeUser = "";
+
+    async function handleLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const err = document.getElementById('loginErr');
+        err.innerText = "Verifying...";
+        
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
+            const r = await res.json();
+            if(r.success) {
+                activeUser = u;
+                document.getElementById('currentUser').innerText = u;
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                load();
+            } else {
+                err.innerText = "Invalid credentials. Try again.";
+            }
+        } catch(e) {
+            err.innerText = "Error connecting to server.";
+        }
+    }
 
     async function load() {
         document.getElementById('syncStatus').innerText = "SYNCING...";
@@ -104,12 +180,17 @@
     function updateUI() {
         fillTable('invTable', DATA.inventory, ['sku', 'itemname', 'price', 'size'], 'Inventory');
         fillTable('custTable', DATA.customers, ['name', 'company', 'email'], 'Customers');
+        
         const cSel = document.getElementById('custSelect');
         cSel.innerHTML = '<option>-- Select Customer --</option>';
         DATA.customers.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+
         const iSel = document.getElementById('itemPicker');
         iSel.innerHTML = '<option value="">-- Choose Item --</option>';
         DATA.inventory.forEach(i => iSel.innerHTML += `<option value="${i.sku}">${i.itemname}</option>`);
+
+        // Set Invoice Number
+        document.getElementById('invNumDisplay').innerText = "#INV-" + Date.now().toString().slice(-6);
     }
 
     function fillTable(id, data, keys, sheetName) {
@@ -121,66 +202,21 @@
         }).join('');
     }
 
-    async function deleteEntry(sheet, id) {
-        if(!confirm("Are you sure?")) return;
-        document.getElementById('syncStatus').innerText = "DELETING...";
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheet: sheet, id: id}) });
-        load();
-    }
-
-    async function addNewData(type) {
-        document.getElementById('syncStatus').innerText = "ADDING...";
-        let payload = { action: type === 'inventory' ? 'saveInventory' : 'saveCustomer' };
-        if(type === 'inventory') {
-            payload.data = [ document.getElementById('newSku').value, document.getElementById('newItemName').value, document.getElementById('newPrice').value, document.getElementById('newSize').value ];
-        } else {
-            payload.data = [ document.getElementById('newCustName').value, document.getElementById('newCustComp').value, document.getElementById('newCustEmail').value ];
-        }
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        load();
-    }
-
     function addItem() {
         const sku = document.getElementById('itemPicker').value;
         const item = DATA.inventory.find(i => i.sku == sku);
         if(item) {
             currentInvoice.push({...item, qty: 1});
             renderInvoice();
+            document.getElementById('itemPicker').value = "";
         }
     }
 
     function renderInvoice() {
         const b = document.getElementById('invoiceTable').querySelector('tbody');
         let total = 0;
-        b.innerHTML = currentInvoice.map(i => {
-            total += (i.price * i.qty);
-            return `<tr><td>${i.itemname}</td><td>${i.qty}</td><td>$${i.price}</td><td>$${(i.price * i.qty).toFixed(2)}</td></tr>`;
+        b.innerHTML = currentInvoice.map((i, index) => {
+            const lineTotal = i.price * i.qty;
+            total += lineTotal;
+            return `<tr><td>${i.itemname}</td><td>${i.qty}</td><td>$${parseFloat(i.price).toFixed(2)}</td><td>$${lineTotal.toFixed(2)}</td></tr>`;
         }).join('');
-        document.getElementById('grandTotal').innerText = `$${total.toFixed(2)}`;
-    }
-
-    async function saveInvoice() {
-        const customer = document.getElementById('custSelect').value;
-        if(customer === "-- Select Customer --" || currentInvoice.length === 0) return alert("Select customer and items.");
-        document.getElementById('syncStatus').innerText = "SAVING...";
-        const payload = {
-            action: 'saveInvoice',
-            invoiceData: { invoiceNumber: "INV-"+Date.now().toString().slice(-5), date: new Date().toLocaleDateString(), customer: customer, total: document.getElementById('grandTotal').innerText, items: currentInvoice }
-        };
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        alert("Invoice Saved!");
-        currentInvoice = [];
-        renderInvoice();
-        load();
-    }
-
-    function switchTab(id, e) {
-        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        e.target.classList.add('active');
-    }
-    load();
-</script>
-</body>
-</html>
