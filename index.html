@@ -3,29 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management System | Login</title>
+    <title>Crafty Art Design | Management System</title>
     <style>
-        :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: sans-serif; }
-        body { background: var(--bg); display: flex; align-items: center; justify-content: center; height: 100vh; }
+        :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
         
-        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-        h1 { margin-bottom: 1rem; font-size: 1.5rem; }
-        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #errorMessage { color: red; margin-top: 1rem; font-size: 0.9rem; display: none; }
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* Dashboard Styling */
+        #mainApp { display: none; }
+        header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .nav-tabs { display: flex; background: #ddd; padding: 10px 20px; gap: 10px; }
+        .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #eee; border-radius: 5px; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .content-area { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        /* Shared Components */
+        h1 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+        .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #errorMsg { color: red; margin-top: 10px; display: none; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <h1>Crafty Art Design</h1>
-        <p>Management Portal</p>
-        <br>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="handleLogin()">Sign In</button>
-        <div id="errorMessage">Invalid username or password.</div>
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h1>Crafty Art Design</h1>
+            <p style="color: #666; margin-bottom: 1.5rem;">Management Portal</p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+            <p id="errorMsg">Invalid username or password.</p>
+        </div>
+    </div>
+
+    <div id="mainApp">
+        <header>
+            <h2>Crafty Art Design</h2>
+            <div>Welcome, <span id="userDisplay" style="font-weight: bold;">User</span> | <a href="#" onclick="location.reload()">Logout</a></div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active">Dashboard</button>
+            <button class="tab-btn">Invoices</button>
+            <button class="tab-btn">Inventory</button>
+        </nav>
+
+        <div class="content-area">
+            <div class="card">
+                <h3>System Overview</h3>
+                <hr style="margin: 15px 0;">
+                <p>Welcome to your management system. Use the tabs above to manage your orders and stock.</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -34,23 +69,33 @@
         async function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            const err = document.getElementById('errorMessage');
+            const err = document.getElementById('errorMsg');
+            const btn = document.querySelector('.btn-primary');
 
             if (!user || !pass) return;
+            
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
 
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
                 const data = await response.json();
 
                 if (data.success) {
-                    alert("Login Successful! Welcome " + data.user.display_name);
-                    // You are now logged in.
+                    // Success: Swap Login for Dashboard
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    document.getElementById('userDisplay').innerText = data.user.display_name;
                 } else {
                     err.style.display = 'block';
+                    btn.innerText = "Sign In";
+                    btn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
-                alert("Connection error. Check your Apps Script URL.");
+                alert("Connection error. Check your network or Apps Script deployment.");
+                btn.innerText = "Sign In";
+                btn.disabled = false;
             }
         }
     </script>
