@@ -1,34 +1,129 @@
-function doGet(e) {
-  const action = e.parameter.action;
-  
-  if (action === 'login') {
-    return handleLogin(e);
-  }
-  
-  // Add other actions (like fetching inventory) here later
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crafty Art Design | Management System</title>
+    <style>
+        :root { 
+            --primary: #000000; 
+            --danger: #ef4444; 
+            --bg: #f3f4f6; 
+            --text: #1f2937; 
+            --white: #ffffff; 
+        }
+        
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh;
+            margin: 0;
+        }
 
-function handleLogin(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Users'); // Matches your "Users" tab
-  const data = sheet.getDataRange().getValues();
-  
-  const username = e.parameter.username;
-  const password = e.parameter.password;
-  
-  // Skip header row and look for user
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === username && data[i][1] === password) {
-      const user = {
-        username: data[i][0],
-        role: data[i][2],
-        display_name: data[i][3]
-      };
-      return ContentService.createTextOutput(JSON.stringify({ success: true, user: user }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({ success: false }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+        /* Login Container */
+        #loginOverlay { 
+            background: var(--white); 
+            width: 90%; 
+            max-width: 400px; 
+            padding: 2.5rem; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; 
+        }
+        
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--primary); }
+        p.subtitle { color: #6b7280; margin-bottom: 2rem; font-size: 0.9rem; }
+        
+        input { 
+            width: 100%; 
+            padding: 0.8rem; 
+            margin-bottom: 1rem; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            outline: none;
+        }
+        
+        input:focus { border-color: var(--primary); }
+        
+        .login-btn { 
+            width: 100%; 
+            padding: 0.8rem; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 1rem;
+            cursor: pointer; 
+            transition: background 0.3s; 
+        }
+        
+        .login-btn:hover { opacity: 0.9; }
+        
+        #errorMessage { 
+            color: var(--danger); 
+            font-size: 0.85rem; 
+            margin-top: 1rem; 
+            display: none; 
+        }
+
+        /* Dashboard (Hidden by default) */
+        #dashboard { display: none; text-align: center; }
+        .success-card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <h1>Crafty Art Design</h1>
+        <p class="subtitle">Management Portal</p>
+        
+        <input type="text" id="username" placeholder="Username" autocomplete="username">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        
+        <button class="btn login-btn" onclick="handleLogin()">Sign In</button>
+        
+        <p id="errorMessage">Invalid username or password. Please try again.</p>
+    </div>
+
+    <div id="dashboard">
+        <div class="success-card">
+            <h2 id="welcomeMsg">Welcome!</h2>
+            <p>You have successfully logged in.</p>
+            <br>
+            <button class="login-btn" onclick="location.reload()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Your Verified Apps Script URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylNUTasKljubN7dhVVurbQsaW0876W0EfRfYAj9LpydUCO8c-3Vc9nvAisKb7r2hg3/exec";
+
+        async function handleLogin() {
+            const userField = document.getElementById('username');
+            const passField = document.getElementById('password');
+            const errorText = document.getElementById('errorMessage');
+            const loginBtn = document.querySelector('.login-btn');
+
+            if (!userField.value || !passField.value) return;
+
+            // UI Feedback
+            loginBtn.innerText = "Signing in...";
+            loginBtn.disabled = true;
+            errorText.style.display = 'none';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(userField.value)}&password=${encodeURIComponent(passField.value)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Hide login, show dashboard
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('welcomeMsg').innerText = "Welcome, " + data.user.display_
