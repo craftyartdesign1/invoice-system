@@ -9,11 +9,9 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         
-        /* Screens */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         #mainApp { display: none; }
 
-        /* UI Elements */
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
@@ -23,14 +21,12 @@
         .content-area { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-        /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
         
         input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; }
         .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #errorMsg { color: red; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -42,7 +38,6 @@
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
             <button class="btn-primary" onclick="handleLogin()">Sign In</button>
-            <p id="errorMsg">Invalid username or password.</p>
         </div>
     </div>
 
@@ -55,11 +50,9 @@
         <nav class="nav-tabs">
             <button class="tab-btn" onclick="showDashboard()">Dashboard</button>
             <button class="tab-btn active" onclick="loadInventory()">Inventory</button>
-            <button class="tab-btn">Invoices</button>
         </nav>
 
-        <div class="content-area" id="pageContent">
-            </div>
+        <div class="content-area" id="pageContent"></div>
     </div>
 
     <script>
@@ -68,7 +61,6 @@
         async function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            const err = document.getElementById('errorMsg');
 
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
@@ -80,18 +72,14 @@
                     document.getElementById('userDisplay').innerText = data.user.display_name;
                     showDashboard();
                 } else {
-                    err.style.display = 'block';
+                    alert("Invalid Login");
                 }
-            } catch (e) { alert("Login failed. Check connection."); }
+            } catch (e) { alert("Connection Error"); }
         }
 
         function showDashboard() {
             updateTabs(0);
-            document.getElementById('pageContent').innerHTML = `
-                <div class="card">
-                    <h3>System Overview</h3>
-                    <p>Welcome back! Use the tabs above to manage your business.</p>
-                </div>`;
+            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>Select a tab to begin.</p></div>`;
         }
 
         async function loadInventory() {
@@ -109,26 +97,29 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>SKU</th>
                                     <th>Item Name</th>
-                                    <th>Quantity</th>
                                     <th>Price</th>
+                                    <th>Size</th>
                                 </tr>
                             </thead>
                             <tbody>`;
                 
                 data.forEach(item => {
+                    // This matches your sheet headers: SKU, Item Name, Price, Size
                     tableHtml += `
                         <tr>
-                            <td>${item.item_name || 'N/A'}</td>
-                            <td>${item.stock_qty || 0}</td>
-                            <td>$${item.unit_price || 0}</td>
+                            <td>${item.sku || ''}</td>
+                            <td>${item.item_name || ''}</td>
+                            <td>$${item.price || ''}</td>
+                            <td>${item.size || ''}</td>
                         </tr>`;
                 });
 
                 tableHtml += `</tbody></table></div>`;
                 container.innerHTML = tableHtml;
             } catch (e) {
-                container.innerHTML = '<div class="card"><h3 style="color:red;">Error loading inventory. Check "Inventory" tab in Sheets.</h3></div>';
+                container.innerHTML = '<div class="card"><h3 style="color:red;">Error loading your items.</h3></div>';
             }
         }
 
