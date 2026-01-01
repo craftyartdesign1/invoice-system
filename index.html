@@ -9,24 +9,28 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         
-        /* Login Screen */
+        /* Screens */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        
-        /* Dashboard Styling */
         #mainApp { display: none; }
+
+        /* UI Elements */
+        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .nav-tabs { display: flex; background: #ddd; padding: 10px 20px; gap: 10px; }
-        .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #eee; border-radius: 5px; font-weight: bold; }
+        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
+        .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 5px; font-weight: bold; }
         .tab-btn.active { background: var(--primary); color: white; }
+        
         .content-area { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-        /* Shared Components */
-        h1 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        
         input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; }
         .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #errorMsg { color: red; margin-top: 10px; display: none; font-size: 0.9rem; }
+        #errorMsg { color: red; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -49,54 +53,91 @@
         </header>
 
         <nav class="nav-tabs">
-            <button class="tab-btn active">Dashboard</button>
+            <button class="tab-btn" onclick="showDashboard()">Dashboard</button>
+            <button class="tab-btn active" onclick="loadInventory()">Inventory</button>
             <button class="tab-btn">Invoices</button>
-            <button class="tab-btn">Inventory</button>
         </nav>
 
-        <div class="content-area">
-            <div class="card">
-                <h3>System Overview</h3>
-                <hr style="margin: 15px 0;">
-                <p>Welcome to your management system. Use the tabs above to manage your orders and stock.</p>
+        <div class="content-area" id="pageContent">
             </div>
-        </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylNUTasKljubN7dhVVurbQsaW0876W0EfRfYAj9LpydUCO8c-3Vc9nvAisKb7r2hg3/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFBf_VR0rtqHUuMDpqYZ5lXc_flDvS6VhQ10zZ5aU4BFlfuEIYdNPhEjWbAmOob0Na/exec";
 
         async function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const err = document.getElementById('errorMsg');
-            const btn = document.querySelector('.btn-primary');
-
-            if (!user || !pass) return;
-            
-            btn.innerText = "Verifying...";
-            btn.disabled = true;
 
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
                 const data = await response.json();
 
                 if (data.success) {
-                    // Success: Swap Login for Dashboard
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
                     document.getElementById('userDisplay').innerText = data.user.display_name;
+                    showDashboard();
                 } else {
                     err.style.display = 'block';
-                    btn.innerText = "Sign In";
-                    btn.disabled = false;
                 }
+            } catch (e) { alert("Login failed. Check connection."); }
+        }
+
+        function showDashboard() {
+            updateTabs(0);
+            document.getElementById('pageContent').innerHTML = `
+                <div class="card">
+                    <h3>System Overview</h3>
+                    <p>Welcome back! Use the tabs above to manage your business.</p>
+                </div>`;
+        }
+
+        async function loadInventory() {
+            updateTabs(1);
+            const container = document.getElementById('pageContent');
+            container.innerHTML = '<div class="card"><h3>Loading Inventory...</h3></div>';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getInventory`);
+                const data = await response.json();
+                
+                let tableHtml = `
+                    <div class="card">
+                        <h3>Stock Inventory</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                data.forEach(item => {
+                    tableHtml += `
+                        <tr>
+                            <td>${item.item_name || 'N/A'}</td>
+                            <td>${item.stock_qty || 0}</td>
+                            <td>$${item.unit_price || 0}</td>
+                        </tr>`;
+                });
+
+                tableHtml += `</tbody></table></div>`;
+                container.innerHTML = tableHtml;
             } catch (e) {
-                console.error(e);
-                alert("Connection error. Check your network or Apps Script deployment.");
-                btn.innerText = "Sign In";
-                btn.disabled = false;
+                container.innerHTML = '<div class="card"><h3 style="color:red;">Error loading inventory. Check "Inventory" tab in Sheets.</h3></div>';
             }
+        }
+
+        function updateTabs(index) {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach((btn, i) => {
+                if(i === index) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
         }
     </script>
 </body>
