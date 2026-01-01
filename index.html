@@ -12,7 +12,7 @@
         /* Login Screen */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .login-logo { width: 220px; height: auto; margin-bottom: 1rem; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1)); }
+        .login-logo { width: 220px; height: auto; margin-bottom: 1rem; }
         .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 1rem; }
         
         /* App Layout */
@@ -20,20 +20,15 @@
         .brand { display: flex; align-items: center; gap: 15px; }
         .logo-img { height: 60px; width: auto; }
         .tabs { background: var(--white); display: flex; padding: 0 2rem; border-bottom: 1px solid #e5e7eb; gap: 1.5rem; }
-        .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         
         .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
-        
         .btn { padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; background: var(--primary); color: var(--white); transition: 0.2s; }
-        .btn-success { background: #10b981; }
         .hidden { display: none !important; }
         
-        @media print {
-            .no-print, .tabs, .header { display: none !important; }
-            #invoice { box-shadow: none; border: none; padding: 0; }
-        }
+        @media print { .no-print, .tabs, .header { display: none !important; } #invoice { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
@@ -54,7 +49,7 @@
         <div class="header">
             <div class="brand">
                 <img src="https://i.ibb.co/Ldn9p7f/my-logo-no-backgroung.png" class="logo-img">
-                <h2 style="font-size: 1.2rem; letter-spacing: 1px; font-weight: 800;">CRAFTY ART DESIGN</h2>
+                <h2 style="font-size: 1.2rem; font-weight: 800;">CRAFTY ART DESIGN</h2>
             </div>
             <div id="syncStatus" style="font-size: 0.75rem; color: #10b981; font-weight: bold;">● SYSTEM ONLINE</div>
         </div>
@@ -67,35 +62,24 @@
 
         <div class="content">
             <div id="invoice" class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; border-bottom: 2px solid #000; padding-bottom:1rem;">
-                    <div>
-                        <h1 style="font-size: 2.5rem; margin:0;">INVOICE</h1>
-                        <p id="invNumDisplay" style="color:#666; font-weight:bold;">#INV-000000</p>
-                    </div>
-                    <div style="text-align:right">
-                         <img src="https://i.ibb.co/Ldn9p7f/my-logo-no-backgroung.png" style="height: 80px;"><br>
-                         <p id="invDate" style="margin-top:5px;">Date: --/--/----</p>
-                    </div>
-                </div>
-                
-                <p>Welcome back, <strong id="displayUser"></strong>!</p>
-                <div style="margin-top: 2rem; padding: 20px; border: 1px dashed #ccc; text-align: center; color: #888;">
-                    The system is ready. Use the tabs above to manage your inventory and customers.
-                </div>
+                <h1>Welcome, <span id="displayUser"></span>!</h1>
+                <p style="margin-top:1rem; color:#666;">Login Successful. The system is retrieving your data from Google Sheets...</p>
             </div>
         </div>
     </div>
 
 <script>
+    // Ensure this URL matches your latest 'Deploy' URL from Apps Script
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzviCex-8kansCAW5SJ7m7ZpoPu4fdvukPOgtCeHTMuvndMWT0iRNH4JgJN993RU1LU/exec';
 
     async function handleLogin() {
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
         const err = document.getElementById('loginErr');
-        err.innerText = "Checking credentials...";
+        err.innerText = "Authenticating...";
         
         try {
+            // Using a simple fetch for the login action
             const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
             const result = await response.json();
             
@@ -103,13 +87,11 @@
                 document.getElementById('displayUser').innerText = u;
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('invDate').innerText = "Date: " + new Date().toLocaleDateString();
-                document.getElementById('invNumDisplay').innerText = "#INV-" + Math.floor(100000 + Math.random() * 900000);
             } else {
-                err.innerText = "Access Denied. Check your spreadsheet 'Users' tab.";
+                err.innerText = "Invalid Username or Password.";
             }
         } catch (e) {
-            err.innerText = "Connection Error. Ensure Script is Deployed to 'Anyone'.";
+            err.innerText = "Connection Error. Please check your Script Deployment.";
         }
     }
 
