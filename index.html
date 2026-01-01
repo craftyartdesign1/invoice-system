@@ -5,34 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crafty Art Design | Management System</title>
     <style>
-        :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f3f4f6; --text: #1f2937; --white: #ffffff; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+        :root { --primary: #000000; --danger: #ef4444; --bg: #f3f4f6; --text: #1f2937; --white: #ffffff; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: var(--bg); color: var(--text); }
 
         /* Login Screen */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .login-logo { width: 120px; margin-bottom: 1rem; }
-        .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        .login-logo { width: 180px; margin-bottom: 1.5rem; }
+        .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 1rem; }
         
         /* App Layout */
         .header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; position: sticky; top:0; z-index: 100; }
         .brand { display: flex; align-items: center; gap: 15px; }
-        .logo-img { height: 40px; width: auto; }
+        .logo-img { height: 50px; width: auto; }
         .tabs { background: var(--white); display: flex; padding: 0 2rem; border-bottom: 1px solid #e5e7eb; gap: 1.5rem; }
-        .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; }
+        .tab { padding: 1rem 0; border: none; background: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; transition: 0.3s; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         
         .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .card { background: var(--white); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
         
         /* Tables & UI */
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; align-items: end; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { background: #f9fafb; padding: 12px; text-align: left; font-size: 0.75rem; color: #6b7280; border-bottom: 2px solid #e5e7eb; }
-        td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; align-items: end; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        th { background: #f9fafb; padding: 12px; text-align: left; font-size: 0.75rem; color: #6b7280; border-bottom: 2px solid #e5e7eb; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.95rem; }
         
-        .btn { padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; background: var(--primary); color: var(--white); }
+        .btn { padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; background: var(--primary); color: var(--white); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { opacity: 0.8; }
         .btn-success { background: #10b981; }
         .btn-del { background: var(--danger); padding: 5px 10px; font-size: 0.8rem; }
         
@@ -40,10 +41,12 @@
         
         /* Print Styles */
         @media print {
-            body * { visibility: hidden; }
-            #invoice, #invoice * { visibility: visible; }
-            #invoice { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
-            .btn, .form-row, .tabs, .header { display: none !important; }
+            body { background: white; }
+            #mainApp { padding: 0; }
+            .content { padding: 0; max-width: 100%; }
+            .card { box-shadow: none; border: none; padding: 0; }
+            .no-print, .tabs, .header, .form-row, .btn-del, th:last-child, td:last-child { display: none !important; }
+            #invoice { display: block !important; visibility: visible !important; }
         }
     </style>
 </head>
@@ -51,9 +54,9 @@
 
     <div id="loginOverlay">
         <div class="login-box">
-            <img src="https://via.placeholder.com/150?text=LOGO" id="displayLogoLogin" class="login-logo">
-            <h2>Crafty Art Design</h2>
-            <p style="margin-bottom: 1.5rem; color: #6b7280;">Secure Staff Portal</p>
+            <img src="https://i.ibb.co/Ldn9p7f/my-logo-no-backgroung.png" class="login-logo" alt="Crafty Art Design Logo">
+            <h2 style="margin-bottom: 0.5rem;">Staff Login</h2>
+            <p style="margin-bottom: 1.5rem; color: #6b7280; font-size: 0.9rem;">Management Portal</p>
             <input type="text" id="user" placeholder="Username">
             <input type="password" id="pass" placeholder="Password">
             <button class="btn" style="width:100%" onclick="handleLogin()">Sign In</button>
@@ -64,13 +67,13 @@
     <div id="mainApp" class="hidden">
         <div class="header">
             <div class="brand">
-                <img src="https://via.placeholder.com/150?text=LOGO" id="displayLogoNav" class="logo-img">
-                <h2 style="font-size: 1.2rem;">Crafty Art Design</h2>
+                <img src="https://i.ibb.co/Ldn9p7f/my-logo-no-backgroung.png" class="logo-img" alt="Logo">
+                <h2 style="font-size: 1.1rem; letter-spacing: 1px;">CRAFTY ART DESIGN</h2>
             </div>
-            <div id="syncStatus" style="font-size: 0.7rem; color: #10b981; font-weight: bold;">CONNECTED ☁️</div>
+            <div id="syncStatus" style="font-size: 0.75rem; color: #10b981; font-weight: bold;">SYSTEM ONLINE</div>
         </div>
 
-        <div class="tabs">
+        <div class="tabs no-print">
             <button class="tab active" onclick="switchTab('invoice', event)">Invoice Builder</button>
             <button class="tab" onclick="switchTab('inventory', event)">Inventory</button>
             <button class="tab" onclick="switchTab('customers', event)">Customers</button>
@@ -78,32 +81,34 @@
 
         <div class="content">
             <div id="invoice" class="card">
-                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:2.5rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
                     <div>
-                        <h2 id="invTitle">INVOICE</h2>
-                        <p id="invNumDisplay">#INV-0000</p>
+                        <h1 style="font-size: 2.5rem; color: #000;">INVOICE</h1>
+                        <p id="invNumDisplay" style="font-weight: bold; color: #666;">#INV-000000</p>
                     </div>
                     <div style="text-align:right">
+                        <img src="https://i.ibb.co/Ldn9p7f/my-logo-no-backgroung.png" style="height: 60px; margin-bottom: 10px;"><br>
                         <strong>Crafty Art Design</strong><br>
-                        Staff: <span id="currentUser">---</span>
+                        Date: <span id="invDate">--/--/----</span><br>
+                        Served by: <span id="currentUser" style="text-transform: capitalize;">---</span>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div><label>Customer</label><select id="custSelect"><option>Loading...</option></select></div>
-                    <div><label>Add Item</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose Item --</option></select></div>
+                <div class="form-row no-print">
+                    <div><label>Select Customer</label><select id="custSelect"><option>Loading...</option></select></div>
+                    <div><label>Add Inventory Item</label><select id="itemPicker" onchange="addItem()"><option value="">-- Click to search --</option></select></div>
                 </div>
 
                 <table id="invoiceTable">
-                    <thead><tr><th>Item Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                    <thead><tr><th>Description</th><th style="width: 80px;">Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
                     <tbody></tbody>
                 </table>
 
-                <div style="text-align:right; margin-top:2rem; border-top: 2px solid #eee; padding-top: 1rem;">
-                    <h3>Grand Total: <span id="grandTotal">$0.00</span></h3>
-                    <div style="margin-top:1.5rem;" class="no-print">
-                        <button class="btn" onclick="window.print()" style="background:#6b7280">Print / PDF</button>
-                        <button class="btn btn-success" onclick="saveInvoice()">Finalize & Save</button>
+                <div style="text-align:right; margin-top:2rem; border-top: 2px solid #000; padding-top: 1rem;">
+                    <h2 style="font-size: 1.8rem;">TOTAL: <span id="grandTotal">$0.00</span></h2>
+                    <div style="margin-top:2rem;" class="no-print">
+                        <button class="btn" onclick="window.print()" style="background:#4b5563">Print / PDF</button>
+                        <button class="btn btn-success" onclick="saveInvoice()">Finalize Sale</button>
                     </div>
                 </div>
             </div>
@@ -114,18 +119,18 @@
                     <div><label>SKU</label><input type="text" id="newSku"></div>
                     <div><label>Item Name</label><input type="text" id="newItemName"></div>
                     <div><label>Price</label><input type="number" id="newPrice"></div>
-                    <div><label>Size</label><input type="text" id="newSize"></div>
-                    <button class="btn" onclick="addNewData('inventory')">Add Stock</button>
+                    <div><label>Size/Notes</label><input type="text" id="newSize"></div>
+                    <button class="btn" onclick="addNewData('inventory')">Add Item</button>
                 </div>
                 <table id="invTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th><th>Action</th></tr></thead><tbody></tbody></table>
             </div>
 
             <div id="customers" class="card hidden">
-                <h3>Customer Records</h3>
+                <h3>Customer Directory</h3>
                 <div class="form-row">
-                    <div><label>Name</label><input type="text" id="newCustName"></div>
-                    <div><label>Company</label><input type="text" id="newCustComp"></div>
-                    <div><label>Email</label><input type="text" id="newCustEmail"></div>
+                    <div><label>Full Name</label><input type="text" id="newCustName"></div>
+                    <div><label>Company/Business</label><input type="text" id="newCustComp"></div>
+                    <div><label>Email Address</label><input type="text" id="newCustEmail"></div>
                     <button class="btn" onclick="addNewData('customer')">Add Customer</button>
                 </div>
                 <table id="custTable"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Action</th></tr></thead><tbody></tbody></table>
@@ -143,7 +148,7 @@
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         const err = document.getElementById('loginErr');
-        err.innerText = "Verifying...";
+        err.innerText = "Authenticating...";
         
         try {
             const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
@@ -155,10 +160,10 @@
                 document.getElementById('mainApp').classList.remove('hidden');
                 load();
             } else {
-                err.innerText = "Invalid credentials. Try again.";
+                err.innerText = "Invalid login details.";
             }
         } catch(e) {
-            err.innerText = "Error connecting to server.";
+            err.innerText = "Connection error.";
         }
     }
 
@@ -170,10 +175,10 @@
             if(r.success) {
                 DATA = r.data;
                 updateUI();
-                document.getElementById('syncStatus').innerText = "CONNECTED ☁️";
+                document.getElementById('syncStatus').innerText = "SYSTEM ONLINE";
             }
         } catch(e) {
-            document.getElementById('syncStatus').innerText = "OFFLINE ❌";
+            document.getElementById('syncStatus').innerText = "OFFLINE";
         }
     }
 
@@ -189,8 +194,8 @@
         iSel.innerHTML = '<option value="">-- Choose Item --</option>';
         DATA.inventory.forEach(i => iSel.innerHTML += `<option value="${i.sku}">${i.itemname}</option>`);
 
-        // Set Invoice Number
         document.getElementById('invNumDisplay').innerText = "#INV-" + Date.now().toString().slice(-6);
+        document.getElementById('invDate').innerText = new Date().toLocaleDateString();
     }
 
     function fillTable(id, data, keys, sheetName) {
@@ -198,7 +203,7 @@
         b.innerHTML = data.map(row => {
             const idVal = row[keys[0]]; 
             return `<tr>${keys.map(k => `<td>${row[k]||''}</td>`).join('')}
-            <td><button class="btn btn-del" onclick="deleteEntry('${sheetName}', '${idVal}')">Delete</button></td></tr>`;
+            <td class="no-print"><button class="btn btn-del" onclick="deleteEntry('${sheetName}', '${idVal}')">Delete</button></td></tr>`;
         }).join('');
     }
 
@@ -220,3 +225,56 @@
             total += lineTotal;
             return `<tr><td>${i.itemname}</td><td>${i.qty}</td><td>$${parseFloat(i.price).toFixed(2)}</td><td>$${lineTotal.toFixed(2)}</td></tr>`;
         }).join('');
+        document.getElementById('grandTotal').innerText = `$${total.toFixed(2)}`;
+    }
+
+    async function saveInvoice() {
+        const customer = document.getElementById('custSelect').value;
+        if(customer === "-- Select Customer --" || currentInvoice.length === 0) return alert("Select customer and items first.");
+        
+        document.getElementById('syncStatus').innerText = "SAVING...";
+        const payload = {
+            action: 'saveInvoice',
+            invoiceData: {
+                invoiceNumber: document.getElementById('invNumDisplay').innerText,
+                date: document.getElementById('invDate').innerText,
+                customer: customer,
+                user: activeUser,
+                total: document.getElementById('grandTotal').innerText,
+                items: currentInvoice
+            }
+        };
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Invoice recorded successfully!");
+        currentInvoice = [];
+        renderInvoice();
+        load();
+    }
+
+    async function deleteEntry(sheet, id) {
+        if(!confirm("Delete this entry forever?")) return;
+        document.getElementById('syncStatus').innerText = "DELETING...";
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheet: sheet, id: id}) });
+        load();
+    }
+
+    async function addNewData(type) {
+        let payload = { action: type === 'inventory' ? 'saveInventory' : 'saveCustomer' };
+        if(type === 'inventory') {
+            payload.data = [ document.getElementById('newSku').value, document.getElementById('newItemName').value, document.getElementById('newPrice').value, document.getElementById('newSize').value ];
+        } else {
+            payload.data = [ document.getElementById('newCustName').value, document.getElementById('newCustComp').value, document.getElementById('newCustEmail').value ];
+        }
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        load();
+    }
+
+    function switchTab(id, e) {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+    }
+</script>
+</body>
+</html>
