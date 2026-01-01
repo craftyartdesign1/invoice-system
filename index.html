@@ -18,91 +18,129 @@
         th{background:#f9fafb;padding:0.75rem;text-align:left;font-size:0.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
         td{padding:0.75rem;border-bottom:1px solid #f3f4f6;font-size:0.875rem}
         input, select{width:100%;padding:0.625rem;margin:0.25rem 0;border:1px solid #d1d5db;border-radius:0.5rem}
-        .btn{padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;border:none;background:#4f46e5;color:#fff}
+        .btn{padding:0.625rem 1.25rem;font-weight:600;border-radius:0.5rem;cursor:pointer;border:none;background:#4f46e5;color:#fff;margin-top:10px}
+        .btn-green{background:#10b981}
         .hidden{display:none}
     </style>
 </head>
 <body>
     <div id="app">
         <div class="header">
-            <h1 id="companyHeading" style="font-size:1.25rem;font-weight:700">Crafty Art Design</h1>
+            <h1 id="companyHeading">Crafty Art Design</h1>
             <div class="sync-status" id="cloudStatus">Connected ☁️</div>
         </div>
         <div class="tabs">
             <button class="tab active" onclick="showTab('invoice', event)">Invoice Generator</button>
             <button class="tab" onclick="showTab('inventory', event)">Inventory</button>
             <button class="tab" onclick="showTab('customers', event)">Customers</button>
-            <button class="tab" onclick="showTab('lookup', event)">Invoice Lookup</button>
             <button class="tab" onclick="showTab('admin', event)">Admin</button>
         </div>
         <div class="content">
             <div id="invoice" class="card">
                 <h2>Create Invoice</h2>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div><label>Customer</label><select id="invCustomer"><option>Select Customer</option></select></div>
-                    <div><label>Invoice #</label><input type="text" placeholder="Auto-gen" readonly></div>
+                    <div><label>Select Item to Add</label><select id="itemPicker" onchange="addItem()"><option value="">-- Choose Item --</option></select></div>
                 </div>
-                <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody><tr><td colspan="4" style="text-align:center">Select items to begin</td></tr></tbody></table>
+                <table id="invoiceTable">
+                    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <div style="text-align:right; margin-top:1rem;">
+                    <h3>Total: $<span id="grandTotal">0.00</span></h3>
+                    <button class="btn btn-green" onclick="saveInvoice()">Save to Google Sheets</button>
+                </div>
             </div>
+
             <div id="inventory" class="card hidden">
                 <h2>Inventory Management</h2>
-                <table id="inventoryList">
-                    <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+                <table id="inventoryList"><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody></tbody></table>
             </div>
+
             <div id="customers" class="card hidden">
                 <h2>Customer Database</h2>
-                <table id="customerList">
-                    <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+                <table id="customerList"><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th></tr></thead><tbody></tbody></table>
             </div>
-            <div id="lookup" class="card hidden">
-                <h2>Invoice Lookup</h2>
-                <table id="invoiceHistory">
-                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+
             <div id="admin" class="card hidden">
-                <h2>Admin Panel</h2>
+                <h2>Admin</h2>
                 <button class="btn" onclick="loadData()">Refresh All Data</button>
             </div>
         </div>
     </div>
+
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhRtX93iSLuj1vk7pacnueHx7OZTyU6JM6O0fR1OBdXffRbAtCsUyTijvWZARqF9sn/exec';
+let inventoryData = [];
+let invoiceItems = [];
+
 async function loadData() {
     document.getElementById('cloudStatus').textContent = "Syncing...";
     try {
         const res = await fetch(SCRIPT_URL + '?action=getAll');
         const d = await res.json();
         if(d.success) {
+            inventoryData = d.data.inventory;
             renderTable('inventoryList', d.data.inventory, ['sku', 'itemname', 'price', 'size']);
             renderTable('customerList', d.data.customers, ['name', 'company', 'email', 'phone']);
-            const sel = document.getElementById('invCustomer');
-            sel.innerHTML = '<option>Select Customer</option>';
-            d.data.customers.forEach(c => {
-                const opt = document.createElement('option');
-                opt.textContent = c.name;
-                sel.appendChild(opt);
-            });
+            
+            // Fill Customer Select
+            const custSel = document.getElementById('invCustomer');
+            custSel.innerHTML = '<option>Select Customer</option>';
+            d.data.customers.forEach(c => custSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+
+            // Fill Item Picker
+            const itemSel = document.getElementById('itemPicker');
+            itemSel.innerHTML = '<option value="">-- Choose Item --</option>';
+            inventoryData.forEach(i => itemSel.innerHTML += `<option value="${i.sku}">${i.itemname}</option>`);
+
             document.getElementById('cloudStatus').textContent = "Connected ☁️";
         }
     } catch(e) { document.getElementById('cloudStatus').textContent = "Sync Error"; }
 }
+
+function addItem() {
+    const sku = document.getElementById('itemPicker').value;
+    const item = inventoryData.find(i => i.sku == sku);
+    if(item) {
+        invoiceItems.push({ name: item.itemname, price: item.price, qty: 1 });
+        updateInvoiceTable();
+    }
+}
+
+function updateInvoiceTable() {
+    const tbody = document.getElementById('invoiceTable').querySelector('tbody');
+    let total = 0;
+    tbody.innerHTML = invoiceItems.map((item, index) => {
+        const rowTotal = item.price * item.qty;
+        total += rowTotal;
+        return `<tr><td>${item.name}</td><td>${item.qty}</td><td>$${item.price}</td><td>$${rowTotal.toFixed(2)}</td></tr>`;
+    }).join('');
+    document.getElementById('grandTotal').textContent = total.toFixed(2);
+}
+
+async function saveInvoice() {
+    const customer = document.getElementById('invCustomer').value;
+    if(customer === "Select Customer" || invoiceItems.length === 0) {
+        alert("Please select a customer and add items first!");
+        return;
+    }
+    // Saving logic would go here
+    alert("System Ready! We can now add the post logic to send this to Sheets.");
+}
+
 function renderTable(id, data, keys) {
     const b = document.getElementById(id).querySelector('tbody');
-    b.innerHTML = (!data || data.length === 0) ? '<tr><td colspan="4" style="text-align:center">No data</td></tr>' : 
-    data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
+    b.innerHTML = data.map(r => `<tr>${keys.map(k => `<td>${r[k]||''}</td>`).join('')}</tr>`).join('');
 }
+
 function showTab(t, event) {
     document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
     document.getElementById(t).classList.remove('hidden');
     document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
 }
+
 loadData();
 </script>
 </body>
