@@ -64,7 +64,7 @@
 
             <div class="form-group">
                 <label>Barcode / SKU Scan</label>
-                <input type="text" id="barcodeInput" placeholder="Scan item here..." oninput="handleScan(this.value)" autofocus>
+                <input type="text" id="barcodeInput" placeholder="Scan or type SKU..." oninput="handleScan(this.value)" autofocus>
             </div>
 
             <div class="form-group">
@@ -122,7 +122,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgdmUpFkjI8YSzJ8ad7g7s9uZXm9ywy2gj0zoSZ47zKllowzs98yS6Pock8LkALEp8/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVrBD0vN-khWOIHrG8862MMk9LjubRN6QqiKgKpqSxrmrzwMGFDKAarr6kC7rxEsAq/exec";
         let currentUser = "";
         let globalInv = [];
         let globalCustomers = [];
@@ -161,27 +161,30 @@
 
             const iSel = document.getElementById('itemSelect');
             iSel.innerHTML = '<option value="">-- Choose Item --</option>';
-            globalInv.forEach(i => iSel.innerHTML += `<option value="${i.sku_barcode}">${i.item_name}</option>`);
+            globalInv.forEach(i => {
+                iSel.innerHTML += `<option value="${i.sku}">${i.item_name}</option>`;
+            });
             
             document.getElementById('barcodeInput').focus();
         }
 
         function handleScan(val) {
-            const item = globalInv.find(i => i.sku_barcode.toString() === val);
+            // Searches for SKU in Column A
+            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === val.trim());
             if(item) {
-                document.getElementById('itemSelect').value = item.sku_barcode;
+                document.getElementById('itemSelect').value = item.sku;
                 applyItemSelection();
                 document.getElementById('barcodeInput').value = ""; 
             }
         }
 
         function applyItemSelection() {
-            const sku = document.getElementById('itemSelect').value;
-            const item = globalInv.find(i => i.sku_barcode.toString() === sku);
+            const skuVal = document.getElementById('itemSelect').value;
+            const item = globalInv.find(i => i.sku && i.sku.toString() === skuVal);
             if(item) {
                 document.getElementById('price').value = item.price.toString().replace('$','');
                 
-                // Auto-fill Size
+                // Set Size
                 if(item.size) document.getElementById('sizeSelect').value = item.size.toUpperCase();
                 
                 // Tax Logic
@@ -244,8 +247,10 @@
             setActiveTab('t-inv');
             const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
             const data = await res.json();
-            let h = `<div class="card"><h3>Inventory</h3><table><tr><th>SKU</th><th>Item</th><th>Price</th><th>Size</th></tr>`;
-            data.forEach(i => h += `<tr><td>${i.sku_barcode}</td><td>${i.item_name}</td><td>$${i.price}</td><td>${i.size}</td></tr>`);
+            let h = `<div class="card"><h3>Product Inventory</h3><table><tr><th>SKU</th><th>Item</th><th>Price</th><th>Tax Exempt</th></tr>`;
+            data.forEach(i => {
+                h += `<tr><td>${i.sku || 'N/A'}</td><td>${i.item_name}</td><td>$${i.price}</td><td>${i.tax_exempt ? 'Yes' : 'No'}</td></tr>`;
+            });
             document.getElementById('pageContent').innerHTML = h + `</table></div>`;
         }
 
