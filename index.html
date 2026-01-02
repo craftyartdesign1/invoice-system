@@ -9,24 +9,34 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         
+        /* Screens */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         #mainApp { display: none; }
 
+        /* UI Elements */
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
         .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 5px; font-weight: bold; }
         .tab-btn.active { background: var(--primary); color: white; }
         
-        .content-area { padding: 1.5rem; max-width: 1400px; margin: 0 auto; overflow-x: auto; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .content-area { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
+        /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th { background: #f8fafc; text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        th { background: #f8fafc; text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; }
         td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         
-        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+        /* Form Styling */
+        .form-group { margin-bottom: 1rem; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; }
         .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* Modal */
+        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -56,8 +66,38 @@
         <div class="content-area" id="pageContent"></div>
     </div>
 
+    <div id="invoiceModal">
+        <div class="modal-content">
+            <h3>Create New Invoice</h3>
+            <hr style="margin: 15px 0;">
+            <div class="form-group">
+                <label>Invoice Number</label>
+                <input type="text" id="invNum" placeholder="e.g. INV-1001">
+            </div>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="invCust" placeholder="Client Name">
+            </div>
+            <div class="form-group">
+                <label>Company</label>
+                <input type="text" id="invComp" placeholder="Company Name">
+            </div>
+            <div class="form-group">
+                <label>Subtotal ($)</label>
+                <input type="number" id="invSub" value="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Tax ($)</label>
+                <input type="number" id="invTax" value="0.00" step="0.01">
+            </div>
+            <button class="btn-primary" id="saveBtn" onclick="saveInvoice()">Save to Sheets</button>
+            <button class="btn-primary" style="background:#666; margin-top:10px;" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFBf_VR0rtqHUuMDpqYZ5lXc_flDvS6VhQ10zZ5aU4BFlfuEIYdNPhEjWbAmOob0Na/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgJag_ff0u4v_ycVQCp0_FzEPC9Xw0Rx9aGNudqbMuYJTxq6jxtiHepIDD9Xv7KQYY/exec";
+        let currentUser = "";
 
         async function handleLogin() {
             const user = document.getElementById('username').value;
@@ -66,9 +106,10 @@
                 const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
                 const data = await response.json();
                 if (data.success) {
+                    currentUser = data.user.display_name;
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
-                    document.getElementById('userDisplay').innerText = data.user.display_name;
+                    document.getElementById('userDisplay').innerText = currentUser;
                     showDashboard();
                 } else { alert("Invalid Login"); }
             } catch (e) { alert("Connection Error"); }
@@ -76,7 +117,7 @@
 
         function showDashboard() {
             updateTabs(0);
-            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>System Connected.</p></div>`;
+            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>System Online. Welcome, ${currentUser}.</p></div>`;
         }
 
         async function loadInventory() {
@@ -103,37 +144,58 @@
                 const data = await response.json();
                 let html = `
                     <div class="card">
-                        <h3>Invoices</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3>Invoices</h3>
+                            <button class="btn-primary" style="width:auto; padding: 8px 20px;" onclick="openModal()">+ New Invoice</button>
+                        </div>
                         <div style="overflow-x:auto;">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>Inv #</th>
-                                    <th>Date</th>
-                                    <th>Customer</th>
-                                    <th>Company</th>
-                                    <th>Employee</th>
-                                    <th>Subtotal</th>
-                                    <th>Tax</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Company</th><th>Total</th></tr></thead>
                             <tbody>`;
                 data.forEach(inv => {
-                    html += `
-                        <tr>
-                            <td>${inv.invoice_number || ''}</td>
-                            <td>${inv.date ? new Date(inv.date).toLocaleDateString() : ''}</td>
-                            <td>${inv.customer || ''}</td>
-                            <td>${inv.company || ''}</td>
-                            <td>${inv.employee || ''}</td>
-                            <td>$${inv.subtotal || '0.00'}</td>
-                            <td>$${inv.tax || '0.00'}</td>
-                            <td><strong>$${inv.total || '0.00'}</strong></td>
-                        </tr>`;
+                    html += `<tr><td>${inv.invoice_number||''}</td><td>${inv.date ? new Date(inv.date).toLocaleDateString() : ''}</td><td>${inv.customer||''}</td><td>${inv.company||''}</td><td><strong>$${inv.total||'0.00'}</strong></td></tr>`;
                 });
                 container.innerHTML = html + `</tbody></table></div></div>`;
             } catch (e) { container.innerHTML = "Error loading invoices."; }
+        }
+
+        function openModal() { document.getElementById('invoiceModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
+
+        async function saveInvoice() {
+            const saveBtn = document.getElementById('saveBtn');
+            const sub = parseFloat(document.getElementById('invSub').value) || 0;
+            const tax = parseFloat(document.getElementById('invTax').value) || 0;
+            
+            const payload = {
+                invoice_number: document.getElementById('invNum').value,
+                customer: document.getElementById('invCust').value,
+                company: document.getElementById('invComp').value,
+                employee: currentUser,
+                subtotal: sub,
+                tax: tax,
+                total: (sub + tax).toFixed(2)
+            };
+
+            saveBtn.innerText = "Saving...";
+            saveBtn.disabled = true;
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    body: JSON.stringify(payload)
+                });
+                alert("Invoice Saved Successfully!");
+                closeModal();
+                loadInvoices(); // Refresh list
+            } catch (e) {
+                alert("Error saving invoice.");
+            } finally {
+                saveBtn.innerText = "Save to Sheets";
+                saveBtn.disabled = false;
+            }
         }
 
         function updateTabs(index) {
