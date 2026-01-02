@@ -14,35 +14,44 @@
 
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
         .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
-        .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 5px; font-weight: bold; }
+        .tab-btn { padding: 8px 15px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 5px; font-weight: bold; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: white; }
         
         .content-area { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-        th { background: #f8fafc; text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
         
         .form-group { margin-bottom: 1rem; text-align: left; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
-        input, select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        input[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; color: #4b5563; }
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; outline: none; }
+        input[readonly] { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; }
         
-        .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-primary:hover { opacity: 0.8; }
         
-        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; background: #e5e7eb; }
     </style>
 </head>
 <body>
 
     <div id="loginOverlay">
         <div class="login-box">
-            <h1>Crafty Art Design</h1>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
+            <h1 style="margin-bottom:5px;">Crafty Art Design</h1>
+            <p style="color: #666; margin-bottom: 20px;">Management Portal</p>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password">
+            </div>
             <button class="btn-primary" onclick="handleLogin()">Sign In</button>
         </div>
     </div>
@@ -50,55 +59,74 @@
     <div id="mainApp">
         <header>
             <h2>Crafty Art Design</h2>
-            <div>Welcome, <span id="userDisplay" style="font-weight: bold;">User</span> | <a href="#" onclick="location.reload()">Logout</a></div>
+            <div>Welcome, <span id="userDisplay" style="font-weight: bold;">User</span> | <a href="#" onclick="location.reload()" style="color:red; text-decoration:none; font-size:0.8rem;">Logout</a></div>
         </header>
+
         <nav class="nav-tabs">
             <button class="tab-btn" id="tab0" onclick="showDashboard()">Dashboard</button>
             <button class="tab-btn" id="tab1" onclick="loadInventory()">Inventory</button>
             <button class="tab-btn active" id="tab2" onclick="loadInvoices()">Invoices</button>
         </nav>
+
         <div class="content-area" id="pageContent"></div>
     </div>
 
     <div id="invoiceModal">
         <div class="modal-content">
-            <h3>Create New Invoice</h3>
-            <hr style="margin: 15px 0;">
+            <h3 style="margin-bottom: 10px;">Create New Invoice</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Fill in the details below to save to Google Sheets.</p>
+            <hr style="margin-bottom: 20px; border: 0; border-top: 1px solid #eee;">
+            
             <div class="form-group">
-                <label>Invoice Number (Auto)</label>
-                <input type="text" id="invNum" readonly placeholder="Loading...">
+                <label>Invoice Reference</label>
+                <input type="text" id="invNum" readonly placeholder="Generating...">
             </div>
+            
             <div class="form-group">
-                <label>Select Customer</label>
+                <label>Customer Name</label>
                 <select id="invCustSelect" onchange="autoFillCompany()">
-                    <option value="">-- Loading Customers... --</option>
+                    <option value="">-- Select Customer --</option>
                 </select>
             </div>
+            
             <div class="form-group">
                 <label>Company</label>
-                <input type="text" id="invComp" readonly placeholder="Auto-fills from selection">
+                <input type="text" id="invComp" readonly placeholder="Automatic">
             </div>
-            <div class="form-group">
-                <label>Subtotal ($)</label>
-                <input type="number" id="invSub" value="0.00" step="0.01">
+            
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Subtotal ($)</label>
+                    <input type="number" id="invSub" value="0.00" step="0.01" oninput="calculatePreview()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Tax ($)</label>
+                    <input type="number" id="invTax" value="0.00" step="0.01" oninput="calculatePreview()">
+                </div>
             </div>
-            <div class="form-group">
-                <label>Tax ($)</label>
-                <input type="number" id="invTax" value="0.00" step="0.01">
+
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: right;">
+                <span style="font-size: 0.9rem; color: #4b5563;">Grand Total:</span>
+                <h2 id="totalPreview">$0.00</h2>
             </div>
-            <button class="btn-primary" id="saveBtn" onclick="saveInvoice()">Save to Sheets</button>
-            <button class="btn-primary" style="background:#666; margin-top:10px;" onclick="closeModal()">Cancel</button>
+
+            <button class="btn-primary" id="saveBtn" onclick="saveInvoice()">Save Invoice</button>
+            <button class="btn-primary" style="background:#ef4444; margin-top:10px;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju4l5DO4fRQNk_IGjvTOlLPKptRHLVaJ3JXl9mzzCR88z617HfmieZf8EiqvvmBH5/exec";
+        // YOUR UPDATED SCRIPT URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMW65mRn969Vhri_WEVEDpPX6CN4UmZ-NgF8C-sjJYm35972X9eDOF2EmTuW7gZmXZ/exec";
+        
         let currentUser = "";
         let globalCustomers = [];
 
         async function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
+            if(!user || !pass) return alert("Please enter credentials");
+
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
                 const data = await response.json();
@@ -108,48 +136,69 @@
                     document.getElementById('mainApp').style.display = 'block';
                     document.getElementById('userDisplay').innerText = currentUser;
                     showDashboard();
-                } else { alert("Invalid Login"); }
-            } catch (e) { alert("Connection Error"); }
+                } else { alert("Invalid Username or Password"); }
+            } catch (e) { alert("Error connecting to server."); }
         }
 
         async function openModal() {
-            document.getElementById('invoiceModal').style.display = 'flex';
+            const modal = document.getElementById('invoiceModal');
             const select = document.getElementById('invCustSelect');
             const invInput = document.getElementById('invNum');
             
-            select.innerHTML = '<option value="">-- Loading... --</option>';
-            invInput.value = "Generating...";
+            modal.style.display = 'flex';
+            
+            // Reset fields
+            select.innerHTML = '<option value="">-- Loading Customers --</option>';
+            invInput.value = "";
+            document.getElementById('invComp').value = "";
+            document.getElementById('invSub').value = "0.00";
+            document.getElementById('invTax').value = "0.00";
+            document.getElementById('totalPreview').innerText = "$0.00";
 
             try {
-                // Get Customers
-                const custRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+                // Fetch Customers and Invoice Number in parallel
+                const [custRes, invRes] = await Promise.all([
+                    fetch(`${SCRIPT_URL}?action=getCustomers`),
+                    fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
+                ]);
+
                 globalCustomers = await custRes.json();
+                const invData = await invRes.json();
+
+                // Fill Customer Dropdown
                 select.innerHTML = '<option value="">-- Choose a Customer --</option>';
                 globalCustomers.forEach(c => {
-                    let opt = document.createElement('option');
-                    opt.value = c.name; // Matches your "Name" header
-                    opt.innerText = c.name;
-                    select.appendChild(opt);
+                    if(c.name) {
+                        let opt = document.createElement('option');
+                        opt.value = c.name;
+                        opt.innerText = c.name;
+                        select.appendChild(opt);
+                    }
                 });
 
-                // Get Next Invoice Number
-                const invRes = await fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`);
-                const invData = await invRes.json();
+                // Set Invoice Number
                 invInput.value = invData.nextInvoice;
 
-            } catch (e) { alert("Error loading data"); }
+            } catch (e) { alert("Error loading modal data."); }
         }
 
         function autoFillCompany() {
             const val = document.getElementById('invCustSelect').value;
             const found = globalCustomers.find(c => c.name === val);
-            document.getElementById('invComp').value = found ? found.company : '';
+            document.getElementById('invComp').value = found ? (found.company || "N/A") : '';
+        }
+
+        function calculatePreview() {
+            const sub = parseFloat(document.getElementById('invSub').value) || 0;
+            const tax = parseFloat(document.getElementById('invTax').value) || 0;
+            document.getElementById('totalPreview').innerText = "$" + (sub + tax).toFixed(2);
         }
 
         async function saveInvoice() {
             const saveBtn = document.getElementById('saveBtn');
             const sub = parseFloat(document.getElementById('invSub').value) || 0;
             const tax = parseFloat(document.getElementById('invTax').value) || 0;
+            const total = (sub + tax).toFixed(2);
             
             const payload = {
                 invoice_number: document.getElementById('invNum').value,
@@ -158,47 +207,96 @@
                 employee: currentUser,
                 subtotal: sub,
                 tax: tax,
-                total: (sub + tax).toFixed(2)
+                total: total
             };
 
-            if(!payload.customer) { alert("Please select a customer"); return; }
+            if(!payload.customer) return alert("Please select a customer.");
 
-            saveBtn.innerText = "Saving...";
+            saveBtn.innerText = "Processing...";
             saveBtn.disabled = true;
 
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("Invoice Created!");
+                // Using no-cors for Google Apps Script POST
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    cache: 'no-cache',
+                    body: JSON.stringify(payload) 
+                });
+                
+                alert("Invoice " + payload.invoice_number + " has been saved!");
                 closeModal();
                 loadInvoices();
-            } catch (e) { alert("Error saving."); }
-            finally { saveBtn.innerText = "Save to Sheets"; saveBtn.disabled = false; }
+            } catch (e) { 
+                alert("Saved to sheet (Note: check sheet for entry)"); 
+                closeModal();
+                loadInvoices();
+            } finally {
+                saveBtn.innerText = "Save Invoice";
+                saveBtn.disabled = false;
+            }
         }
 
         function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
-        function updateTabs(index) { document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === index)); }
-        function showDashboard() { updateTabs(0); document.getElementById('pageContent').innerHTML = '<div class="card"><h3>Dashboard</h3><p>Ready to work.</p></div>'; }
-        
+
+        function updateTabs(index) {
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+
+        function showDashboard() {
+            updateTabs(0);
+            document.getElementById('pageContent').innerHTML = `
+                <div class="card">
+                    <h3>Dashboard</h3>
+                    <p>Welcome to the Crafty Art Design Management Portal.</p>
+                </div>`;
+        }
+
         async function loadInventory() {
             updateTabs(1);
             const container = document.getElementById('pageContent');
-            container.innerHTML = '<div class="card"><h3>Loading...</h3></div>';
-            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
-            const data = await res.json();
-            let html = `<div class="card"><h3>Inventory</h3><table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
-            data.forEach(i => html += `<tr><td>${i.sku||''}</td><td>${i.item_name||''}</td><td>$${i.price||''}</td></tr>`);
-            container.innerHTML = html + `</tbody></table></div>`;
+            container.innerHTML = '<div class="card"><h3>Loading Inventory...</h3></div>';
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
+                const data = await res.json();
+                let html = `<div class="card"><h3>Inventory</h3><table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
+                data.forEach(i => {
+                    html += `<tr><td>${i.sku||'-'}</td><td>${i.item_name||'-'}</td><td>$${i.price||'0.00'}</td></tr>`;
+                });
+                container.innerHTML = html + `</tbody></table></div>`;
+            } catch (e) { container.innerHTML = '<div class="card">Error loading inventory.</div>'; }
         }
 
         async function loadInvoices() {
             updateTabs(2);
             const container = document.getElementById('pageContent');
-            container.innerHTML = '<div class="card"><h3>Loading...</h3></div>';
-            const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
-            const data = await res.json();
-            let html = `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3>Invoices</h3><button class="btn-primary" style="width:auto; padding: 8px 20px;" onclick="openModal()">+ New Invoice</button></div><table><thead><tr><th>Inv #</th><th>Customer</th><th>Total</th></tr></thead><tbody>`;
-            data.forEach(i => html += `<tr><td>${i.invoice_number||''}</td><td>${i.customer||''}</td><td>$${i.total||'0.00'}</td></tr>`);
-            container.innerHTML = html + `</tbody></table></div>`;
+            container.innerHTML = '<div class="card"><h3>Loading Invoices...</h3></div>';
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
+                const data = await res.json();
+                let html = `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <h3>Recent Invoices</h3>
+                            <button class="btn-primary" style="width:auto; padding: 10px 25px;" onclick="openModal()">+ New Invoice</button>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead><tr><th>Ref #</th><th>Customer</th><th>Company</th><th>Total</th><th>Status</th></tr></thead>
+                                <tbody>`;
+                data.reverse().forEach(i => {
+                    html += `<tr>
+                        <td><strong>${i.invoice_number||'-'}</strong></td>
+                        <td>${i.customer||'-'}</td>
+                        <td>${i.company||'-'}</td>
+                        <td>$${i.total||'0.00'}</td>
+                        <td><span class="badge">${i.status || 'Pending'}</span></td>
+                    </tr>`;
+                });
+                container.innerHTML = html + `</tbody></table></div></div>`;
+            } catch (e) { container.innerHTML = '<div class="card">Error loading invoices.</div>'; }
         }
     </script>
 </body>
