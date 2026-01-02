@@ -9,11 +9,9 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
         
-        /* Screens */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
         #mainApp { display: none; }
 
-        /* UI Elements */
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
@@ -23,18 +21,15 @@
         .content-area { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th { background: #f8fafc; text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; }
         td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         
-        /* Form Styling */
         .form-group { margin-bottom: 1rem; text-align: left; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
-        input, select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; }
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
         .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* Modal */
         #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
     </style>
@@ -58,9 +53,9 @@
         </header>
 
         <nav class="nav-tabs">
-            <button class="tab-btn" onclick="showDashboard()">Dashboard</button>
-            <button class="tab-btn" onclick="loadInventory()">Inventory</button>
-            <button class="tab-btn active" onclick="loadInvoices()">Invoices</button>
+            <button class="tab-btn" id="tab0" onclick="showDashboard()">Dashboard</button>
+            <button class="tab-btn" id="tab1" onclick="loadInventory()">Inventory</button>
+            <button class="tab-btn active" id="tab2" onclick="loadInvoices()">Invoices</button>
         </nav>
 
         <div class="content-area" id="pageContent"></div>
@@ -72,15 +67,17 @@
             <hr style="margin: 15px 0;">
             <div class="form-group">
                 <label>Invoice Number</label>
-                <input type="text" id="invNum" placeholder="e.g. INV-1001">
+                <input type="text" id="invNum" placeholder="INV-001">
             </div>
             <div class="form-group">
-                <label>Customer Name</label>
-                <input type="text" id="invCust" placeholder="Client Name">
+                <label>Select Customer</label>
+                <select id="invCustSelect" onchange="autoFillCompany()">
+                    <option value="">-- Loading Customers... --</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>Company</label>
-                <input type="text" id="invComp" placeholder="Company Name">
+                <input type="text" id="invComp" readonly style="background: #f3f4f6;" placeholder="Auto-filled">
             </div>
             <div class="form-group">
                 <label>Subtotal ($)</label>
@@ -96,8 +93,9 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgJag_ff0u4v_ycVQCp0_FzEPC9Xw0Rx9aGNudqbMuYJTxq6jxtiHepIDD9Xv7KQYY/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhD4oNy5mqhC5JqFjKoDDL_ck3QijDXMy2Rzsnx4fumv1AkoqJ6FDo_mzJNrs8J8fg/exec";
         let currentUser = "";
+        let globalCustomers = [];
 
         async function handleLogin() {
             const user = document.getElementById('username').value;
@@ -115,9 +113,15 @@
             } catch (e) { alert("Connection Error"); }
         }
 
+        function updateTabs(index) {
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+
         function showDashboard() {
             updateTabs(0);
-            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>System Online. Welcome, ${currentUser}.</p></div>`;
+            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>Welcome, ${currentUser}. System connected to Sheets.</p></div>`;
         }
 
         async function loadInventory() {
@@ -144,7 +148,7 @@
                 const data = await response.json();
                 let html = `
                     <div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                             <h3>Invoices</h3>
                             <button class="btn-primary" style="width:auto; padding: 8px 20px;" onclick="openModal()">+ New Invoice</button>
                         </div>
@@ -159,7 +163,31 @@
             } catch (e) { container.innerHTML = "Error loading invoices."; }
         }
 
-        function openModal() { document.getElementById('invoiceModal').style.display = 'flex'; }
+        async function openModal() {
+            document.getElementById('invoiceModal').style.display = 'flex';
+            const select = document.getElementById('invCustSelect');
+            select.innerHTML = '<option value="">-- Loading... --</option>';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+                globalCustomers = await response.json();
+                
+                select.innerHTML = '<option value="">-- Choose a Customer --</option>';
+                globalCustomers.forEach(c => {
+                    let opt = document.createElement('option');
+                    opt.value = c.name; // Based on your 'Name' header
+                    opt.innerText = c.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) { select.innerHTML = '<option value="">Error loading customers</option>'; }
+        }
+
+        function autoFillCompany() {
+            const val = document.getElementById('invCustSelect').value;
+            const found = globalCustomers.find(c => c.name === val);
+            document.getElementById('invComp').value = found ? found.company : '';
+        }
+
         function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
 
         async function saveInvoice() {
@@ -169,7 +197,7 @@
             
             const payload = {
                 invoice_number: document.getElementById('invNum').value,
-                customer: document.getElementById('invCust').value,
+                customer: document.getElementById('invCustSelect').value,
                 company: document.getElementById('invComp').value,
                 employee: currentUser,
                 subtotal: sub,
@@ -181,26 +209,12 @@
             saveBtn.disabled = true;
 
             try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    body: JSON.stringify(payload)
-                });
-                alert("Invoice Saved Successfully!");
+                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert("Invoice Sent to Sheet!");
                 closeModal();
-                loadInvoices(); // Refresh list
-            } catch (e) {
-                alert("Error saving invoice.");
-            } finally {
-                saveBtn.innerText = "Save to Sheets";
-                saveBtn.disabled = false;
-            }
-        }
-
-        function updateTabs(index) {
-            const btns = document.querySelectorAll('.tab-btn');
-            btns.forEach((btn, i) => i === index ? btn.classList.add('active') : btn.classList.remove('active'));
+                loadInvoices();
+            } catch (e) { alert("Error saving."); }
+            finally { saveBtn.innerText = "Save to Sheets"; saveBtn.disabled = false; }
         }
     </script>
 </body>
