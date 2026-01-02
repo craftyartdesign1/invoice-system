@@ -28,6 +28,8 @@
         .form-group { margin-bottom: 1rem; text-align: left; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; }
         input, select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+        input[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
+        
         .btn-primary { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
         #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
@@ -39,7 +41,6 @@
     <div id="loginOverlay">
         <div class="login-box">
             <h1>Crafty Art Design</h1>
-            <p style="color: #666; margin-bottom: 1.5rem;">Management Portal</p>
             <input type="text" id="username" placeholder="Username">
             <input type="password" id="password" placeholder="Password">
             <button class="btn-primary" onclick="handleLogin()">Sign In</button>
@@ -51,13 +52,11 @@
             <h2>Crafty Art Design</h2>
             <div>Welcome, <span id="userDisplay" style="font-weight: bold;">User</span> | <a href="#" onclick="location.reload()">Logout</a></div>
         </header>
-
         <nav class="nav-tabs">
             <button class="tab-btn" id="tab0" onclick="showDashboard()">Dashboard</button>
             <button class="tab-btn" id="tab1" onclick="loadInventory()">Inventory</button>
             <button class="tab-btn active" id="tab2" onclick="loadInvoices()">Invoices</button>
         </nav>
-
         <div class="content-area" id="pageContent"></div>
     </div>
 
@@ -66,8 +65,8 @@
             <h3>Create New Invoice</h3>
             <hr style="margin: 15px 0;">
             <div class="form-group">
-                <label>Invoice Number</label>
-                <input type="text" id="invNum" placeholder="INV-001">
+                <label>Invoice Number (Auto)</label>
+                <input type="text" id="invNum" readonly placeholder="Loading...">
             </div>
             <div class="form-group">
                 <label>Select Customer</label>
@@ -77,7 +76,7 @@
             </div>
             <div class="form-group">
                 <label>Company</label>
-                <input type="text" id="invComp" readonly style="background: #f3f4f6;" placeholder="Auto-filled">
+                <input type="text" id="invComp" readonly placeholder="Auto-fills from selection">
             </div>
             <div class="form-group">
                 <label>Subtotal ($)</label>
@@ -93,7 +92,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhD4oNy5mqhC5JqFjKoDDL_ck3QijDXMy2Rzsnx4fumv1AkoqJ6FDo_mzJNrs8J8fg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxju4l5DO4fRQNk_IGjvTOlLPKptRHLVaJ3JXl9mzzCR88z617HfmieZf8EiqvvmBH5/exec";
         let currentUser = "";
         let globalCustomers = [];
 
@@ -113,73 +112,32 @@
             } catch (e) { alert("Connection Error"); }
         }
 
-        function updateTabs(index) {
-            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i === index);
-            });
-        }
-
-        function showDashboard() {
-            updateTabs(0);
-            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>Welcome, ${currentUser}. System connected to Sheets.</p></div>`;
-        }
-
-        async function loadInventory() {
-            updateTabs(1);
-            const container = document.getElementById('pageContent');
-            container.innerHTML = '<div class="card"><h3>Loading Inventory...</h3></div>';
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getInventory`);
-                const data = await response.json();
-                let html = `<div class="card"><h3>Inventory</h3><table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody>`;
-                data.forEach(item => {
-                    html += `<tr><td>${item.sku||''}</td><td>${item.item_name||''}</td><td>$${item.price||''}</td><td>${item.size||''}</td></tr>`;
-                });
-                container.innerHTML = html + `</tbody></table></div>`;
-            } catch (e) { container.innerHTML = "Error loading inventory."; }
-        }
-
-        async function loadInvoices() {
-            updateTabs(2);
-            const container = document.getElementById('pageContent');
-            container.innerHTML = '<div class="card"><h3>Loading Invoices...</h3></div>';
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getInvoices`);
-                const data = await response.json();
-                let html = `
-                    <div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <h3>Invoices</h3>
-                            <button class="btn-primary" style="width:auto; padding: 8px 20px;" onclick="openModal()">+ New Invoice</button>
-                        </div>
-                        <div style="overflow-x:auto;">
-                        <table>
-                            <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Company</th><th>Total</th></tr></thead>
-                            <tbody>`;
-                data.forEach(inv => {
-                    html += `<tr><td>${inv.invoice_number||''}</td><td>${inv.date ? new Date(inv.date).toLocaleDateString() : ''}</td><td>${inv.customer||''}</td><td>${inv.company||''}</td><td><strong>$${inv.total||'0.00'}</strong></td></tr>`;
-                });
-                container.innerHTML = html + `</tbody></table></div></div>`;
-            } catch (e) { container.innerHTML = "Error loading invoices."; }
-        }
-
         async function openModal() {
             document.getElementById('invoiceModal').style.display = 'flex';
             const select = document.getElementById('invCustSelect');
+            const invInput = document.getElementById('invNum');
+            
             select.innerHTML = '<option value="">-- Loading... --</option>';
+            invInput.value = "Generating...";
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getCustomers`);
-                globalCustomers = await response.json();
-                
+                // Get Customers
+                const custRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+                globalCustomers = await custRes.json();
                 select.innerHTML = '<option value="">-- Choose a Customer --</option>';
                 globalCustomers.forEach(c => {
                     let opt = document.createElement('option');
-                    opt.value = c.name; // Based on your 'Name' header
+                    opt.value = c.name; // Matches your "Name" header
                     opt.innerText = c.name;
                     select.appendChild(opt);
                 });
-            } catch (e) { select.innerHTML = '<option value="">Error loading customers</option>'; }
+
+                // Get Next Invoice Number
+                const invRes = await fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`);
+                const invData = await invRes.json();
+                invInput.value = invData.nextInvoice;
+
+            } catch (e) { alert("Error loading data"); }
         }
 
         function autoFillCompany() {
@@ -187,8 +145,6 @@
             const found = globalCustomers.find(c => c.name === val);
             document.getElementById('invComp').value = found ? found.company : '';
         }
-
-        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
 
         async function saveInvoice() {
             const saveBtn = document.getElementById('saveBtn');
@@ -205,16 +161,44 @@
                 total: (sub + tax).toFixed(2)
             };
 
+            if(!payload.customer) { alert("Please select a customer"); return; }
+
             saveBtn.innerText = "Saving...";
             saveBtn.disabled = true;
 
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("Invoice Sent to Sheet!");
+                alert("Invoice Created!");
                 closeModal();
                 loadInvoices();
             } catch (e) { alert("Error saving."); }
             finally { saveBtn.innerText = "Save to Sheets"; saveBtn.disabled = false; }
+        }
+
+        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
+        function updateTabs(index) { document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === index)); }
+        function showDashboard() { updateTabs(0); document.getElementById('pageContent').innerHTML = '<div class="card"><h3>Dashboard</h3><p>Ready to work.</p></div>'; }
+        
+        async function loadInventory() {
+            updateTabs(1);
+            const container = document.getElementById('pageContent');
+            container.innerHTML = '<div class="card"><h3>Loading...</h3></div>';
+            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
+            const data = await res.json();
+            let html = `<div class="card"><h3>Inventory</h3><table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
+            data.forEach(i => html += `<tr><td>${i.sku||''}</td><td>${i.item_name||''}</td><td>$${i.price||''}</td></tr>`);
+            container.innerHTML = html + `</tbody></table></div>`;
+        }
+
+        async function loadInvoices() {
+            updateTabs(2);
+            const container = document.getElementById('pageContent');
+            container.innerHTML = '<div class="card"><h3>Loading...</h3></div>';
+            const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
+            const data = await res.json();
+            let html = `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3>Invoices</h3><button class="btn-primary" style="width:auto; padding: 8px 20px;" onclick="openModal()">+ New Invoice</button></div><table><thead><tr><th>Inv #</th><th>Customer</th><th>Total</th></tr></thead><tbody>`;
+            data.forEach(i => html += `<tr><td>${i.invoice_number||''}</td><td>${i.customer||''}</td><td>$${i.total||'0.00'}</td></tr>`);
+            container.innerHTML = html + `</tbody></table></div>`;
         }
     </script>
 </body>
