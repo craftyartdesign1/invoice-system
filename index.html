@@ -3,294 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Design | NYC POS 2026</title>
+    <title>Crafty Art Design | Admin POS 2026</title>
     <style>
         :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; --success: #22c55e; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); }
         
-        /* Login Screen */
+        /* Login */
         #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         
-        /* App Layout */
+        /* Layout */
         #mainApp { display: none; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
-        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; overflow-x: auto; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 6px; font-weight: bold; white-space: nowrap; }
         .tab-btn.active { background: var(--primary); color: white; }
         
         .content-area { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* Modal & POS Layout */
-        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-container { display: flex; background: white; border-radius: 15px; width: 95%; max-width: 1150px; height: 85vh; overflow: hidden; }
-        .modal-form { flex: 1.2; padding: 2rem; overflow-y: auto; border-right: 1px solid #eee; }
-        .modal-preview { flex: 0.8; padding: 2rem; background: #fafafa; overflow-y: auto; display: flex; flex-direction: column; }
+        /* POS Side-by-Side */
+        .pos-container { display: flex; gap: 20px; height: calc(100vh - 180px); }
+        .pos-form { flex: 1.2; background: white; padding: 1.5rem; border-radius: 12px; overflow-y: auto; }
+        .pos-preview { flex: 0.8; background: #fafafa; padding: 1.5rem; border-radius: 12px; overflow-y: auto; }
         
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.85rem; color: #444; }
-        input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-        
-        .btn { padding: 0.9rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-add { background: var(--success); color: white; margin-top: 10px; }
-        
-        /* Receipt Styling */
-        .receipt-paper { background: white; padding: 25px; box-shadow: 0 0 10px rgba(0,0,0,0.1); flex-grow: 1; font-family: 'Courier New', Courier, monospace; }
-        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-        .receipt-total { border-top: 1px dashed #000; margin-top: 15px; padding-top: 15px; font-weight: bold; }
-
+        /* Tables & UI */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; color: #64748b; text-transform: uppercase; }
+        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 15px; }
+        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-danger { background: var(--danger); color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; }
+        
+        /* Receipt */
+        .receipt-paper { background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: 'Courier New', monospace; }
+        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
 
-        @media print {
-            body * { visibility: hidden; }
-            #printableReceipt, #printableReceipt * { visibility: visible; }
-            #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
-        }
+        @media print { body * { visibility: hidden; } #printableReceipt, #printableReceipt * { visibility: visible; } #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; } }
     </style>
 </head>
 <body>
 
     <div id="loginOverlay">
         <div class="login-box">
-            <h1 style="margin-bottom: 10px;">Crafty Art Design</h1>
-            <p style="margin-bottom: 25px; font-size: 0.9rem; color: #666;">NYC POS Terminal - 2026</p>
-            <input type="text" id="username" placeholder="Username" style="margin-bottom:12px;">
-            <input type="password" id="password" placeholder="Password" style="margin-bottom:20px;">
-            <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Sign In</button>
+            <h1 style="margin-bottom:20px;">CAD Master Admin</h1>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
         </div>
     </div>
 
     <div id="mainApp">
         <header>
             <h2>CRAFTY ART DESIGN</h2>
-            <div>Welcome, <span id="userDisplay" style="font-weight:bold;"></span> | <a href="#" onclick="location.reload()" style="color:var(--danger); text-decoration:none; font-size: 0.8rem; margin-left: 10px;">LOGOUT</a></div>
+            <div>User: <span id="userDisplay" style="font-weight:bold;"></span> | <a href="#" onclick="location.reload()" style="color:var(--danger); text-decoration:none; font-size:0.8rem;">LOGOUT</a></div>
         </header>
         
         <nav class="nav-tabs">
-            <button class="tab-btn active" id="t-sales" onclick="loadInvoices()">Sales History</button>
-            <button class="tab-btn" id="t-inv" onclick="loadInventory()">Inventory</button>
+            <button class="tab-btn active" id="tab-sales" onclick="loadInvoices()">Sales History</button>
+            <button class="tab-btn" id="tab-pos" onclick="openPOS()">POS (New Sale)</button>
+            <button class="tab-btn" id="tab-inv" onclick="loadInventory()">Manage Inventory</button>
+            <button class="tab-btn" id="tab-cust" onclick="loadCustomers()">Manage Customers</button>
         </nav>
 
-        <div class="content-area" id="pageContent">
-            </div>
-    </div>
-
-    <div id="invoiceModal">
-        <div class="modal-container">
-            <div class="modal-form">
-                <h3 style="margin-bottom:20px;">New Transaction</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group"><label>Select Customer</label><select id="custSelect" onchange="applyCustomer()"></select></div>
-                    <div class="form-group"><label>Company</label><input type="text" id="compDisplay" placeholder="---" readonly></div>
-                </div>
-                <hr style="margin: 20px 0; opacity: 0.2;">
-                <h3 style="margin-bottom:20px;">Add Items</h3>
-                <div class="form-group"><label>Scan or Type SKU</label><input type="text" id="skuScan" placeholder="Scan SKU..." oninput="handleSkuSearch(this.value)" autofocus></div>
-                
-                <div id="foundArea" style="display:none; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div><strong id="foundName" style="font-size: 1.1rem;"></strong><br><small id="foundSize" style="color:#666;"></small></div>
-                        <strong id="foundPrice" style="font-size: 1.2rem; color: var(--success);"></strong>
-                    </div>
-                    <div style="display: flex; gap: 15px; align-items: flex-end; margin-top: 15px;">
-                        <div style="flex:1;"><label>Quantity</label><input type="number" id="foundQty" value="1" min="1"></div>
-                        <button class="btn btn-add" style="flex:2;" onclick="commitItem()">+ Add to Receipt</button>
-                    </div>
-                </div>
-                <p id="cartStatus" style="font-size: 0.8rem; color: #888; font-style: italic;">Scan items to build the invoice.</p>
-            </div>
-
-            <div class="modal-preview">
-                <div class="receipt-paper" id="printableReceipt">
-                    <h2 style="text-align: center; letter-spacing: 2px; margin-bottom: 5px;">INVOICE</h2>
-                    <p style="text-align: center; font-size: 0.7rem; color: #555;">CRAFTY ART DESIGN - NYC</p>
-                    <p style="text-align: center; font-size: 0.75rem; font-weight:bold; margin-top: 10px;" id="p-invNum"># ---</p>
-                    <hr style="margin: 15px 0; border: 0.5px solid #000;">
-                    
-                    <p style="font-size: 0.85rem; margin-bottom: 3px;"><strong>Customer:</strong> <span id="p-cust">--</span></p>
-                    <p style="font-size: 0.85rem; margin-bottom: 15px;"><strong>Company:</strong> <span id="p-comp">--</span></p>
-                    
-                    <div id="p-items" style="min-height: 120px;">
-                        </div>
-
-                    <div class="receipt-total">
-                        <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
-                        <div class="receipt-line"><span>NYC Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
-                        <div class="receipt-line" style="font-size: 1.1rem; margin-top: 5px;">
-                            <span><strong>TOTAL:</strong></span>
-                            <span id="p-total"><strong>$0.00</strong></span>
-                        </div>
-                    </div>
-                    <p style="text-align: center; font-size: 0.7rem; margin-top: 30px; color: #888;">Thank you for your business!</p>
-                </div>
-                
-                <div style="margin-top:20px; display:flex; flex-direction: column; gap:10px;">
-                    <button class="btn btn-primary" onclick="submitFinalSale()">Complete & Print</button>
-                    <button class="btn" style="background:#ddd;" onclick="closeModal()">Discard Sale</button>
-                </div>
-            </div>
-        </div>
+        <div class="content-area" id="pageContent"></div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbze65NKt4wJItOfNh4gkGmLwZdkYOYR8FaMJalMB7MRdAMg8Uz0fvjv6MqSAlQRc3E3/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxceWhfXU1ykFbao-9eG6x-mthdr6o9J5Q72tjqna6-tUQIz-C9uOTZfpw-hGfrAXma/exec";
         const NYC_TAX_RATE = 0.08875;
-        let globalInv = [], globalCust = [], cart = [], activeItem = null, currentUser = "";
+        let globalInv = [], globalCust = [], cart = [], currentUser = "";
 
-        // 1. LOGIN
+        // LOGIN
         async function handleLogin() {
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
-            const btn = document.getElementById('loginBtn');
-            btn.innerText = "Authenticating...";
-            
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
-                const data = await res.json();
-                if(data.success) {
-                    currentUser = data.user.display_name;
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    document.getElementById('userDisplay').innerText = currentUser;
-                    loadInvoices();
-                } else {
-                    alert("Invalid Username or Password");
-                    btn.innerText = "Sign In";
-                }
-            } catch (e) {
-                alert("Connection error. Check script deployment settings.");
-                btn.innerText = "Sign In";
-            }
+            const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
+            const data = await res.json();
+            if(data.success) {
+                currentUser = data.user.display_name;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('userDisplay').innerText = currentUser;
+                loadInvoices();
+            } else { alert("Invalid Credentials"); }
         }
 
-        // 2. DASHBOARD LOADING
+        // TAB 1: SALES HISTORY
         async function loadInvoices() {
-            setActiveTab('t-sales');
-            document.getElementById('pageContent').innerHTML = "Loading sales history...";
+            setActiveTab('tab-sales');
             const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
             const data = await res.json();
-            let h = `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;"><h3>Sales History</h3><button class="btn btn-primary" style="width:auto; padding:8px 25px;" onclick="openModal()">+ New Sale</button></div><table><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th></tr>`;
-            data.reverse().slice(0, 50).forEach(i => {
-                h += `<tr><td><b>${i.invoice_number}</b></td><td>${new Date(i.date).toLocaleDateString()}</td><td>${i.customer}</td><td>$${parseFloat(i.total).toFixed(2)}</td></tr>`;
-            });
+            let h = `<div class="card"><h3>Recent Transactions</h3><table><tr><th>Inv #</th><th>Customer</th><th>Total</th></tr>`;
+            data.reverse().forEach(i => h += `<tr><td><b>${i.invoice_number}</b></td><td>${i.customer}</td><td>$${parseFloat(i.total).toFixed(2)}</td></tr>`);
             document.getElementById('pageContent').innerHTML = h + `</table></div>`;
         }
 
-        async function loadInventory() {
-            setActiveTab('t-inv');
-            document.getElementById('pageContent').innerHTML = "Loading inventory...";
-            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
-            const data = await res.json();
-            let h = `<div class="card"><h3>Product Inventory</h3><table><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th></tr>`;
-            data.forEach(i => {
-                h += `<tr><td>${i.sku || 'N/A'}</td><td>${i.item_name}</td><td>${i.size || '---'}</td><td>$${parseFloat(i.price).toFixed(2)}</td></tr>`;
-            });
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
-
-        // 3. POS LOGIC
-        async function openModal() {
-            cart = []; activeItem = null;
-            document.getElementById('skuScan').value = "";
-            document.getElementById('foundArea').style.display = "none";
-            document.getElementById('custSelect').innerHTML = '<option>Loading...</option>';
-            renderPreview();
-            document.getElementById('invoiceModal').style.display = 'flex';
-            
+        // TAB 2: POINT OF SALE
+        async function openPOS() {
+            setActiveTab('tab-pos');
+            cart = [];
             const [cRes, iRes, nRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
+                fetch(`${SCRIPT_URL}?action=getCustomers`), fetch(`${SCRIPT_URL}?action=getInventory`), fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
             ]);
-            
-            globalCust = await cRes.json();
-            globalInv = await iRes.json();
-            document.getElementById('p-invNum').innerText = (await nRes.json()).nextInvoice;
-            
-            const cSel = document.getElementById('custSelect');
-            cSel.innerHTML = '<option value="">-- Select Customer --</option>';
-            globalCust.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            globalCust = await cRes.json(); globalInv = await iRes.json();
+            const invNum = (await nRes.json()).nextInvoice;
+
+            document.getElementById('pageContent').innerHTML = `
+                <div class="pos-container">
+                    <div class="pos-form">
+                        <label>Customer Name</label>
+                        <select id="custSelect" onchange="updatePOSPreview()"><option value="">-- Choose --</option></select>
+                        <label>Company</label><input id="compDisplay" readonly>
+                        <hr style="margin:20px 0;">
+                        <label>Scan SKU</label><input type="text" id="skuScan" placeholder="Type SKU..." oninput="searchSKU(this.value)" autofocus>
+                        <div id="foundArea" style="display:none; background:#f0fdf4; padding:15px; border-radius:8px;">
+                            <p><strong id="foundName"></strong></p>
+                            <p id="foundPrice" style="color:var(--success); font-weight:bold;"></p>
+                            <button class="btn btn-primary" style="margin-top:10px;" onclick="addToCart()">Add to Receipt</button>
+                        </div>
+                    </div>
+                    <div class="pos-preview">
+                        <div class="receipt-paper" id="printableReceipt">
+                            <h2 style="text-align:center;">INVOICE</h2>
+                            <p style="text-align:center; font-size:0.8rem;">${invNum}</p>
+                            <hr style="margin:10px 0;">
+                            <div id="p-items"></div>
+                            <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px;">
+                                <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
+                                <div class="receipt-line"><span>NYC Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
+                                <div class="receipt-line" style="font-weight:bold;"><span>TOTAL:</span><span id="p-total">$0.00</span></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top:15px;" onclick="finalizePOS()">Finish & Print</button>
+                    </div>
+                </div>`;
+            const sel = document.getElementById('custSelect');
+            globalCust.forEach(c => sel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
         }
 
-        function handleSkuSearch(sku) {
-            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === sku.trim());
+        function searchSKU(sku) {
+            const item = globalInv.find(i => i.sku.toString() === sku.trim());
             if(item) {
                 activeItem = item;
                 document.getElementById('foundArea').style.display = "block";
                 document.getElementById('foundName').innerText = item.item_name;
-                document.getElementById('foundSize').innerText = "Size: " + (item.size || "Standard");
                 document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2);
-                document.getElementById('cartStatus').style.display = 'none';
-            } else {
-                document.getElementById('foundArea').style.display = "none";
-            }
+            } else { document.getElementById('foundArea').style.display = "none"; }
         }
 
-        function commitItem() {
-            const qty = parseInt(document.getElementById('foundQty').value);
-            cart.push({...activeItem, qty: qty, totalPrice: parseFloat(activeItem.price) * qty});
-            document.getElementById('skuScan').value = ""; 
+        function addToCart() {
+            cart.push(activeItem);
+            document.getElementById('skuScan').value = "";
             document.getElementById('foundArea').style.display = "none";
-            document.getElementById('foundQty').value = "1";
-            renderPreview();
+            updatePOSPreview();
             document.getElementById('skuScan').focus();
         }
 
-        function renderPreview() {
-            document.getElementById('p-cust').innerText = document.getElementById('custSelect').value || "--";
-            document.getElementById('p-comp').innerText = document.getElementById('compDisplay').value || "--";
-            let h = "", s = 0, t = 0;
-            cart.forEach(i => {
-                s += i.totalPrice;
-                if(i.tax_exempt === "No" || i.tax_exempt === false) t += (i.totalPrice * NYC_TAX_RATE);
-                h += `<div class="receipt-line"><span>${i.qty}x ${i.item_name}</span><span>$${i.totalPrice.toFixed(2)}</span></div>`;
-            });
-            document.getElementById('p-items').innerHTML = h;
-            document.getElementById('p-sub').innerText = "$" + s.toFixed(2);
-            document.getElementById('p-tax').innerText = "$" + t.toFixed(2);
-            document.getElementById('p-total').innerText = "$" + (s + t).toFixed(2);
-        }
-
-        function applyCustomer() {
+        function updatePOSPreview() {
             const c = globalCust.find(x => x.name === document.getElementById('custSelect').value);
             document.getElementById('compDisplay').value = c ? c.company : "";
-            renderPreview();
+            let h = "", sub = 0, tax = 0;
+            cart.forEach(i => {
+                sub += parseFloat(i.price);
+                if(i.tax_exempt === "No" || i.tax_exempt === false) tax += (parseFloat(i.price) * NYC_TAX_RATE);
+                h += `<div class="receipt-line"><span>1x ${i.item_name}</span><span>$${parseFloat(i.price).toFixed(2)}</span></div>`;
+            });
+            document.getElementById('p-items').innerHTML = h;
+            document.getElementById('p-sub').innerText = "$" + sub.toFixed(2);
+            document.getElementById('p-tax').innerText = "$" + tax.toFixed(2);
+            document.getElementById('p-total').innerText = "$" + (sub + tax).toFixed(2);
         }
 
-        async function submitFinalSale() {
-            if(!cart.length) return alert("Please add at least one item.");
-            const payload = {
-                invoice_number: document.getElementById('p-invNum').innerText,
-                customer: document.getElementById('custSelect').value,
-                company: document.getElementById('compDisplay').value,
-                employee: currentUser,
-                item_details: cart.map(i => `${i.qty}x ${i.item_name} (${i.size})`).join(", "),
-                subtotal: document.getElementById('p-sub').innerText.replace('$',''),
-                tax: document.getElementById('p-tax').innerText.replace('$',''),
-                total: document.getElementById('p-total').innerText.replace('$','')
-            };
-            
-            try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                window.print();
-                closeModal();
-                loadInvoices();
-            } catch (e) {
-                alert("Error saving sale.");
-            }
+        // TAB 3: MANAGE INVENTORY
+        async function loadInventory() {
+            setActiveTab('tab-inv');
+            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
+            const data = await res.json();
+            let h = `<div class="card"><h3>Inventory Control</h3><table><tr><th>SKU</th><th>Item</th><th>Price</th><th>Action</th></tr>`;
+            data.forEach(i => h += `<tr><td>${i.sku}</td><td>${i.item_name}</td><td>$${parseFloat(i.price).toFixed(2)}</td><td><button class="btn-danger" onclick="deleteEntry('Inventory','${i.sku}')">Delete</button></td></tr>`);
+            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
+        }
+
+        // TAB 4: MANAGE CUSTOMERS
+        async function loadCustomers() {
+            setActiveTab('tab-cust');
+            const res = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+            const data = await res.json();
+            let h = `<div class="card"><h3>Customer Database</h3><table><tr><th>Name</th><th>Company</th><th>Action</th></tr>`;
+            data.forEach(c => h += `<tr><td>${c.name}</td><td>${c.company}</td><td><button class="btn-danger" onclick="deleteEntry('Customers','${c.name}')">Delete</button></td></tr>`);
+            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
+        }
+
+        // ADMIN DELETE FUNCTION
+        async function deleteEntry(sheet, id) {
+            if(!confirm(`Are you sure you want to delete ${id}?`)) return;
+            const payload = { action: 'deleteRow', sheetName: sheet, id: id };
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Deleted successfully.");
+            sheet === 'Inventory' ? loadInventory() : loadCustomers();
+        }
+
+        async function finalizePOS() {
+            if(!cart.length) return alert("Add items first.");
+            window.print();
+            location.reload();
         }
 
         function setActiveTab(id) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
-
-        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
     </script>
 </body>
 </html>
