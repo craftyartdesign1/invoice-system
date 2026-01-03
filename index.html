@@ -3,182 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Design | Management POS</title>
+    <title>Crafty Art Design | NYC Management POS</title>
     <style>
         :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; --success: #22c55e; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); }
-        #mainApp { display: block; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
         .content-area { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-container { display: flex; background: white; border-radius: 15px; width: 95%; max-width: 1000px; max-height: 90vh; overflow: hidden; }
-        .modal-form { flex: 1; padding: 2rem; overflow-y: auto; border-right: 1px solid #eee; }
-        .modal-preview { width: 350px; padding: 2rem; background: #fafafa; overflow-y: auto; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.8rem; color: #666; }
-        input, select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-        .btn { padding: 0.85rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .modal-container { display: flex; background: white; border-radius: 15px; width: 95%; max-width: 1100px; height: 85vh; overflow: hidden; }
+        .modal-form { flex: 1.2; padding: 2rem; overflow-y: auto; border-right: 1px solid #eee; }
+        .modal-preview { flex: 0.8; padding: 2rem; background: #fafafa; overflow-y: auto; display: flex; flex-direction: column; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.85rem; color: #444; }
+        input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
+        .btn { padding: 0.9rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-add { background: var(--success); color: white; margin-bottom: 15px; }
-        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
-        .total-box { border-top: 2px solid #000; margin-top: 15px; padding-top: 10px; font-weight: bold; font-size: 1.2rem; }
+        .btn-add { background: var(--success); color: white; margin-top: 10px; }
+        .receipt-paper { background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); flex-grow: 1; font-family: 'Courier New', Courier, monospace; }
+        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+        .receipt-total { border-top: 1px dashed #000; margin-top: 10px; padding-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="mainApp">
-        <header>
-            <h2>CRAFTY ART DESIGN</h2>
-            <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="openModal()">+ New Sale</button>
-        </header>
-        <div class="content-area" id="pageContent">
-            </div>
+    <header>
+        <h2>CRAFTY ART DESIGN</h2>
+        <button class="btn-primary" style="width: auto; padding: 10px 25px;" onclick="openModal()">+ NEW SALE</button>
+    </header>
+
+    <div class="content-area" id="pageContent">
+        <div class="card">
+            <h3>Recent Sales</h3>
+            <div id="salesList">Loading historical data...</div>
+        </div>
     </div>
 
     <div id="invoiceModal">
         <div class="modal-container">
             <div class="modal-form">
-                <h3>Customer Details</h3>
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <select id="custSelect" onchange="updatePreview()">
-                        <option value="">-- Select Customer --</option>
-                    </select>
-                </div>
-                
-                <hr style="margin: 20px 0;">
-                
-                <h3>Add Items</h3>
-                <div class="form-group">
-                    <label>Scan SKU</label>
-                    <input type="text" id="skuInput" placeholder="Enter SKU..." oninput="autoFillItem(this.value)">
-                </div>
-
-                <div id="itemEntryArea" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none;">
-                    <p id="foundItemName" style="font-weight: bold;"></p>
-                    <p id="foundItemSize" style="color: #666; font-size: 0.8rem;"></p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                        <div><label>Price</label><input type="text" id="tempPrice" readonly></div>
-                        <div><label>Qty</label><input type="number" id="tempQty" value="1" oninput="updatePreview()"></div>
+                <h3 style="margin-bottom:20px;">Step 1: Customer</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <select id="custSelect" onchange="applyCustomer()"></select>
                     </div>
-                    <button class="btn btn-add" onclick="addItemToInvoice()">+ Add to List</button>
+                    <div class="form-group">
+                        <label>Company</label>
+                        <input type="text" id="compDisplay" readonly>
+                    </div>
                 </div>
 
-                <div id="itemList"></div>
-                
-                <button class="btn btn-primary" onclick="submitInvoice()">Save & Complete Sale</button>
-                <button class="btn" style="background: #ccc;" onclick="closeModal()">Discard</button>
+                <hr style="margin: 20px 0; opacity: 0.3;">
+
+                <h3 style="margin-bottom:20px;">Step 2: Add Items</h3>
+                <div class="form-group">
+                    <label>Scan/Type SKU</label>
+                    <input type="text" id="skuScan" placeholder="e.g. 2026" oninput="handleSkuSearch(this.value)" autofocus>
+                </div>
+
+                <div id="foundArea" style="display:none; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <strong id="foundName"></strong><br>
+                            <small id="foundSize" style="color:#666;"></small>
+                        </div>
+                        <strong id="foundPrice"></strong>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-top: 15px;">
+                        <div style="flex:1;">
+                            <label>Quantity</label>
+                            <input type="number" id="foundQty" value="1" min="1">
+                        </div>
+                        <button class="btn btn-add" style="flex:1;" onclick="commitItem()">+ Add to Invoice</button>
+                    </div>
+                </div>
+
+                <div id="cartDisplay"></div>
             </div>
 
             <div class="modal-preview">
-                <div id="receiptContent">
-                    <h3 style="text-align: center;">RECEIPT PREVIEW</h3>
-                    <p style="text-align: center; font-size: 0.7rem; color: #888;">CRAFTY ART DESIGN</p>
+                <div class="receipt-paper" id="printableReceipt">
+                    <h2 style="text-align: center;">INVOICE</h2>
+                    <p style="text-align: center; font-size: 0.7rem;">CRAFTY ART DESIGN - NYC</p>
+                    <p style="text-align: center; font-size: 0.7rem;" id="p-invNum"># ---</p>
                     <hr style="margin: 15px 0;">
-                    <div id="previewCustomer"><b>Customer:</b> --</div>
+                    <p><strong>To:</strong> <span id="p-cust">--</span></p>
+                    <p><strong>Company:</strong> <span id="p-comp">--</span></p>
                     <hr style="margin: 15px 0;">
-                    <div id="previewItems"></div>
-                    <div class="total-box">
-                        <div class="receipt-line"><span>Subtotal</span><span id="prevSub">$0.00</span></div>
-                        <div class="receipt-line"><span>Tax</span><span id="prevTax">$0.00</span></div>
-                        <div class="receipt-line" style="font-size: 1.4rem;"><span>Total</span><span id="prevTotal">$0.00</span></div>
+                    
+                    <div id="p-items" style="min-height: 120px;"></div>
+
+                    <div class="receipt-total">
+                        <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
+                        <div class="receipt-line"><span>Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
+                        <div class="receipt-line" style="font-size: 1.2rem; margin-top:5px;"><span>TOTAL:</span><span id="p-total">$0.00</span></div>
                     </div>
                 </div>
-                <button id="btnPrint" class="btn" style="background: #007bff; color: white; display: none;" onclick="window.print()">Print Receipt</button>
+                
+                <div style="margin-top:20px; display:flex; flex-direction: column; gap:10px;">
+                    <button class="btn btn-primary" onclick="submitFinalSale()">Complete Sale</button>
+                    <button class="btn" style="background:#ddd;" onclick="closeModal()">Discard</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVrBD0vN-khWOIHrG8862MMk9LjubRN6QqiKgKpqSxrmrzwMGFDKAarr6kC7rxEsAq/exec";
+        const NYC_TAX_RATE = 0.08875; // Updated for NYC
         let globalInv = [];
-        let currentItems = [];
-        const TAX_RATE = 0.07; // Change to your local tax rate (e.g., 0.07 for 7%)
+        let globalCust = [];
+        let cart = [];
+        let activeItem = null;
 
         async function openModal() {
-            // RESET ALL FIELDS
-            document.getElementById('skuInput').value = "";
+            // Form Reset
+            cart = [];
+            activeItem = null;
+            document.getElementById('skuScan').value = "";
+            document.getElementById('foundArea').style.display = "none";
             document.getElementById('custSelect').value = "";
-            document.getElementById('itemEntryArea').style.display = "none";
-            currentItems = [];
-            updatePreview();
-            
+            document.getElementById('compDisplay').value = "";
+            renderPreview();
+
             document.getElementById('invoiceModal').style.display = 'flex';
             
-            const [cRes, iRes] = await Promise.all([
+            const [cRes, iRes, nRes] = await Promise.all([
                 fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInventory`)
+                fetch(`${SCRIPT_URL}?action=getInventory`),
+                fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
             ]);
             
-            const customers = await cRes.json();
+            globalCust = await cRes.json();
             globalInv = await iRes.json();
-
+            const nData = await nRes.json();
+            
+            document.getElementById('p-invNum').innerText = nData.nextInvoice;
             const cSel = document.getElementById('custSelect');
-            cSel.innerHTML = '<option value="">-- Select Customer --</option>';
-            customers.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            cSel.innerHTML = '<option value="">-- Select --</option>';
+            globalCust.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
         }
 
-        function autoFillItem(sku) {
-            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === sku.trim());
+        function handleSkuSearch(sku) {
+            const item = globalInv.find(i => i.sku && i.sku.toString() === sku.trim());
             if(item) {
-                document.getElementById('itemEntryArea').style.display = "block";
-                document.getElementById('foundItemName').innerText = item.item_name;
-                document.getElementById('foundItemSize').innerText = "Size: " + (item.size || "N/A");
-                document.getElementById('tempPrice').value = "$" + parseFloat(item.price).toFixed(2);
-                window.lastFoundItem = item;
+                activeItem = item;
+                document.getElementById('foundArea').style.display = "block";
+                document.getElementById('foundName').innerText = item.item_name;
+                document.getElementById('foundSize').innerText = "Size: " + item.size;
+                document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2); // Two decimals
             } else {
-                document.getElementById('itemEntryArea').style.display = "none";
+                document.getElementById('foundArea').style.display = "none";
             }
         }
 
-        function addItemToInvoice() {
-            const qty = parseInt(document.getElementById('tempQty').value);
-            const item = window.lastFoundItem;
-            
-            currentItems.push({
-                name: item.item_name,
-                price: parseFloat(item.price),
+        function commitItem() {
+            const qty = parseInt(document.getElementById('foundQty').value);
+            cart.push({
+                ...activeItem,
                 qty: qty,
-                taxable: (item.tax_exempt === "No" || item.tax_exempt === false)
+                totalPrice: parseFloat(activeItem.price) * qty
             });
-            
-            document.getElementById('skuInput').value = "";
-            document.getElementById('itemEntryArea').style.display = "none";
-            updatePreview();
+            document.getElementById('skuScan').value = "";
+            document.getElementById('foundArea').style.display = "none";
+            renderPreview();
         }
 
-        function updatePreview() {
-            const cust = document.getElementById('custSelect').value;
-            document.getElementById('previewCustomer').innerHTML = `<b>Customer:</b> ${cust || '--'}`;
-            
+        function renderPreview() {
+            document.getElementById('p-cust').innerText = document.getElementById('custSelect').value || "--";
+            document.getElementById('p-comp').innerText = document.getElementById('compDisplay').value || "--";
+
             let html = "";
             let subtotal = 0;
             let taxTotal = 0;
 
-            currentItems.forEach((item, index) => {
-                const lineTotal = item.price * item.qty;
-                subtotal += lineTotal;
-                if(item.taxable) taxTotal += (lineTotal * TAX_RATE);
-                
-                html += `
-                <div class="receipt-line">
-                    <span>${item.qty}x ${item.name}</span>
-                    <span>$${lineTotal.toFixed(2)}</span>
-                </div>`;
+            cart.forEach(item => {
+                subtotal += item.totalPrice;
+                // NYC Tax Logic: If "Tax Exempt" is "No", calculate 8.875%
+                if(item.tax_exempt === "No" || item.tax_exempt === false) {
+                    taxTotal += (item.totalPrice * NYC_TAX_RATE);
+                }
+                html += `<div class="receipt-line"><span>${item.qty}x ${item.item_name}</span><span>$${item.totalPrice.toFixed(2)}</span></div>`;
             });
 
-            document.getElementById('previewItems').innerHTML = html;
-            document.getElementById('prevSub').innerText = "$" + subtotal.toFixed(2);
-            document.getElementById('prevTax').innerText = "$" + taxTotal.toFixed(2);
-            document.getElementById('prevTotal').innerText = "$" + (subtotal + taxTotal).toFixed(2);
+            document.getElementById('p-items').innerHTML = html;
+            document.getElementById('p-sub').innerText = "$" + subtotal.toFixed(2);
+            document.getElementById('p-tax').innerText = "$" + taxTotal.toFixed(2);
+            document.getElementById('p-total').innerText = "$" + (subtotal + taxTotal).toFixed(2);
+        }
+
+        function applyCustomer() {
+            const c = globalCust.find(x => x.name === document.getElementById('custSelect').value);
+            document.getElementById('compDisplay').value = c ? c.company : "";
+            renderPreview();
         }
 
         function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
 
-        async function submitInvoice() {
-            // Submission logic to save all currentItems to Google Sheets...
+        async function submitFinalSale() {
+            if(cart.length === 0) return alert("Please add at least one item.");
+            const payload = {
+                invoice_number: document.getElementById('p-invNum').innerText,
+                customer: document.getElementById('custSelect').value,
+                company: document.getElementById('compDisplay').value,
+                employee: "Alessio",
+                item_details: cart.map(i => `${i.qty}x ${i.item_name} (${i.size})`).join(", "),
+                subtotal: document.getElementById('p-sub').innerText.replace('$',''),
+                tax: document.getElementById('p-tax').innerText.replace('$',''),
+                total: document.getElementById('p-total').innerText.replace('$','')
+            };
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             alert("Sale Saved!");
             closeModal();
         }
