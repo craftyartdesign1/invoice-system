@@ -3,253 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Design | NYC Management POS</title>
+    <title>Crafty Art Design | NYC POS</title>
     <style>
         :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; --success: #22c55e; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); }
+        
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* App Layout */
+        #mainApp { display: none; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
+        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
+        .tab-btn { padding: 8px 18px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 6px; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
         .content-area { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        /* Modal & Receipt */
         #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
         .modal-container { display: flex; background: white; border-radius: 15px; width: 95%; max-width: 1100px; height: 85vh; overflow: hidden; }
         .modal-form { flex: 1.2; padding: 2rem; overflow-y: auto; border-right: 1px solid #eee; }
         .modal-preview { flex: 0.8; padding: 2rem; background: #fafafa; overflow-y: auto; display: flex; flex-direction: column; }
+        
         .form-group { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.85rem; color: #444; }
         input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-        .btn { padding: 0.9rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        
+        .btn { padding: 0.9rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-add { background: var(--success); color: white; margin-top: 10px; }
+        
         .receipt-paper { background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); flex-grow: 1; font-family: 'Courier New', Courier, monospace; }
         .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-        .receipt-total { border-top: 1px dashed #000; margin-top: 10px; padding-top: 10px; font-weight: bold; }
-
-        @media print {
-            body * { visibility: hidden; }
-            #printableReceipt, #printableReceipt * { visibility: visible; }
-            #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h2>CRAFTY ART DESIGN</h2>
-        <button class="btn-primary" style="width: auto; padding: 10px 25px;" onclick="openModal()">+ NEW SALE</button>
-    </header>
-
-    <div class="content-area" id="pageContent">
-        <div class="card">
-            <h3>Recent Sales History</h3>
-            <div id="salesList">Connecting to database...</div>
-        </div>
-    </div>
-
-    <div id="invoiceModal">
-        <div class="modal-container">
-            <div class="modal-form">
-                <h3 style="margin-bottom:20px;">1. Customer Info</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Customer Name</label>
-                        <select id="custSelect" onchange="applyCustomer()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Company</label>
-                        <input type="text" id="compDisplay" placeholder="Auto-fills from Customer" readonly>
-                    </div>
-                </div>
-
-                <hr style="margin: 20px 0; opacity: 0.2;">
-
-                <h3 style="margin-bottom:20px;">2. Scan or Type Items</h3>
-                <div class="form-group">
-                    <label>SKU / Barcode</label>
-                    <input type="text" id="skuScan" placeholder="Scan SKU here..." oninput="handleSkuSearch(this.value)" autofocus>
-                </div>
-
-                <div id="foundArea" style="display:none; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong id="foundName" style="font-size: 1.1rem;"></strong><br>
-                            <small id="foundSize" style="color:#666;"></small>
-                        </div>
-                        <strong id="foundPrice" style="font-size: 1.1rem; color: var(--success);"></strong>
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-top: 15px;">
-                        <div style="flex:1;">
-                            <label>Quantity</label>
-                            <input type="number" id="foundQty" value="1" min="1">
-                        </div>
-                        <button class="btn btn-add" style="flex:1.5;" onclick="commitItem()">+ Add to Invoice</button>
-                    </div>
-                </div>
-
-                <div id="cartStatus" style="font-size: 0.8rem; color: #666; font-style: italic; margin-top: 10px;">
-                    Items added to this sale will appear on the receipt to the right.
-                </div>
-            </div>
-
-            <div class="modal-preview">
-                <div class="receipt-paper" id="printableReceipt">
-                    <h2 style="text-align: center; letter-spacing: 2px;">INVOICE</h2>
-                    <p style="text-align: center; font-size: 0.75rem;">CRAFTY ART DESIGN - NYC</p>
-                    <p style="text-align: center; font-size: 0.75rem; font-weight: bold;" id="p-invNum"># ---</p>
-                    <hr style="margin: 15px 0; border: 0.5px solid #000;">
-                    
-                    <p style="font-size: 0.85rem;"><strong>Bill To:</strong> <span id="p-cust">--</span></p>
-                    <p style="font-size: 0.85rem;"><strong>Company:</strong> <span id="p-comp">--</span></p>
-                    
-                    <hr style="margin: 15px 0; border: 0.5px dashed #ccc;">
-                    
-                    <div id="p-items" style="min-height: 150px;">
-                        </div>
-
-                    <div class="receipt-total">
-                        <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
-                        <div class="receipt-line"><span>NYC Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
-                        <div class="receipt-line" style="font-size: 1.2rem; margin-top: 5px;">
-                            <span><strong>TOTAL:</strong></span>
-                            <span id="p-total"><strong>$0.00</strong></span>
-                        </div>
-                    </div>
-                    
-                    <p style="text-align: center; font-size: 0.7rem; margin-top: 30px;">Thank you for your business!</p>
-                </div>
-                
-                <div style="margin-top:20px; display:flex; flex-direction: column; gap:10px;">
-                    <button class="btn btn-primary" onclick="submitFinalSale()">Complete & Print</button>
-                    <button class="btn" style="background:#ddd;" onclick="closeModal()">Discard Sale</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIomJpEzS3bLoll0xJYyzO2rfCd1MPSE2smk5kCmQ443GhtbEW9oKUmIEORlxoF7ai/exec";
-        const NYC_TAX_RATE = 0.08875; 
-        let globalInv = [];
-        let globalCust = [];
-        let cart = [];
-        let activeItem = null;
-
-        async function openModal() {
-            // Reset logic for fresh invoice
-            cart = [];
-            activeItem = null;
-            document.getElementById('skuScan').value = "";
-            document.getElementById('foundArea').style.display = "none";
-            document.getElementById('custSelect').value = "";
-            document.getElementById('compDisplay').value = "";
-            renderPreview();
-
-            document.getElementById('invoiceModal').style.display = 'flex';
-            
-            const [cRes, iRes, nRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
-            ]);
-            
-            globalCust = await cRes.json();
-            globalInv = await iRes.json();
-            const nData = await nRes.json();
-            
-            document.getElementById('p-invNum').innerText = nData.nextInvoice;
-            
-            const cSel = document.getElementById('custSelect');
-            cSel.innerHTML = '<option value="">-- Select Customer --</option>';
-            globalCust.forEach(c => {
-                cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-            });
-        }
-
-        function handleSkuSearch(sku) {
-            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === sku.trim());
-            if(item) {
-                activeItem = item;
-                document.getElementById('foundArea').style.display = "block";
-                document.getElementById('foundName').innerText = item.item_name;
-                document.getElementById('foundSize').innerText = "Size: " + (item.size || "Standard");
-                document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2);
-            } else {
-                document.getElementById('foundArea').style.display = "none";
-            }
-        }
-
-        function commitItem() {
-            const qty = parseInt(document.getElementById('foundQty').value);
-            cart.push({
-                ...activeItem,
-                qty: qty,
-                totalPrice: parseFloat(activeItem.price) * qty
-            });
-            
-            document.getElementById('skuScan').value = "";
-            document.getElementById('foundArea').style.display = "none";
-            document.getElementById('foundQty').value = "1";
-            renderPreview();
-            document.getElementById('skuScan').focus();
-        }
-
-        function renderPreview() {
-            document.getElementById('p-cust').innerText = document.getElementById('custSelect').value || "--";
-            document.getElementById('p-comp').innerText = document.getElementById('compDisplay').value || "--";
-
-            let html = "";
-            let subtotal = 0;
-            let taxTotal = 0;
-
-            cart.forEach((item) => {
-                subtotal += item.totalPrice;
-                // If "Tax Exempt" says "No", we charge NYC tax
-                if(item.tax_exempt === "No" || item.tax_exempt === false) {
-                    taxTotal += (item.totalPrice * NYC_TAX_RATE);
-                }
-                
-                html += `
-                <div class="receipt-line">
-                    <span>${item.qty}x ${item.item_name}</span>
-                    <span>$${item.totalPrice.toFixed(2)}</span>
-                </div>`;
-            });
-
-            document.getElementById('p-items').innerHTML = html;
-            document.getElementById('p-sub').innerText = "$" + subtotal.toFixed(2);
-            document.getElementById('p-tax').innerText = "$" + taxTotal.toFixed(2);
-            document.getElementById('p-total').innerText = "$" + (subtotal + taxTotal).toFixed(2);
-        }
-
-        function applyCustomer() {
-            const name = document.getElementById('custSelect').value;
-            const c = globalCust.find(x => x.name === name);
-            document.getElementById('compDisplay').value = c ? c.company : "";
-            renderPreview();
-        }
-
-        async function submitFinalSale() {
-            if(cart.length === 0) return alert("Please add at least one item!");
-            
-            const payload = {
-                invoice_number: document.getElementById('p-invNum').innerText,
-                customer: document.getElementById('custSelect').value,
-                company: document.getElementById('compDisplay').value,
-                employee: "Alessio",
-                item_details: cart.map(i => `${i.qty}x ${i.item_name} (${i.size})`).join(", "),
-                subtotal: document.getElementById('p-sub').innerText.replace('$',''),
-                tax: document.getElementById('p-tax').innerText.replace('$',''),
-                total: document.getElementById('p-total').innerText.replace('$','')
-            };
-
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            
-            window.print(); // Triggers the browser print window for the receipt
-            alert("Sale Saved and Receipt Generated.");
-            closeModal();
-        }
-
-        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
-    </script>
-</body>
-</html>
+        .receipt-total { border-top: 1px dashed #000; margin-top
