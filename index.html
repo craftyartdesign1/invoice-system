@@ -24,6 +24,12 @@
         .receipt-paper { background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); flex-grow: 1; font-family: 'Courier New', Courier, monospace; }
         .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
         .receipt-total { border-top: 1px dashed #000; margin-top: 10px; padding-top: 10px; font-weight: bold; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceipt, #printableReceipt * { visibility: visible; }
+            #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+        }
     </style>
 </head>
 <body>
@@ -34,53 +40,31 @@
     </header>
 
     <div class="content-area" id="pageContent">
-        <div class="card">
-            <h3>Recent Sales</h3>
-            <div id="salesList">Loading historical data...</div>
-        </div>
+        <div class="card"><h3>Recent Sales</h3><div id="salesList">History loading...</div></div>
     </div>
 
     <div id="invoiceModal">
         <div class="modal-container">
             <div class="modal-form">
-                <h3 style="margin-bottom:20px;">Step 1: Customer</h3>
+                <h3>1. Customer Details</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Customer Name</label>
-                        <select id="custSelect" onchange="applyCustomer()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Company</label>
-                        <input type="text" id="compDisplay" readonly>
-                    </div>
+                    <div class="form-group"><label>Customer Name</label><select id="custSelect" onchange="applyCustomer()"></select></div>
+                    <div class="form-group"><label>Company</label><input type="text" id="compDisplay" readonly></div>
                 </div>
-
-                <hr style="margin: 20px 0; opacity: 0.3;">
-
-                <h3 style="margin-bottom:20px;">Step 2: Add Items</h3>
-                <div class="form-group">
-                    <label>Scan/Type SKU</label>
-                    <input type="text" id="skuScan" placeholder="e.g. 2026" oninput="handleSkuSearch(this.value)" autofocus>
-                </div>
-
-                <div id="foundArea" style="display:none; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <hr style="margin: 20px 0; opacity: 0.2;">
+                <h3>2. Add Items</h3>
+                <div class="form-group"><label>Scan/Type SKU</label><input type="text" id="skuScan" oninput="handleSkuSearch(this.value)" autofocus></div>
+                
+                <div id="foundArea" style="display:none; background: #f0fdf4; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="display:flex; justify-content:space-between;">
-                        <div>
-                            <strong id="foundName"></strong><br>
-                            <small id="foundSize" style="color:#666;"></small>
-                        </div>
+                        <div><strong id="foundName"></strong><br><small id="foundSize"></small></div>
                         <strong id="foundPrice"></strong>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-top: 15px;">
-                        <div style="flex:1;">
-                            <label>Quantity</label>
-                            <input type="number" id="foundQty" value="1" min="1">
-                        </div>
-                        <button class="btn btn-add" style="flex:1;" onclick="commitItem()">+ Add to Invoice</button>
+                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-top: 10px;">
+                        <div style="flex:1;"><label>Qty</label><input type="number" id="foundQty" value="1" min="1"></div>
+                        <button class="btn btn-add" style="flex:1;" onclick="commitItem()">+ Add to Receipt</button>
                     </div>
                 </div>
-
-                <div id="cartDisplay"></div>
             </div>
 
             <div class="modal-preview">
@@ -88,23 +72,20 @@
                     <h2 style="text-align: center;">INVOICE</h2>
                     <p style="text-align: center; font-size: 0.7rem;">CRAFTY ART DESIGN - NYC</p>
                     <p style="text-align: center; font-size: 0.7rem;" id="p-invNum"># ---</p>
-                    <hr style="margin: 15px 0;">
+                    <hr style="margin: 10px 0;">
                     <p><strong>To:</strong> <span id="p-cust">--</span></p>
                     <p><strong>Company:</strong> <span id="p-comp">--</span></p>
-                    <hr style="margin: 15px 0;">
-                    
-                    <div id="p-items" style="min-height: 120px;"></div>
-
+                    <hr style="margin: 10px 0;">
+                    <div id="p-items" style="min-height: 100px;"></div>
                     <div class="receipt-total">
                         <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
                         <div class="receipt-line"><span>Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
-                        <div class="receipt-line" style="font-size: 1.2rem; margin-top:5px;"><span>TOTAL:</span><span id="p-total">$0.00</span></div>
+                        <div class="receipt-line" style="font-size: 1.1rem;"><span>TOTAL:</span><span id="p-total">$0.00</span></div>
                     </div>
                 </div>
-                
                 <div style="margin-top:20px; display:flex; flex-direction: column; gap:10px;">
-                    <button class="btn btn-primary" onclick="submitFinalSale()">Complete Sale</button>
-                    <button class="btn" style="background:#ddd;" onclick="closeModal()">Discard</button>
+                    <button class="btn btn-primary" onclick="submitFinalSale()">Complete & Print</button>
+                    <button class="btn" style="background:#ddd;" onclick="closeModal()">Discard Sale</button>
                 </div>
             </div>
         </div>
@@ -112,35 +93,20 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVrBD0vN-khWOIHrG8862MMk9LjubRN6QqiKgKpqSxrmrzwMGFDKAarr6kC7rxEsAq/exec";
-        const NYC_TAX_RATE = 0.08875; // Updated for NYC
-        let globalInv = [];
-        let globalCust = [];
-        let cart = [];
-        let activeItem = null;
+        const NYC_TAX_RATE = 0.08875; // NYC Rate
+        let globalInv = [], globalCust = [], cart = [], activeItem = null;
 
         async function openModal() {
-            // Form Reset
-            cart = [];
-            activeItem = null;
+            cart = []; activeItem = null;
             document.getElementById('skuScan').value = "";
             document.getElementById('foundArea').style.display = "none";
-            document.getElementById('custSelect').value = "";
-            document.getElementById('compDisplay').value = "";
             renderPreview();
-
             document.getElementById('invoiceModal').style.display = 'flex';
-            
             const [cRes, iRes, nRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
+                fetch(`${SCRIPT_URL}?action=getCustomers`), fetch(`${SCRIPT_URL}?action=getInventory`), fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
             ]);
-            
-            globalCust = await cRes.json();
-            globalInv = await iRes.json();
-            const nData = await nRes.json();
-            
-            document.getElementById('p-invNum').innerText = nData.nextInvoice;
+            globalCust = await cRes.json(); globalInv = await iRes.json();
+            document.getElementById('p-invNum').innerText = (await nRes.json()).nextInvoice;
             const cSel = document.getElementById('custSelect');
             cSel.innerHTML = '<option value="">-- Select --</option>';
             globalCust.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
@@ -153,71 +119,55 @@
                 document.getElementById('foundArea').style.display = "block";
                 document.getElementById('foundName').innerText = item.item_name;
                 document.getElementById('foundSize').innerText = "Size: " + item.size;
-                document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2); // Two decimals
-            } else {
-                document.getElementById('foundArea').style.display = "none";
-            }
+                document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2); // $20.00 Format
+            } else { document.getElementById('foundArea').style.display = "none"; }
         }
 
         function commitItem() {
             const qty = parseInt(document.getElementById('foundQty').value);
-            cart.push({
-                ...activeItem,
-                qty: qty,
-                totalPrice: parseFloat(activeItem.price) * qty
-            });
-            document.getElementById('skuScan').value = "";
-            document.getElementById('foundArea').style.display = "none";
+            cart.push({...activeItem, qty: qty, totalPrice: parseFloat(activeItem.price) * qty});
+            document.getElementById('skuScan').value = ""; document.getElementById('foundArea').style.display = "none";
             renderPreview();
         }
 
         function renderPreview() {
             document.getElementById('p-cust').innerText = document.getElementById('custSelect').value || "--";
             document.getElementById('p-comp').innerText = document.getElementById('compDisplay').value || "--";
-
-            let html = "";
-            let subtotal = 0;
-            let taxTotal = 0;
-
-            cart.forEach(item => {
-                subtotal += item.totalPrice;
-                // NYC Tax Logic: If "Tax Exempt" is "No", calculate 8.875%
-                if(item.tax_exempt === "No" || item.tax_exempt === false) {
-                    taxTotal += (item.totalPrice * NYC_TAX_RATE);
-                }
-                html += `<div class="receipt-line"><span>${item.qty}x ${item.item_name}</span><span>$${item.totalPrice.toFixed(2)}</span></div>`;
+            let h = "", s = 0, t = 0;
+            cart.forEach(i => {
+                s += i.totalPrice;
+                if(i.tax_exempt === "No" || i.tax_exempt === false) t += (i.totalPrice * NYC_TAX_RATE);
+                h += `<div class="receipt-line"><span>${i.qty}x ${i.item_name}</span><span>$${i.totalPrice.toFixed(2)}</span></div>`;
             });
-
-            document.getElementById('p-items').innerHTML = html;
-            document.getElementById('p-sub').innerText = "$" + subtotal.toFixed(2);
-            document.getElementById('p-tax').innerText = "$" + taxTotal.toFixed(2);
-            document.getElementById('p-total').innerText = "$" + (subtotal + taxTotal).toFixed(2);
+            document.getElementById('p-items').innerHTML = h;
+            document.getElementById('p-sub').innerText = "$" + s.toFixed(2);
+            document.getElementById('p-tax').innerText = "$" + t.toFixed(2);
+            document.getElementById('p-total').innerText = "$" + (s + t).toFixed(2);
         }
 
         function applyCustomer() {
             const c = globalCust.find(x => x.name === document.getElementById('custSelect').value);
-            document.getElementById('compDisplay').value = c ? c.company : "";
-            renderPreview();
+            document.getElementById('compDisplay').value = c ? c.company : ""; renderPreview();
         }
 
-        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
-
         async function submitFinalSale() {
-            if(cart.length === 0) return alert("Please add at least one item.");
+            if(!cart.length) return alert("Add items first!");
             const payload = {
                 invoice_number: document.getElementById('p-invNum').innerText,
                 customer: document.getElementById('custSelect').value,
                 company: document.getElementById('compDisplay').value,
                 employee: "Alessio",
-                item_details: cart.map(i => `${i.qty}x ${i.item_name} (${i.size})`).join(", "),
+                item_details: cart.map(i => `${i.qty}x ${i.item_name}`).join(", "),
                 subtotal: document.getElementById('p-sub').innerText.replace('$',''),
                 tax: document.getElementById('p-tax').innerText.replace('$',''),
                 total: document.getElementById('p-total').innerText.replace('$','')
             };
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Sale Saved!");
+            window.print(); // Triggers Print
             closeModal();
         }
+
+        function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
     </script>
 </body>
 </html>
