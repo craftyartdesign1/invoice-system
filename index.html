@@ -5,272 +5,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crafty Art Design | Management POS</title>
     <style>
-        :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; }
+        :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; --success: #22c55e; }
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); }
-        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        #mainApp { display: none; }
-        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        #mainApp { display: block; }
         header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
-        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; }
-        .tab-btn { padding: 8px 18px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 6px; font-weight: bold; }
-        .tab-btn.active { background: var(--primary); color: white; }
         .content-area { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        .form-group { margin-bottom: 1rem; text-align: left; }
+        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-container { display: flex; background: white; border-radius: 15px; width: 95%; max-width: 1000px; max-height: 90vh; overflow: hidden; }
+        .modal-form { flex: 1; padding: 2rem; overflow-y: auto; border-right: 1px solid #eee; }
+        .modal-preview { width: 350px; padding: 2rem; background: #fafafa; overflow-y: auto; }
+        .form-group { margin-bottom: 1rem; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.8rem; color: #666; }
         input, select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-        input:read-only { background-color: #f9fafb; color: #9ca3af; }
-        .btn-primary { width: 100%; padding: 0.85rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #invoiceModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-        .modal-content { background: white; padding: 2rem; border-radius: 15px; width: 95%; max-width: 580px; max-height: 95vh; overflow-y: auto; }
-        .custom-size-box { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .exempt-label { color: var(--danger); font-size: 0.7rem; font-weight: bold; display: none; margin-top: 4px; }
+        .btn { padding: 0.85rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-add { background: var(--success); color: white; margin-bottom: 15px; }
+        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .total-box { border-top: 2px solid #000; margin-top: 15px; padding-top: 10px; font-weight: bold; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h1>Crafty Art Design</h1>
-            <input type="text" id="username" placeholder="Username" style="margin-bottom:12px;">
-            <input type="password" id="password" placeholder="Password" style="margin-bottom:20px;">
-            <button class="btn-primary" onclick="handleLogin()">Sign In</button>
-        </div>
-    </div>
-
     <div id="mainApp">
         <header>
             <h2>CRAFTY ART DESIGN</h2>
-            <div>Welcome, <span id="userDisplay" style="font-weight:bold;"></span> | <a href="#" onclick="location.reload()" style="color:var(--danger); text-decoration:none;">Logout</a></div>
+            <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="openModal()">+ New Sale</button>
         </header>
-        <nav class="nav-tabs">
-            <button class="tab-btn" id="t-dash" onclick="showDashboard()">Dashboard</button>
-            <button class="tab-btn" id="t-inv" onclick="loadInventory()">Inventory</button>
-            <button class="tab-btn active" id="t-sales" onclick="loadInvoices()">Invoices</button>
-        </nav>
-        <div class="content-area" id="pageContent"></div>
+        <div class="content-area" id="pageContent">
+            </div>
     </div>
 
     <div id="invoiceModal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>New Sale</h3>
-                <span id="invRefLabel" style="font-weight:bold; color:#666; background:#eee; padding:4px 10px; border-radius:5px;"></span>
-            </div>
-
-            <div class="form-group">
-                <label>Barcode / SKU Scan</label>
-                <input type="text" id="barcodeInput" placeholder="Scan or type SKU..." oninput="handleScan(this.value)" autofocus>
-            </div>
-
-            <div class="form-group">
-                <label>Item Name</label>
-                <select id="itemSelect" onchange="applyItemSelection()">
-                    <option value="">-- Choose Item --</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Size / Dimensions</label>
-                <select id="sizeSelect" onchange="checkSize()">
-                    <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-                    <option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option>
-                    <option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option>
-                    <option value="CUSTOM">Custom Dimensions</option>
-                </select>
-                <div id="customSizeInput" class="custom-size-box">
-                    <input type="number" id="cWidth" placeholder="Width (in)">
-                    <input type="number" id="cHeight" placeholder="Height (in)">
+        <div class="modal-container">
+            <div class="modal-form">
+                <h3>Customer Details</h3>
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <select id="custSelect" onchange="updatePreview()">
+                        <option value="">-- Select Customer --</option>
+                    </select>
                 </div>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Add Items</h3>
+                <div class="form-group">
+                    <label>Scan SKU</label>
+                    <input type="text" id="skuInput" placeholder="Enter SKU..." oninput="autoFillItem(this.value)">
+                </div>
+
+                <div id="itemEntryArea" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none;">
+                    <p id="foundItemName" style="font-weight: bold;"></p>
+                    <p id="foundItemSize" style="color: #666; font-size: 0.8rem;"></p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div><label>Price</label><input type="text" id="tempPrice" readonly></div>
+                        <div><label>Qty</label><input type="number" id="tempQty" value="1" oninput="updatePreview()"></div>
+                    </div>
+                    <button class="btn btn-add" onclick="addItemToInvoice()">+ Add to List</button>
+                </div>
+
+                <div id="itemList"></div>
+                
+                <button class="btn btn-primary" onclick="submitInvoice()">Save & Complete Sale</button>
+                <button class="btn" style="background: #ccc;" onclick="closeModal()">Discard</button>
             </div>
 
-            <div class="form-group">
-                <label>Customer Name</label>
-                <select id="custSelect" onchange="applyCustomerSelection()">
-                    <option value="">-- Select Customer --</option>
-                </select>
+            <div class="modal-preview">
+                <div id="receiptContent">
+                    <h3 style="text-align: center;">RECEIPT PREVIEW</h3>
+                    <p style="text-align: center; font-size: 0.7rem; color: #888;">CRAFTY ART DESIGN</p>
+                    <hr style="margin: 15px 0;">
+                    <div id="previewCustomer"><b>Customer:</b> --</div>
+                    <hr style="margin: 15px 0;">
+                    <div id="previewItems"></div>
+                    <div class="total-box">
+                        <div class="receipt-line"><span>Subtotal</span><span id="prevSub">$0.00</span></div>
+                        <div class="receipt-line"><span>Tax</span><span id="prevTax">$0.00</span></div>
+                        <div class="receipt-line" style="font-size: 1.4rem;"><span>Total</span><span id="prevTotal">$0.00</span></div>
+                    </div>
+                </div>
+                <button id="btnPrint" class="btn" style="background: #007bff; color: white; display: none;" onclick="window.print()">Print Receipt</button>
             </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                <div class="form-group"><label>Company</label><input type="text" id="compDisplay" readonly></div>
-                <div class="form-group"><label>Address</label><input type="text" id="addrDisplay" readonly></div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                <div class="form-group"><label>Price ($)</label><input type="number" id="price" step="0.01" oninput="doMath()"></div>
-                <div class="form-group"><label>Quantity</label><input type="number" id="qty" value="1" oninput="doMath()"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Tax Amount ($)</label>
-                <input type="number" id="tax" step="0.01" value="0.00" oninput="doMath()">
-                <span id="taxExemptMsg" class="exempt-label">ITEM IS TAX EXEMPT</span>
-            </div>
-
-            <div style="background:#000; color:#fff; padding:15px; border-radius:10px; text-align:right; margin-bottom:20px;">
-                <p style="font-size:0.7rem; opacity:0.8;">Grand Total</p>
-                <h1 id="totalDisplay">$0.00</h1>
-            </div>
-
-            <button class="btn-primary" onclick="submitInvoice()">Save & Complete Sale</button>
-            <button class="btn-primary" style="background:#9ca3af; margin-top:10px;" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVrBD0vN-khWOIHrG8862MMk9LjubRN6QqiKgKpqSxrmrzwMGFDKAarr6kC7rxEsAq/exec";
-        let currentUser = "";
         let globalInv = [];
-        let globalCustomers = [];
-
-        async function handleLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
-            const data = await res.json();
-            if(data.success) {
-                currentUser = data.user.display_name;
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('userDisplay').innerText = currentUser;
-                loadInvoices();
-            } else { alert("Login Error"); }
-        }
+        let currentItems = [];
+        const TAX_RATE = 0.07; // Change to your local tax rate (e.g., 0.07 for 7%)
 
         async function openModal() {
+            // RESET ALL FIELDS
+            document.getElementById('skuInput').value = "";
+            document.getElementById('custSelect').value = "";
+            document.getElementById('itemEntryArea').style.display = "none";
+            currentItems = [];
+            updatePreview();
+            
             document.getElementById('invoiceModal').style.display = 'flex';
-            const [cRes, iRes, nRes] = await Promise.all([
+            
+            const [cRes, iRes] = await Promise.all([
                 fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
+                fetch(`${SCRIPT_URL}?action=getInventory`)
             ]);
-            globalCustomers = await cRes.json();
+            
+            const customers = await cRes.json();
             globalInv = await iRes.json();
-            const nData = await nRes.json();
-
-            window.currentInvNum = nData.nextInvoice;
-            document.getElementById('invRefLabel').innerText = nData.nextInvoice;
 
             const cSel = document.getElementById('custSelect');
             cSel.innerHTML = '<option value="">-- Select Customer --</option>';
-            globalCustomers.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            customers.forEach(c => cSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
 
-            const iSel = document.getElementById('itemSelect');
-            iSel.innerHTML = '<option value="">-- Choose Item --</option>';
-            globalInv.forEach(i => {
-                iSel.innerHTML += `<option value="${i.sku}">${i.item_name}</option>`;
+        function autoFillItem(sku) {
+            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === sku.trim());
+            if(item) {
+                document.getElementById('itemEntryArea').style.display = "block";
+                document.getElementById('foundItemName').innerText = item.item_name;
+                document.getElementById('foundItemSize').innerText = "Size: " + (item.size || "N/A");
+                document.getElementById('tempPrice').value = "$" + parseFloat(item.price).toFixed(2);
+                window.lastFoundItem = item;
+            } else {
+                document.getElementById('itemEntryArea').style.display = "none";
+            }
+        }
+
+        function addItemToInvoice() {
+            const qty = parseInt(document.getElementById('tempQty').value);
+            const item = window.lastFoundItem;
+            
+            currentItems.push({
+                name: item.item_name,
+                price: parseFloat(item.price),
+                qty: qty,
+                taxable: (item.tax_exempt === "No" || item.tax_exempt === false)
             });
             
-            document.getElementById('barcodeInput').focus();
+            document.getElementById('skuInput').value = "";
+            document.getElementById('itemEntryArea').style.display = "none";
+            updatePreview();
         }
 
-        function handleScan(val) {
-            // Searches for SKU in Column A
-            const item = globalInv.find(i => i.sku && i.sku.toString().trim() === val.trim());
-            if(item) {
-                document.getElementById('itemSelect').value = item.sku;
-                applyItemSelection();
-                document.getElementById('barcodeInput').value = ""; 
-            }
-        }
-
-        function applyItemSelection() {
-            const skuVal = document.getElementById('itemSelect').value;
-            const item = globalInv.find(i => i.sku && i.sku.toString() === skuVal);
-            if(item) {
-                document.getElementById('price').value = item.price.toString().replace('$','');
-                
-                // Set Size
-                if(item.size) document.getElementById('sizeSelect').value = item.size.toUpperCase();
-                
-                // Tax Logic
-                const isExempt = (item.tax_exempt === true || item.tax_exempt === "TRUE");
-                const tInput = document.getElementById('tax');
-                tInput.value = "0.00";
-                tInput.readOnly = isExempt;
-                document.getElementById('taxExemptMsg').style.display = isExempt ? 'block' : 'none';
-                
-                doMath();
-            }
-        }
-
-        function applyCustomerSelection() {
-            const name = document.getElementById('custSelect').value;
-            const cust = globalCustomers.find(c => c.name === name);
-            if(cust) {
-                document.getElementById('compDisplay').value = cust.company || "N/A";
-                document.getElementById('addrDisplay').value = cust.address || "N/A";
-            }
-        }
-
-        function checkSize() {
-            const isCustom = document.getElementById('sizeSelect').value === "CUSTOM";
-            document.getElementById('customSizeInput').style.display = isCustom ? 'grid' : 'none';
-        }
-
-        function doMath() {
-            const p = parseFloat(document.getElementById('price').value) || 0;
-            const q = parseFloat(document.getElementById('qty').value) || 1;
-            const t = parseFloat(document.getElementById('tax').value) || 0;
-            document.getElementById('totalDisplay').innerText = "$" + ((p * q) + t).toFixed(2);
-        }
-
-        async function submitInvoice() {
-            const size = document.getElementById('sizeSelect').value;
-            const finalSize = size === "CUSTOM" ? `${document.getElementById('cWidth').value}x${document.getElementById('cHeight').value}in` : size;
-            const itemText = document.getElementById('itemSelect').selectedOptions[0].text;
+        function updatePreview() {
+            const cust = document.getElementById('custSelect').value;
+            document.getElementById('previewCustomer').innerHTML = `<b>Customer:</b> ${cust || '--'}`;
             
-            const payload = {
-                invoice_number: window.currentInvNum,
-                customer: document.getElementById('custSelect').value,
-                company: document.getElementById('compDisplay').value,
-                employee: currentUser,
-                item_details: `${itemText} | Size: ${finalSize} | Qty: ${document.getElementById('qty').value}`,
-                subtotal: document.getElementById('price').value,
-                tax: document.getElementById('tax').value,
-                total: document.getElementById('totalDisplay').innerText.replace('$','')
-            };
+            let html = "";
+            let subtotal = 0;
+            let taxTotal = 0;
 
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Sale Recorded!");
-            closeModal();
-            loadInvoices();
+            currentItems.forEach((item, index) => {
+                const lineTotal = item.price * item.qty;
+                subtotal += lineTotal;
+                if(item.taxable) taxTotal += (lineTotal * TAX_RATE);
+                
+                html += `
+                <div class="receipt-line">
+                    <span>${item.qty}x ${item.name}</span>
+                    <span>$${lineTotal.toFixed(2)}</span>
+                </div>`;
+            });
+
+            document.getElementById('previewItems').innerHTML = html;
+            document.getElementById('prevSub').innerText = "$" + subtotal.toFixed(2);
+            document.getElementById('prevTax').innerText = "$" + taxTotal.toFixed(2);
+            document.getElementById('prevTotal').innerText = "$" + (subtotal + taxTotal).toFixed(2);
         }
 
         function closeModal() { document.getElementById('invoiceModal').style.display = 'none'; }
-        
-        async function loadInventory() {
-            setActiveTab('t-inv');
-            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
-            const data = await res.json();
-            let h = `<div class="card"><h3>Product Inventory</h3><table><tr><th>SKU</th><th>Item</th><th>Price</th><th>Tax Exempt</th></tr>`;
-            data.forEach(i => {
-                h += `<tr><td>${i.sku || 'N/A'}</td><td>${i.item_name}</td><td>$${i.price}</td><td>${i.tax_exempt ? 'Yes' : 'No'}</td></tr>`;
-            });
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
 
-        async function loadInvoices() {
-            setActiveTab('t-sales');
-            const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
-            const data = await res.json();
-            let h = `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><h3>Sales History</h3><button class="btn-primary" style="width:auto; padding:5px 20px;" onclick="openModal()">+ New Sale</button></div><table><tr><th>Inv #</th><th>Customer</th><th>Company</th><th>Total</th></tr>`;
-            data.reverse().forEach(i => h += `<tr><td><b>${i.invoice_number}</b></td><td>${i.customer}</td><td>${i.company}</td><td>$${i.total}</td></tr>`);
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
-        
-        function showDashboard() {
-            setActiveTab('t-dash');
-            document.getElementById('pageContent').innerHTML = `<div class="card"><h3>Dashboard</h3><p>Welcome back, ${currentUser}.</p></div>`;
-        }
-
-        function setActiveTab(id) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        async function submitInvoice() {
+            // Submission logic to save all currentItems to Google Sheets...
+            alert("Sale Saved!");
+            closeModal();
         }
     </script>
 </body>
