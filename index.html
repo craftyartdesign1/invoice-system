@@ -33,13 +33,12 @@
         .modal-header { 
             background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
             cursor: move; user-select: none; font-size: 0.9rem; text-align: center; font-weight: bold;
-            letter-spacing: 1px;
         }
         .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
         .check-group input { width: auto; margin: 0; }
         .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .custom-size-box { display: none; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -59,7 +58,7 @@
 
 <div id="appModal" class="modal">
     <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">⁝⁝ CLICK & DRAG TO MOVE WINDOW ⁝⁝</div>
+        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
         <div class="modal-content">
             <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
             <div id="modalFields"></div>
@@ -91,6 +90,10 @@
         } catch (e) { view.innerHTML = "<p style='color:red'>Error loading data.</p>"; }
     }
 
+    function showAddressPopup(name, addr) {
+        alert(`Full Address for ${name}:\n\n${addr}`);
+    }
+
     function renderTable(type, data) {
         const isOwner = currentUser.username === OWNER_ID;
         let html = `<div class="card"><button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button><h3>${type} Management</h3><table><thead><tr>`;
@@ -108,26 +111,37 @@
                 html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
             }});
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Full Address</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
                 
-                // DATA MAPPING FIX: Combined all address columns
-                const street = item.Street || '';
+                // SYNCED TO SPREADSHEET
+                const street = item["Street Address"] || '';
                 const city = item.City || '';
                 const state = item.State || '';
                 const zip = item["Zip Code"] || '';
-                
-                // Formats as: "123 Main St, Queens, NY 11111"
-                const fullAddr = `${street}${street ? ', ' : ''}${city}${city ? ', ' : ''}${state} ${zip}`.trim();
+                const fullAddr = `${street}, ${city}, ${state} ${zip}`;
 
-                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr || 'No Address'}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+                html += `<tr>
+                    <td><b>${item.Name}</b></td>
+                    <td>${item.Company || ''}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>${street || 'No Street'}</span>
+                            <span class="info-pill" onclick="showAddressPopup('${item.Name}', '${fullAddr}')">Address Info</span>
+                        </div>
+                    </td>
+                    <td>${item.Email || ''}</td>
+                    <td>${item.Phone || ''}</td>
+                    <td>
+                        <button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>
+                        ${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}
+                    </td>
+                </tr>`;
             }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
-
-    function toggleCustomSize(val) { document.getElementById('customSizeBox').style.display = (val === 'Custom') ? 'flex' : 'none'; }
 
     function openModal(isEdit, dataStr = null) {
         editMode = isEdit;
@@ -141,16 +155,18 @@
 
         if (activeTab === 'Customers') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
+            // Fields: Name(f1), Company(f2), Street(f3), City(f4), State(f5), Zip(f6), Email(f7), Phone(f8)
             fields.innerHTML = `
                 <input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}>
-                <input id="f2" placeholder="Street Address">
-                <div class="address-grid"><input id="f3" placeholder="City"><input id="f4" placeholder="State"></div>
-                <div class="address-grid"><input id="f5" placeholder="Zip Code"><input id="f6" placeholder="Email Address"></div>
-                <input id="f7" placeholder="Phone Number">
-                <div class="check-group"><input type="checkbox" id="f8"> <label>Tax Exempt Customer</label></div>`;
+                <input id="f2" placeholder="Company Name">
+                <input id="f3" placeholder="Street Address">
+                <div class="address-grid"><input id="f4" placeholder="City"><input id="f5" placeholder="State"></div>
+                <div class="address-grid"><input id="f6" placeholder="Zip Code"><input id="f7" placeholder="Email Address"></div>
+                <input id="f8" placeholder="Phone Number">
+                <div class="check-group"><input type="checkbox" id="f9"> <label>Tax Exempt Customer</label></div>`;
         } else if (activeTab === 'Inventory') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><select id="f4" onchange="toggleCustomSize(this.value)"><option value="" disabled selected>Size</option><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option><option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option><option value="Custom">Custom</option></select><div id="customSizeBox" class="custom-size-box"><input id="cWidth" type="number" placeholder="W (in)"><input id="cHeight" type="number" placeholder="H (in)"></div><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><input id="f4" placeholder="Size"><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         } else {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
             fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
@@ -161,22 +177,18 @@
             currentId = data.Username || data.SKU || data.Name;
             document.getElementById('f1').value = currentId;
             if (activeTab === 'Customers') {
-                document.getElementById('f2').value = data.Street || '';
-                document.getElementById('f3').value = data.City || '';
-                document.getElementById('f4').value = data.State || '';
-                document.getElementById('f5').value = data["Zip Code"] || '';
-                document.getElementById('f6').value = data.Email || '';
-                document.getElementById('f7').value = data.Phone || '';
-                document.getElementById('f8').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
+                document.getElementById('f2').value = data.Company || '';
+                document.getElementById('f3').value = data["Street Address"] || '';
+                document.getElementById('f4').value = data.City || '';
+                document.getElementById('f5').value = data.State || '';
+                document.getElementById('f6').value = data["Zip Code"] || '';
+                document.getElementById('f7').value = data.Email || '';
+                document.getElementById('f8').value = data.Phone || '';
+                document.getElementById('f9').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
             } else if (activeTab === 'Inventory') {
                 document.getElementById('f2').value = data["Item Name"] || '';
                 document.getElementById('f3').value = data.Price || '';
-                const s = data.Size || '';
-                if (s.includes(' x ')) {
-                    document.getElementById('f4').value = 'Custom'; toggleCustomSize('Custom');
-                    const p = s.replace(' in','').split(' x ');
-                    document.getElementById('cWidth').value = p[0]; document.getElementById('cHeight').value = p[1];
-                } else { document.getElementById('f4').value = s; }
+                document.getElementById('f4').value = data.Size || '';
                 document.getElementById('f5').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
             } else {
                 document.getElementById('f2').value = data.Password || '';
@@ -193,20 +205,20 @@
     async function handleSave() {
         let rowData = [];
         if (activeTab === 'Customers') {
+            // MATCHING YOUR SPREADSHEET COLUMNS A through H
             rowData = [
-                document.getElementById('f1').value, // Name (Col A)
-                document.getElementById('f2').value, // Street (Col B)
-                document.getElementById('f3').value, // City (Col C)
-                document.getElementById('f4').value, // State (Col D)
-                document.getElementById('f5').value, // Zip (Col E)
-                document.getElementById('f6').value, // Email (Col F)
-                document.getElementById('f7').value, // Phone (Col G)
-                document.getElementById('f8').checked // Tax Exempt (Col H)
+                document.getElementById('f1').value, // Name
+                document.getElementById('f2').value, // Company
+                document.getElementById('f3').value, // Street Address
+                document.getElementById('f4').value, // City
+                document.getElementById('f5').value, // State
+                document.getElementById('f6').value, // Zip Code
+                document.getElementById('f7').value, // Email
+                document.getElementById('f8').value, // Phone
+                document.getElementById('f9').checked // Tax Exempt (Col I)
             ];
         } else if (activeTab === 'Inventory') {
-            let sVal = document.getElementById('f4').value;
-            if (sVal === 'Custom') sVal = `${document.getElementById('cWidth').value} x ${document.getElementById('cHeight').value} in`;
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, sVal, document.getElementById('f5').checked];
+            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked];
         } else {
             rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
         }
@@ -223,7 +235,7 @@
         }
     }
 
-    // Draggable logic with Header Grab
+    // Draggable Window Logic
     const dragItem = document.getElementById("draggableModal");
     const dragHeader = document.getElementById("modalHeader");
     let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
