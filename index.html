@@ -9,29 +9,29 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #f4f7f6; margin: 0; }
 
-        /* Header & Navigation */
-        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); }
+        /* Header & Nav */
+        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
 
-        /* Content & Tables */
+        /* Content Area */
         .content { padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
 
-        /* Buttons */
+        /* Buttons & Inputs */
         .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
+        input[type="text"], input[type="password"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
 
         /* Modal Popup */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
         .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
-        input[type="text"], input[type="password"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
     </style>
 </head>
@@ -40,7 +40,7 @@
 <div id="dashboard">
     <header>
         <h2>CRAFTY ART DESIGN</h2>
-        <div id="userDisplay" style="font-weight:bold; color:var(--blue)">User: Alessio</div>
+        <div style="font-weight:bold; color:var(--blue)">User: Alessio</div>
     </header>
     <nav class="nav">
         <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
@@ -57,30 +57,21 @@
         <h3 style="color:var(--blue)">Add New User</h3>
         <input type="text" id="nu" placeholder="Username">
         <input type="password" id="np" placeholder="Password">
-        
         <select id="nr">
             <option value="" disabled selected>Select Role</option>
             <option value="Admin">Admin</option>
             <option value="Staff">Staff</option>
         </select>
-
         <input type="text" id="nd" placeholder="Display Name">
-        
-        <div class="check-group">
-            <input type="checkbox" id="ci"> <label>Can Edit Inventory</label>
-        </div>
-        <div class="check-group">
-            <input type="checkbox" id="cc"> <label>Can Edit Customers</label>
-        </div>
-
-        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveNewUser()">SAVE USER</button>
+        <div class="check-group"><input type="checkbox" id="ci"> <label>Can Edit Inventory</label></div>
+        <div class="check-group"><input type="checkbox" id="cc"> <label>Can Edit Customers</label></div>
+        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveUser()">SAVE USER</button>
         <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
 <script>
-    // Latest Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSzTeIyDD4HjXQ-qNU4xoxC_xClVBQtrVVVrHUlxwckWKKJkUUZkqxBCxkUqzBcuqP/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzS_aQhdRtUSsnj5Q0853z9gFuU1poDmdIv3xNnMr8nW_K9Ev6UzJg6OKP2IDp8X4ch/exec";
 
     async function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
@@ -92,7 +83,7 @@
             const data = await res.json();
             renderTable(tabName, data);
         } catch (e) {
-            view.innerHTML = "<p style='color:red'>Error loading data. Verify Apps Script deployment.</p>";
+            view.innerHTML = "<p style='color:red'>Error loading data.</p>";
         }
     }
 
@@ -104,16 +95,15 @@
             html += `<h3>Users Management</h3><table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
             
             data.forEach(item => {
-                // Hides buttons on empty rows
+                // Ensure buttons only show if Username exists
                 if (item.Username && item.Username.toString().trim() !== "") {
-                    
-                    // Improved logic to detect checkmarks correctly
+                    // Normalize boolean values for checkmarks
                     const hasInv = item["Can Edit Inventory"] === true || item["Can Edit Inventory"] === "TRUE";
                     const hasCust = item["Can Edit Customers"] === true || item["Can Edit Customers"] === "TRUE";
 
                     html += `<tr>
                         <td><b>${item.Username}</b></td>
-                        <td>${item.Role || 'Staff'}</td>
+                        <td>${item.Role || ''}</td>
                         <td>${item["Display Name"] || ''}</td>
                         <td style="text-align:center">${hasInv ? '✅' : '❌'}</td>
                         <td style="text-align:center">${hasCust ? '✅' : '❌'}</td>
@@ -125,40 +115,33 @@
                 }
             });
         } else {
-            html += `<h3>${type}</h3><p>Tab content coming soon...</p>`;
+            html += `<h3>${type} Management</h3><p>Tab functionality for ${type} is ready to be linked.</p>`;
         }
-
-        view.innerHTML = html + "</tbody></table></div>";
+        document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
 
     function openModal() { document.getElementById('userModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    async function saveNewUser() {
-        // Collects values in exact order of Spreadsheet columns
+    async function saveUser() {
+        // Data follows spreadsheet order: A:Username, B:Password, C:Role, D:DisplayName, E:Inv, F:Cust
         const payload = {
             action: 'addRow',
             sheetName: 'Users',
             data: [
-                document.getElementById('nu').value,   // Column A: Username
-                document.getElementById('np').value,   // Column B: Password
-                document.getElementById('nr').value,   // Column C: Role
-                document.getElementById('nd').value,   // Column D: Display Name
-                document.getElementById('ci').checked, // Column E: Inv Access
-                document.getElementById('cc').checked  // Column F: Cust Access
+                document.getElementById('nu').value,
+                document.getElementById('np').value,
+                document.getElementById('nr').value,
+                document.getElementById('nd').value,
+                document.getElementById('ci').checked,
+                document.getElementById('cc').checked
             ]
         };
-
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            closeModal();
-            switchTab('Users'); // Refresh the table
-        } catch (e) {
-            alert("Error saving user. Check Internet connection.");
-        }
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        closeModal();
+        switchTab('Users');
     }
 
-    // Initialize the portal
     switchTab('Users');
 </script>
 </body>
