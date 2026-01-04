@@ -50,9 +50,8 @@
         <input type="text" id="nu" placeholder="Username">
         <input type="password" id="np" placeholder="Password">
         <select id="nr">
-            <option value="" disabled selected>Select Role</option>
-            <option value="Admin">Admin</option>
             <option value="Staff">Staff</option>
+            <option value="Admin">Admin</option>
         </select>
         <input type="text" id="nd" placeholder="Display Name">
         <div class="check-group"><input type="checkbox" id="ci"> <label>Can Edit Inventory</label></div>
@@ -63,14 +62,14 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLcNLS3iIhem3gmS4sluLIIfe99WyhbfSEex8YfHZ07IveJe1fRyh5DZeAnUKQMOg4/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj8-yKsrfRjamJ5rbOH7p5VUNb_n1-6ueoPBeFbbvqGR3Xo1BVH1RVeyATVBDNCctW/exec";
     let editMode = false;
     let currentEditId = "";
 
     async function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
-        view.innerHTML = "Loading " + tabName + "...";
+        view.innerHTML = "Loading...";
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
@@ -83,15 +82,20 @@
         if (type === 'Users') {
             html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD USER</button>`;
             html += `<h3>Users Management</h3><table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
+            
             data.forEach(item => {
                 if (item.Username && item.Username.toString().trim() !== "") {
-                    const hasInv = item["Can Edit Inventory"] === true || item["Can Edit Inventory"] === "TRUE";
-                    const hasCust = item["Can Edit Customers"] === true || item["Can Edit Customers"] === "TRUE";
+                    // Optimized Checkbox Logic: Finds the key even with small typos
+                    const invKey = Object.keys(item).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('inv'));
+                    const custKey = Object.keys(item).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('cust'));
+                    
+                    const hasInv = item[invKey] === true || item[invKey] === "TRUE";
+                    const hasCust = item[custKey] === true || item[custKey] === "TRUE";
                     const jsonStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
                     html += `<tr>
                         <td><b>${item.Username}</b></td>
-                        <td>${item.Role || ''}</td>
+                        <td>${item.Role || 'Staff'}</td>
                         <td>${item["Display Name"] || ''}</td>
                         <td style="text-align:center">${hasInv ? '✅' : '❌'}</td>
                         <td style="text-align:center">${hasCust ? '✅' : '❌'}</td>
@@ -108,26 +112,28 @@
 
     function openModal(isEdit, dataStr = null) {
         editMode = isEdit;
-        const modal = document.getElementById('userModal');
-        modal.style.display = 'flex';
-        
-        if (isEdit && dataStr) {
+        document.getElementById('userModal').style.display = 'flex';
+        if (isEdit) {
             const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
             currentEditId = data.Username;
             document.getElementById('modalTitle').innerText = "Edit User";
             document.getElementById('saveBtn').innerText = "UPDATE USER";
             document.getElementById('nu').value = data.Username;
-            document.getElementById('nu').disabled = true; // Username is the ID
+            document.getElementById('nu').disabled = true;
             document.getElementById('np').value = data.Password || '';
             document.getElementById('nr').value = data.Role || 'Staff';
             document.getElementById('nd').value = data["Display Name"] || '';
-            document.getElementById('ci').checked = data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE";
-            document.getElementById('cc').checked = data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE";
+            
+            const invKey = Object.keys(data).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('inv'));
+            const custKey = Object.keys(data).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('cust'));
+            document.getElementById('ci').checked = data[invKey] === true || data[invKey] === "TRUE";
+            document.getElementById('cc').checked = data[custKey] === true || data[custKey] === "TRUE";
         } else {
             document.getElementById('modalTitle').innerText = "Add New User";
             document.getElementById('saveBtn').innerText = "SAVE USER";
             document.getElementById('nu').disabled = false;
-            document.querySelectorAll('#userModal input, #userModal select').forEach(i => { if(i.type === 'checkbox') i.checked = false; else i.value = ''; });
+            document.querySelectorAll('#userModal input').forEach(i => i.type === 'checkbox' ? i.checked = false : i.value = '');
+            document.getElementById('nr').value = 'Staff';
         }
     }
 
@@ -152,10 +158,9 @@
         switchTab('Users');
     }
 
-    async function deleteUser(username) {
-        if (confirm(`Are you sure you want to delete user: ${username}?`)) {
-            const payload = { action: 'deleteRow', sheetName: 'Users', id: username };
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    async function deleteUser(id) {
+        if(confirm(`Delete ${id}?`)) {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: 'Users', id: id}) });
             switchTab('Users');
         }
     }
