@@ -21,10 +21,13 @@
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
-        .check-group { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
+        .modal-body { background: white; padding: 25px; border-radius: 12px; width: 420px; max-height: 90vh; overflow-y: auto; }
+        .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
+        .check-group input { width: auto; margin: 0; }
+        .custom-size-box { display: none; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .custom-size-box input { flex: 1; }
     </style>
 </head>
 <body>
@@ -44,10 +47,10 @@
 
 <div id="appModal" class="modal">
     <div class="modal-body">
-        <h3 id="modalTitle" style="color:var(--blue)">Action</h3>
+        <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
         <div id="modalFields"></div>
-        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;">SAVE</button>
-        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
+        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
+        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
@@ -86,7 +89,6 @@
                 }
             });
         } else if (type === 'Inventory') {
-            // Updated Headers to match spreadsheet Column D and E
             html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
                 if (item.SKU && item.SKU.toString().trim() !== "") {
@@ -100,6 +102,11 @@
             });
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
+    }
+
+    function toggleCustomSize(val) {
+        const box = document.getElementById('customSizeBox');
+        if (box) box.style.display = (val === 'Custom') ? 'flex' : 'none';
     }
 
     function openModal(isEdit, dataStr = null) {
@@ -117,13 +124,24 @@
                                 <div class="check-group"><input type="checkbox" id="f5"> <label>Can Edit Inventory</label></div>
                                 <div class="check-group"><input type="checkbox" id="f6"> <label>Can Edit Customers</label></div>`;
         } else if (activeTab === 'Inventory') {
-            // Updated Inputs for Inventory
             title.innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `<input id="f1" placeholder="SKU" ${isEdit ? 'disabled' : ''}>
-                                <input id="f2" placeholder="Item Name">
-                                <input id="f3" type="number" placeholder="Price">
-                                <input id="f4" placeholder="Size (e.g. XL, XS)">
-                                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+            fields.innerHTML = `
+                <input id="f1" placeholder="SKU" ${isEdit ? 'disabled' : ''}>
+                <input id="f2" placeholder="Item Name">
+                <input id="f3" type="number" placeholder="Price">
+                <select id="f4" onchange="toggleCustomSize(this.value)">
+                    <option value="" disabled selected>Select Size</option>
+                    <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+                    <option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option>
+                    <option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option>
+                    <option value="Custom">Custom</option>
+                </select>
+                <div id="customSizeBox" class="custom-size-box">
+                    <input id="cWidth" type="number" placeholder="Width (in)">
+                    <span>x</span>
+                    <input id="cHeight" type="number" placeholder="Height (in)">
+                </div>
+                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         }
 
         if (isEdit && dataStr) {
@@ -141,7 +159,16 @@
             } else {
                 document.getElementById('f2').value = data["Item Name"] || '';
                 document.getElementById('f3').value = data.Price || '';
-                document.getElementById('f4').value = data.Size || '';
+                const rawSize = data.Size || '';
+                if (rawSize.includes('in x')) {
+                    document.getElementById('f4').value = 'Custom';
+                    toggleCustomSize('Custom');
+                    const parts = rawSize.replace(' in', '').split(' x ');
+                    document.getElementById('cWidth').value = parts[0];
+                    document.getElementById('cHeight').value = parts[1];
+                } else {
+                    document.getElementById('f4').value = rawSize;
+                }
                 const taxK = Object.keys(data).find(k => k.toLowerCase().includes('tax'));
                 document.getElementById('f5').checked = (data[taxK] === true || data[taxK] === "TRUE");
             }
@@ -157,9 +184,14 @@
             rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
                        document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
         } else {
-            // Matches columns A, B, C, D, E in Inventory sheet
+            let sizeVal = document.getElementById('f4').value;
+            if (sizeVal === 'Custom') {
+                const w = document.getElementById('cWidth').value;
+                const h = document.getElementById('cHeight').value;
+                sizeVal = `${w} x ${h} in`;
+            }
             rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
-                       document.getElementById('f4').value, document.getElementById('f5').checked];
+                       sizeVal, document.getElementById('f5').checked];
         }
         
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
