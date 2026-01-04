@@ -56,11 +56,8 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
-    
-    // PERMISSION SETTINGS
     const OWNER_ID = "craftyartdesign1"; 
     let currentUser = { username: "craftyartdesign1", role: "Admin" }; 
-    
     document.getElementById('currentUserDisplay').innerText = `User: ${currentUser.username}`;
 
     let activeTab = "Users";
@@ -71,7 +68,7 @@
         activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
-        view.innerHTML = "Loading...";
+        view.innerHTML = "Loading " + tabName + "...";
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
@@ -81,54 +78,32 @@
 
     function renderTable(type, data) {
         const isOwner = currentUser.username === OWNER_ID;
-        const isAdmin = currentUser.role === "Admin";
-        let html = `<div class="card">`;
-        if (isOwner || (isAdmin && type === 'Inventory')) {
-            html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button>`;
-        }
-        html += `<h3>${type} Management</h3><table><thead><tr>`;
+        let html = `<div class="card"><button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button><h3>${type} Management</h3><table><thead><tr>`;
         
         if (type === 'Users') {
             html += `<th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
-            data.forEach(item => {
-                if (item.Username) {
-                    const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                    html += `<tr><td><b>${item.Username}</b></td><td>${item.Role}</td><td>${item["Display Name"]}</td>
-                    <td style="text-align:center">${item["Can Edit Inventory"] ? '✅' : '❌'}</td>
-                    <td style="text-align:center">${item["Can Edit Customers"] ? '✅' : '❌'}</td>
-                    <td>`;
-                    if (isOwner) {
-                        html += `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>
-                                 <button class="btn btn-red" onclick="deleteRow('${item.Username}')">DEL</button>`;
-                    }
-                    html += `</td></tr>`;
-                }
-            });
+            data.forEach(item => { if (item.Username) {
+                const json = JSON.stringify(item).replace(/"/g, '&quot;');
+                html += `<tr><td><b>${item.Username}</b></td><td>${item.Role}</td><td>${item["Display Name"]}</td><td style="text-align:center">${item["Can Edit Inventory"]?'✅':'❌'}</td><td style="text-align:center">${item["Can Edit Customers"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.Username}')">DEL</button>`:''}</td></tr>`;
+            }});
         } else if (type === 'Inventory') {
             html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody>`;
-            data.forEach(item => {
-                if (item.SKU) {
-                    const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                    html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td>
-                    <td style="text-align:center">${(item["Tax Exempt"] === true || item["Tax Exempt"] === "TRUE") ? '✅' : '❌'}</td>
-                    <td>`;
-                    if (isOwner) {
-                        html += `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>
-                                 <button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`;
-                    } else {
-                        html += `<button class="btn btn-blue">SELECT</button>`;
-                    }
-                    html += `</td></tr>`;
-                }
-            });
+            data.forEach(item => { if (item.SKU) {
+                const json = JSON.stringify(item).replace(/"/g, '&quot;');
+                const taxK = Object.keys(item).find(k => k.toLowerCase().includes('tax'));
+                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${(item[taxK] === true || item[taxK] === "TRUE") ? '✅' : '❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
+            }});
+        } else if (type === 'Customers') {
+            html += `<th>Name</th><th>Email</th><th>Phone</th><th>Address</th><th>Tax Status</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => { if (item.Name) {
+                const json = JSON.stringify(item).replace(/"/g, '&quot;');
+                html += `<tr><td><b>${item.Name}</b></td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td>${item.Address || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+            }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
 
-    function toggleCustomSize(val) {
-        const box = document.getElementById('customSizeBox');
-        if (box) box.style.display = (val === 'Custom') ? 'flex' : 'none';
-    }
+    function toggleCustomSize(val) { document.getElementById('customSizeBox').style.display = (val === 'Custom') ? 'flex' : 'none'; }
 
     function openModal(isEdit, dataStr = null) {
         editMode = isEdit;
@@ -136,75 +111,47 @@
         const isOwner = currentUser.username === OWNER_ID;
         fields.innerHTML = "";
         
-        if (activeTab === 'Inventory') {
-            fields.innerHTML = `
-                <input id="f1" placeholder="SKU" ${ (isEdit && !isOwner) ? 'disabled' : ''}>
-                <input id="f2" placeholder="Item Name">
-                <input id="f3" type="number" placeholder="Price">
-                <select id="f4" onchange="toggleCustomSize(this.value)">
-                    <option value="" disabled selected>Select Size</option>
-                    <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-                    <option value="L">L</option><option value="XL">XL</option>
-                    <option value="2XL">2XL</option><option value="3XL">3XL</option>
-                    <option value="4XL">4XL</option><option value="5XL">5XL</option>
-                    <option value="Custom">Custom</option>
-                </select>
-                <div id="customSizeBox" class="custom-size-box">
-                    <input id="cWidth" type="number" placeholder="Width (in)">
-                    <input id="cHeight" type="number" placeholder="Height (in)">
-                </div>
-                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+        if (activeTab === 'Customers') {
+            document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
+            fields.innerHTML = `<input id="f1" placeholder="Customer Name" ${isEdit ? 'disabled' : ''}>
+                                <input id="f2" placeholder="Email Address">
+                                <input id="f3" placeholder="Phone Number">
+                                <input id="f4" placeholder="Full Address">
+                                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt Customer</label></div>`;
+        } else if (activeTab === 'Inventory') {
+            document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
+            fields.innerHTML = `<input id="f1" placeholder="SKU" ${ (isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><select id="f4" onchange="toggleCustomSize(this.value)"><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="Custom">Custom</option></select><div id="customSizeBox" class="custom-size-box"><input id="cWidth" placeholder="W"><input id="cHeight" placeholder="H"></div><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         } else {
-             fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
+            document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
+            fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
         }
 
         if (isEdit && dataStr) {
             const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
-            currentId = data.Username || data.SKU;
+            currentId = data.Username || data.SKU || data.Name;
             document.getElementById('f1').value = currentId;
-            if (activeTab === 'Inventory') {
-                document.getElementById('f2').value = data["Item Name"] || '';
-                document.getElementById('f3').value = data.Price || '';
-                const size = data.Size || '';
-                if (size.includes(' x ')) {
-                    document.getElementById('f4').value = 'Custom';
-                    toggleCustomSize('Custom');
-                    const parts = size.replace(' in', '').split(' x ');
-                    document.getElementById('cWidth').value = parts[0];
-                    document.getElementById('cHeight').value = parts[1];
-                } else {
-                    document.getElementById('f4').value = size;
-                }
-                document.getElementById('f5').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
-            } else {
-                document.getElementById('f2').value = data.Password || '';
-                document.getElementById('f3').value = data.Role || 'Staff';
-                document.getElementById('f4').value = data["Display Name"] || '';
-                document.getElementById('f5').checked = (data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE");
-                document.getElementById('f6').checked = (data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE");
-            }
+            document.getElementById('f2').value = data.Email || data.Password || data["Item Name"] || '';
+            document.getElementById('f3').value = data.Phone || data.Role || data.Price || '';
+            document.getElementById('f4').value = data.Address || data["Display Name"] || data.Size || '';
+            document.getElementById('f5').checked = data["Tax Exempt"] || data["Can Edit Inventory"] || false;
         }
         document.getElementById('saveBtn').onclick = handleSave;
         document.getElementById('appModal').style.display = 'flex';
     }
 
     async function handleSave() {
-        let rowData = [];
-        if (activeTab === 'Users') {
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
-                       document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
+        let rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value];
+        if (activeTab === 'Inventory') {
+            let sVal = document.getElementById('f4').value;
+            if (sVal === 'Custom') sVal = `${document.getElementById('cWidth').value} x ${document.getElementById('cHeight').value} in`;
+            rowData.push(sVal, document.getElementById('f5').checked);
+        } else if (activeTab === 'Customers') {
+            rowData.push(document.getElementById('f4').value, document.getElementById('f5').checked);
         } else {
-            let sizeVal = document.getElementById('f4').value;
-            if (sizeVal === 'Custom') {
-                sizeVal = `${document.getElementById('cWidth').value} x ${document.getElementById('cHeight').value} in`;
-            }
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
-                       sizeVal, document.getElementById('f5').checked];
+            rowData.push(document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked);
         }
         
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
-            action: editMode ? 'editRow' : 'addRow', sheetName: activeTab, id: currentId, data: rowData
-        })});
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: editMode ? 'editRow' : 'addRow', sheetName: activeTab, id: currentId, data: rowData })});
         closeModal(); switchTab(activeTab);
     }
 
