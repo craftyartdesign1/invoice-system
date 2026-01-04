@@ -3,52 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD Admin | Pro Secure Portal</title>
+    <title>CAD | Admin Portal</title>
     <style>
-        :root { 
-            --primary-blue: #007bff; 
-            --danger-red: #dc3545; 
-            --bg-light: #f8f9fa; 
-            --dark-grey: #343a40;
-            --border: #dee2e6;
-        }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #e9ecef; margin: 0; color: #333; }
-        
+        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --grey: #6c757d; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f7f6; margin: 0; }
+
         /* Login Screen */
-        #loginOverlay { position: fixed; inset: 0; background: var(--dark-grey); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .login-box { background: white; padding: 40px; border-radius: 15px; width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .login-box h2 { color: var(--primary-blue); margin-bottom: 20px; letter-spacing: 1px; }
+        #loginOverlay { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box h2 { color: var(--blue); margin-bottom: 20px; }
 
-        /* Dashboard Layout */
+        /* Dashboard */
         #dashboard { display: none; }
-        header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary-blue); }
-        .nav-tabs { display: flex; background: var(--dark-grey); padding: 10px 20px; gap: 10px; }
-        .tab-btn { padding: 10px 25px; border: none; background: #495057; color: white; border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .tab-btn:hover { background: #6c757d; }
-        .tab-btn.active { background: var(--primary-blue); }
+        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); }
+        .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
+        .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .tab.active { background: var(--blue); }
 
-        .content { padding: 2rem; max-width: 1600px; margin: auto; }
-        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow-x: auto; }
-        
-        /* Table Styling */
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; background: #e7f1ff; color: #004085; padding: 15px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        /* Table & Cards */
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
 
         /* Buttons */
-        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-blue { background: var(--primary-blue); }
-        .btn-blue:hover { background: #0056b3; }
-        .btn-red { background: var(--danger-red); }
-        .btn-red:hover { background: #a71d2a; }
-        .btn-add { float: right; margin-bottom: 15px; padding: 12px 25px; font-size: 1rem; }
-
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ced4da; border-radius: 8px; }
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-blue { background: var(--blue); }
+        .btn-red { background: var(--red); }
+        input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; }
         
-        /* Modal */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-body { background: white; padding: 2rem; border-radius: 15px; width: 550px; max-height: 90vh; overflow-y: auto; }
+        .status-icon { font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -56,38 +42,109 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2>CRAFTY ART DESIGN</h2>
-        <p>Admin Login</p>
-        <input type="text" id="user" placeholder="Username">
-        <input type="password" id="pass" placeholder="Password">
-        <button class="btn btn-blue" style="width:100%; padding: 15px;" onclick="checkLogin()">LOGIN</button>
-        <p id="errMsg" style="color:var(--danger-red); font-size:0.85rem; margin-top:15px;"></p>
+        <input type="text" id="userInput" placeholder="Username">
+        <input type="password" id="passInput" placeholder="Password">
+        <button class="btn btn-blue" style="width:100%; padding:14px; margin-top:10px;" onclick="attemptLogin()">LOGIN</button>
+        <p id="errorMsg" style="color:var(--red); font-size:0.8rem; margin-top:15px;"></p>
     </div>
 </div>
 
 <div id="dashboard">
     <header>
         <h2>CRAFTY ART DESIGN</h2>
-        <div id="welcomeUser" style="font-weight: bold; color: var(--primary-blue);"></div>
+        <div id="userDisplay" style="font-weight:bold; color:var(--blue)"></div>
     </header>
-    <nav class="nav-tabs">
-        <button class="tab-btn" onclick="loadTab('Inventory')">INVENTORY</button>
-        <button class="tab-btn active" onclick="loadTab('Customers')">CUSTOMERS</button>
-        <button class="tab-btn" onclick="loadTab('Users')">USERS</button>
+    <nav class="nav">
+        <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
+        <button class="tab" onclick="switchTab('Customers')">Customers</button>
+        <button class="tab active" onclick="switchTab('Users')">Users</button>
     </nav>
     <div class="content">
-        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Search records..." style="margin-bottom:20px;">
-        <div id="main"></div>
-    </div>
-</div>
-
-<div id="m" class="modal">
-    <div class="modal-body">
-        <h3 id="mt" style="color: var(--primary-blue);"></h3>
-        <div id="mf"></div>
-        <button class="btn btn-blue" id="saveBtn" style="width:100%; margin-top:20px; padding:15px;" onclick="save()">SAVE TO SYSTEM</button>
-        <button onclick="closeM()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--danger-red); font-weight:bold; cursor:pointer;">CANCEL</button>
+        <div id="mainView"></div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbe4EdyyCcpJXI8_32_S45N61p_MPed7aoV5yvQBOjq2V4YJNkuMGx2fR-kJ7-yJCF/exec";
+    let activeUser = null;
+
+    async function attemptLogin() {
+        const u = document.getElementById('userInput').value;
+        const p = document.getElementById('passInput').value;
+        const err = document.getElementById('errorMsg');
+        err.innerText = "Authenticating...";
+
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getUsers`);
+            const users = await res.json();
+            
+            // Matches exact headers from your sheet
+            const found = users.find(x => x.Username === u && x.Password === p);
+
+            if (found) {
+                activeUser = found;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('userDisplay').innerText = "User: " + found["Display Name"];
+                switchTab('Users');
+            } else {
+                err.innerText = "Invalid Username or Password";
+            }
+        } catch (e) {
+            err.innerText = "Error connecting to database.";
+        }
+    }
+
+    async function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.innerText === tabName);
+        });
+
+        const view = document.getElementById('mainView');
+        view.innerHTML = "<p>Loading " + tabName + "...</p>";
+
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
+            const data = await res.json();
+            renderTable(tabName, data);
+        } catch (e) {
+            view.innerHTML = "<p style='color:red'>Failed to load data.</p>";
+        }
+    }
+
+    function renderTable(type, data) {
+        let html = `<div class="card"><h3>${type} Management</h3><table><thead><tr>`;
+
+        if (type === 'Users') {
+            html += `<th>Username</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => {
+                html += `<tr>
+                    <td><b>${item.Username}</b></td>
+                    <td>${item["Display Name"]}</td>
+                    <td><span class="status-icon">${item["Can Edit Inventory"] ? '✅' : '❌'}</span></td>
+                    <td><span class="status-icon">${item["Can Edit Customers"] ? '✅' : '❌'}</span></td>
+                    <td>
+                        <button class="btn btn-blue">EDIT</button>
+                        <button class="btn btn-red">DEL</button>
+                    </td>
+                </tr>`;
+            });
+        } else if (type === 'Customers') {
+            html += `<th>Name</th><th>Company</th><th>Email</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => {
+                html += `<tr>
+                    <td><b>${item.name || item.Name}</b></td>
+                    <td>${item.company || ''}</td>
+                    <td>${item.email || ''}</td>
+                    <td><button class="btn btn-blue">EDIT</button></td>
+                </tr>`;
+            });
+        }
+
+        html += `</tbody></table></div>`;
+        document.getElementById('mainView').innerHTML = html;
+    }
+</script>
+</body>
+</html>
