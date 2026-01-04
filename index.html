@@ -23,7 +23,7 @@
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
         
-        /* Modal Styles */
+        /* Draggable Modal Styles */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; pointer-events: none; }
         .modal-body { 
             background: white; padding: 0; border-radius: 12px; width: 450px; 
@@ -31,15 +31,14 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
         }
         .modal-header { 
-            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
-            cursor: move; user-select: none; font-weight: bold;
+            background: var(--blue); color: white; padding: 12px; border-radius: 12px 12px 0 0; 
+            cursor: move; user-select: none; font-size: 0.8rem; text-align: center;
         }
-        .modal-content { padding: 20px; max-height: 80vh; overflow-y: auto; }
+        .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
         .check-group input { width: auto; margin: 0; }
         .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .custom-size-box { display: none; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .custom-size-box input { flex: 1; }
     </style>
 </head>
 <body>
@@ -59,7 +58,7 @@
 
 <div id="appModal" class="modal">
     <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">Drag to Move Window</div>
+        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
         <div class="modal-content">
             <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
             <div id="modalFields"></div>
@@ -108,10 +107,11 @@
                 html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
             }});
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Location</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Name</th><th>Full Address</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${item.Name}</b></td><td>${item.City || ''}, ${item.State || ''}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+                const fullAddr = `${item.Street || ''}, ${item.City || ''} ${item.State || ''} ${item["Zip Code"] || ''}`;
+                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
             }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
@@ -125,9 +125,10 @@
         const isOwner = currentUser.username === OWNER_ID;
         fields.innerHTML = "";
         
-        // Reset modal position when opening
+        // Reset modal position
         const m = document.getElementById('draggableModal');
         m.style.left = '50%'; m.style.top = '50%'; m.style.transform = 'translate(-50%, -50%)';
+        xOffset = 0; yOffset = 0;
 
         if (activeTab === 'Customers') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
@@ -157,7 +158,7 @@
                 document.getElementById('f5').value = data["Zip Code"] || '';
                 document.getElementById('f6').value = data.Email || '';
                 document.getElementById('f7').value = data.Phone || '';
-                document.getElementById('f8').checked = data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE";
+                document.getElementById('f8').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
             } else if (activeTab === 'Inventory') {
                 document.getElementById('f2').value = data["Item Name"] || '';
                 document.getElementById('f3').value = data.Price || '';
@@ -167,13 +168,13 @@
                     const p = s.replace(' in','').split(' x ');
                     document.getElementById('cWidth').value = p[0]; document.getElementById('cHeight').value = p[1];
                 } else { document.getElementById('f4').value = s; }
-                document.getElementById('f5').checked = data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE";
+                document.getElementById('f5').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
             } else {
                 document.getElementById('f2').value = data.Password || '';
                 document.getElementById('f3').value = data.Role || 'Staff';
                 document.getElementById('f4').value = data["Display Name"] || '';
-                document.getElementById('f5').checked = data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE";
-                document.getElementById('f6').checked = data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE";
+                document.getElementById('f5').checked = (data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE");
+                document.getElementById('f6').checked = (data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE");
             }
         }
         document.getElementById('saveBtn').onclick = handleSave;
@@ -183,7 +184,16 @@
     async function handleSave() {
         let rowData = [];
         if (activeTab === 'Customers') {
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').value, document.getElementById('f6').value, document.getElementById('f7').value, document.getElementById('f8').checked];
+            rowData = [
+                document.getElementById('f1').value, // Name
+                document.getElementById('f2').value, // Street
+                document.getElementById('f3').value, // City
+                document.getElementById('f4').value, // State
+                document.getElementById('f5').value, // Zip Code
+                document.getElementById('f6').value, // Email
+                document.getElementById('f7').value, // Phone
+                document.getElementById('f8').checked // Tax Exempt
+            ];
         } else if (activeTab === 'Inventory') {
             let sVal = document.getElementById('f4').value;
             if (sVal === 'Custom') sVal = `${document.getElementById('cWidth').value} x ${document.getElementById('cHeight').value} in`;
