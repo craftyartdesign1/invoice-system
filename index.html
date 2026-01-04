@@ -9,19 +9,13 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #f4f7f6; margin: 0; }
 
-        /* Login Screen */
-        #loginOverlay { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-box h2 { color: var(--blue); margin-bottom: 20px; }
-
-        /* Dashboard Header & Nav */
-        #dashboard { display: none; }
+        /* Dashboard Header */
         header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
 
-        /* Content Area */
+        /* Tables & Cards */
         .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -32,25 +26,21 @@
         .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
-        input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; }
+        .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
+
+        /* Modal Popup */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        .check-group { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2>CRAFTY ART DESIGN</h2>
-        <input type="text" id="userInput" placeholder="Username">
-        <input type="password" id="passInput" placeholder="Password">
-        <button class="btn btn-blue" style="width:100%; padding:14px; margin-top:10px;" onclick="attemptLogin()">LOGIN</button>
-        <p id="errorMsg" style="color:var(--red); font-size:0.8rem; margin-top:15px;"></p>
-    </div>
-</div>
-
 <div id="dashboard">
     <header>
         <h2>CRAFTY ART DESIGN</h2>
-        <div id="userDisplay" style="font-weight:bold; color:var(--blue)"></div>
+        <div id="userDisplay" style="font-weight:bold; color:var(--blue)">User: Alessio</div>
     </header>
     <nav class="nav">
         <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
@@ -62,36 +52,26 @@
     </div>
 </div>
 
+<div id="userModal" class="modal">
+    <div class="modal-body">
+        <h3 style="color:var(--blue)">Add New User</h3>
+        <input type="text" id="nu" placeholder="Username">
+        <input type="password" id="np" placeholder="Password">
+        <input type="text" id="nd" placeholder="Display Name">
+        <div class="check-group">
+            <input type="checkbox" id="ci"> <label>Can Edit Inventory</label>
+        </div>
+        <div class="check-group">
+            <input type="checkbox" id="cc"> <label>Can Edit Customers</label>
+        </div>
+        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveNewUser()">SAVE USER</button>
+        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbe4EdyyCcpJXI8_32_S45N61p_MPed7aoV5yvQBOjq2V4YJNkuMGx2fR-kJ7-yJCF/exec";
-    let activeUser = null;
-
-    async function attemptLogin() {
-        const u = document.getElementById('userInput').value;
-        const p = document.getElementById('passInput').value;
-        const err = document.getElementById('errorMsg');
-        err.innerText = "Connecting...";
-
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=getUsers`);
-            const users = await res.json();
-            
-            // Checks for exact match in your Users sheet
-            const found = users.find(x => x.Username === u && x.Password === p);
-
-            if (found) {
-                activeUser = found;
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('userDisplay').innerText = "User: " + found["Display Name"];
-                switchTab('Users');
-            } else {
-                err.innerText = "Invalid Username or Password";
-            }
-        } catch (e) {
-            err.innerText = "Connection error. Check script deployment.";
-        }
-    }
+    // Updated Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeVwwvNPwkxMR5xKazt21Q9oAqKCIPUI7xeiUoAwBXUOy3MFJkiueXZIz08aacY66E/exec";
 
     async function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
@@ -103,61 +83,54 @@
             const data = await res.json();
             renderTable(tabName, data);
         } catch (e) {
-            view.innerHTML = "<p style='color:red'>Failed to load data from " + tabName + ".</p>";
+            view.innerHTML = "<p style='color:red'>Error loading data.</p>";
         }
     }
 
     function renderTable(type, data) {
-        let html = `<div class="card"><h3>${type} Management</h3><table><thead><tr>`;
-
+        let html = `<div class="card">`;
+        
         if (type === 'Users') {
-            html += `<th>Username</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<button class="btn btn-blue btn-add" onclick="openModal()">+ ADD USER</button>`;
+            html += `<h3>Users Management</h3><table><thead><tr><th>Username</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                // HIDE BUTTONS IF NO USERNAME EXISTS
+                // Only show rows that have a Username
                 if (item.Username && item.Username.toString().trim() !== "") {
                     html += `<tr>
                         <td><b>${item.Username}</b></td>
                         <td>${item["Display Name"] || ''}</td>
-                        <td style="text-align:center">${item["Can Edit Inventory"] ? '✅' : '❌'}</td>
-                        <td style="text-align:center">${item["Can Edit Customers"] ? '✅' : '❌'}</td>
+                        <td style="text-align:center">${item["Can Edit Inventory"] === true ? '✅' : '❌'}</td>
+                        <td style="text-align:center">${item["Can Edit Customers"] === true ? '✅' : '❌'}</td>
                         <td>
-                            <button class="btn btn-blue" onclick="alert('Edit logic for ${item.Username} ready')">EDIT</button>
-                            <button class="btn btn-red" onclick="alert('Delete logic for ${item.Username} ready')">DEL</button>
+                            <button class="btn btn-blue">EDIT</button>
+                            <button class="btn btn-red">DEL</button>
                         </td>
                     </tr>`;
                 }
             });
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>Email</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<h3>Customers List</h3><table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                const cName = item.name || item.Name;
-                // HIDE BUTTONS IF NO NAME EXISTS
+                const cName = item.Name || item.name;
                 if (cName && cName.toString().trim() !== "") {
                     html += `<tr>
                         <td><b>${cName}</b></td>
-                        <td>${item.company || item.Company || ''}</td>
-                        <td>${item.email || item.Email || ''}</td>
-                        <td>
-                            <button class="btn btn-blue">EDIT</button>
-                            <button class="btn btn-red">DEL</button>
-                        </td>
+                        <td>${item.Company || ''}</td>
+                        <td>${item.Email || ''}</td>
+                        <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red">DEL</button></td>
                     </tr>`;
                 }
             });
         } else if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<h3>Inventory Management</h3><table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                const sku = item.sku || item.SKU;
-                // HIDE BUTTONS IF NO SKU EXISTS
+                const sku = item.SKU || item.sku;
                 if (sku && sku.toString().trim() !== "") {
                     html += `<tr>
                         <td><b>${sku}</b></td>
-                        <td>${item.item_name || item["Item Name"] || ''}</td>
-                        <td>$${item.price || item.Price || '0.00'}</td>
-                        <td>
-                            <button class="btn btn-blue">EDIT</button>
-                            <button class="btn btn-red">DEL</button>
-                        </td>
+                        <td>${item["Item Name"] || ''}</td>
+                        <td>$${item.Price || '0.00'}</td>
+                        <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red">DEL</button></td>
                     </tr>`;
                 }
             });
@@ -166,6 +139,30 @@
         html += `</tbody></table></div>`;
         document.getElementById('mainView').innerHTML = html;
     }
+
+    function openModal() { document.getElementById('userModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('userModal').style.display = 'none'; }
+
+    async function saveNewUser() {
+        const payload = {
+            action: 'addRow',
+            sheetName: 'Users',
+            data: [
+                document.getElementById('nu').value,
+                document.getElementById('np').value,
+                'Admin', // Default Role
+                document.getElementById('nd').value,
+                document.getElementById('ci').checked,
+                document.getElementById('cc').checked
+            ]
+        };
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        closeModal();
+        switchTab('Users'); // Refresh table
+    }
+
+    // Initialize with Users tab
+    switchTab('Users');
 </script>
 </body>
 </html>
