@@ -31,8 +31,9 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
         }
         .modal-header { 
-            background: var(--blue); color: white; padding: 12px; border-radius: 12px 12px 0 0; 
-            cursor: move; user-select: none; font-size: 0.8rem; text-align: center; font-weight: bold;
+            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
+            cursor: move; user-select: none; font-size: 0.9rem; text-align: center; font-weight: bold;
+            letter-spacing: 1px;
         }
         .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
@@ -58,7 +59,7 @@
 
 <div id="appModal" class="modal">
     <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">⁝⁝ CLICK AND DRAG TO MOVE ⁝⁝</div>
+        <div class="modal-header" id="modalHeader">⁝⁝ CLICK & DRAG TO MOVE WINDOW ⁝⁝</div>
         <div class="modal-content">
             <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
             <div id="modalFields"></div>
@@ -110,14 +111,17 @@
             html += `<th>Name</th><th>Full Address</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                // FIXED: Displays Street (B), City (C), State (D), and Zip (E) from spreadsheet
+                
+                // DATA MAPPING FIX: Combined all address columns
                 const street = item.Street || '';
                 const city = item.City || '';
                 const state = item.State || '';
                 const zip = item["Zip Code"] || '';
+                
+                // Formats as: "123 Main St, Queens, NY 11111"
                 const fullAddr = `${street}${street ? ', ' : ''}${city}${city ? ', ' : ''}${state} ${zip}`.trim();
 
-                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr || 'No Address'}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
             }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
@@ -190,14 +194,14 @@
         let rowData = [];
         if (activeTab === 'Customers') {
             rowData = [
-                document.getElementById('f1').value, // Name (A)
-                document.getElementById('f2').value, // Street (B)
-                document.getElementById('f3').value, // City (C)
-                document.getElementById('f4').value, // State (D)
-                document.getElementById('f5').value, // Zip Code (E)
-                document.getElementById('f6').value, // Email (F)
-                document.getElementById('f7').value, // Phone (G)
-                document.getElementById('f8').checked // Tax Exempt (H)
+                document.getElementById('f1').value, // Name (Col A)
+                document.getElementById('f2').value, // Street (Col B)
+                document.getElementById('f3').value, // City (Col C)
+                document.getElementById('f4').value, // State (Col D)
+                document.getElementById('f5').value, // Zip (Col E)
+                document.getElementById('f6').value, // Email (Col F)
+                document.getElementById('f7').value, // Phone (Col G)
+                document.getElementById('f8').checked // Tax Exempt (Col H)
             ];
         } else if (activeTab === 'Inventory') {
             let sVal = document.getElementById('f4').value;
@@ -219,7 +223,7 @@
         }
     }
 
-    // Draggable Window Logic
+    // Draggable logic with Header Grab
     const dragItem = document.getElementById("draggableModal");
     const dragHeader = document.getElementById("modalHeader");
     let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
