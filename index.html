@@ -22,13 +22,24 @@
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-body { background: white; padding: 25px; border-radius: 12px; width: 450px; max-height: 95vh; overflow-y: auto; }
+        
+        /* Modal Styles */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; pointer-events: none; }
+        .modal-body { 
+            background: white; padding: 0; border-radius: 12px; width: 450px; 
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
+        }
+        .modal-header { 
+            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
+            cursor: move; user-select: none; font-weight: bold;
+        }
+        .modal-content { padding: 20px; max-height: 80vh; overflow-y: auto; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
         .check-group input { width: auto; margin: 0; }
+        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .custom-size-box { display: none; gap: 10px; align-items: center; margin-bottom: 10px; }
         .custom-size-box input { flex: 1; }
-        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
@@ -47,11 +58,14 @@
 </div>
 
 <div id="appModal" class="modal">
-    <div class="modal-body">
-        <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
-        <div id="modalFields"></div>
-        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
-        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
+    <div class="modal-body" id="draggableModal">
+        <div class="modal-header" id="modalHeader">Drag to Move Window</div>
+        <div class="modal-content">
+            <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
+            <div id="modalFields"></div>
+            <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
+            <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -111,24 +125,22 @@
         const isOwner = currentUser.username === OWNER_ID;
         fields.innerHTML = "";
         
+        // Reset modal position when opening
+        const m = document.getElementById('draggableModal');
+        m.style.left = '50%'; m.style.top = '50%'; m.style.transform = 'translate(-50%, -50%)';
+
         if (activeTab === 'Customers') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
             fields.innerHTML = `
-                <input id="f1" placeholder="Customer Name" ${isEdit ? 'disabled' : ''}>
+                <input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}>
                 <input id="f2" placeholder="Street Address">
-                <div class="address-grid">
-                    <input id="f3" placeholder="City">
-                    <input id="f4" placeholder="State">
-                </div>
-                <div class="address-grid">
-                    <input id="f5" placeholder="Zip Code">
-                    <input id="f6" placeholder="Email Address">
-                </div>
+                <div class="address-grid"><input id="f3" placeholder="City"><input id="f4" placeholder="State"></div>
+                <div class="address-grid"><input id="f5" placeholder="Zip Code"><input id="f6" placeholder="Email Address"></div>
                 <input id="f7" placeholder="Phone Number">
                 <div class="check-group"><input type="checkbox" id="f8"> <label>Tax Exempt Customer</label></div>`;
         } else if (activeTab === 'Inventory') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `<input id="f1" placeholder="SKU" ${ (isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><select id="f4" onchange="toggleCustomSize(this.value)"><option value="" disabled selected>Size</option><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option><option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option><option value="Custom">Custom</option></select><div id="customSizeBox" class="custom-size-box"><input id="cWidth" type="number" placeholder="W (in)"><input id="cHeight" type="number" placeholder="H (in)"></div><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><select id="f4" onchange="toggleCustomSize(this.value)"><option value="" disabled selected>Size</option><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option><option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option><option value="Custom">Custom</option></select><div id="customSizeBox" class="custom-size-box"><input id="cWidth" type="number" placeholder="W (in)"><input id="cHeight" type="number" placeholder="H (in)"></div><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         } else {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
             fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
@@ -151,8 +163,7 @@
                 document.getElementById('f3').value = data.Price || '';
                 const s = data.Size || '';
                 if (s.includes(' x ')) {
-                    document.getElementById('f4').value = 'Custom';
-                    toggleCustomSize('Custom');
+                    document.getElementById('f4').value = 'Custom'; toggleCustomSize('Custom');
                     const p = s.replace(' in','').split(' x ');
                     document.getElementById('cWidth').value = p[0]; document.getElementById('cHeight').value = p[1];
                 } else { document.getElementById('f4').value = s; }
@@ -166,7 +177,7 @@
             }
         }
         document.getElementById('saveBtn').onclick = handleSave;
-        document.getElementById('appModal').style.display = 'flex';
+        document.getElementById('appModal').style.display = 'block';
     }
 
     async function handleSave() {
@@ -192,6 +203,26 @@
             switchTab(activeTab);
         }
     }
+
+    // Draggable Logic
+    const dragItem = document.getElementById("draggableModal");
+    const dragHeader = document.getElementById("modalHeader");
+    let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
+
+    dragHeader.onmousedown = (e) => {
+        initialX = e.clientX - xOffset; initialY = e.clientY - yOffset;
+        active = true;
+    };
+    document.onmouseup = () => { active = false; };
+    document.onmousemove = (e) => {
+        if (active) {
+            e.preventDefault();
+            currentX = e.clientX - initialX; currentY = e.clientY - initialY;
+            xOffset = currentX; yOffset = currentY;
+            dragItem.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
+        }
+    };
+
     switchTab('Users');
 </script>
 </body>
