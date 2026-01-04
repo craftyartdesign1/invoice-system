@@ -21,7 +21,7 @@
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
-        input[type="text"], input[type="password"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
         .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
@@ -46,30 +46,38 @@
 
 <div id="userModal" class="modal">
     <div class="modal-body">
-        <h3 id="modalTitle" style="color:var(--blue)">Add New User</h3>
+        <h3 id="uModalTitle" style="color:var(--blue)">Add New User</h3>
         <input type="text" id="nu" placeholder="Username">
         <input type="password" id="np" placeholder="Password">
-        <select id="nr">
-            <option value="Staff">Staff</option>
-            <option value="Admin">Admin</option>
-        </select>
+        <select id="nr"><option value="Staff">Staff</option><option value="Admin">Admin</option></select>
         <input type="text" id="nd" placeholder="Display Name">
         <div class="check-group"><input type="checkbox" id="ci"> <label>Can Edit Inventory</label></div>
         <div class="check-group"><input type="checkbox" id="cc"> <label>Can Edit Customers</label></div>
-        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="handleSave()">SAVE USER</button>
-        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveUser()">SAVE USER</button>
+        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModals()">Cancel</button>
+    </div>
+</div>
+
+<div id="invModal" class="modal">
+    <div class="modal-body">
+        <h3 style="color:var(--blue)">Add Inventory Item</h3>
+        <input type="text" id="sku" placeholder="SKU">
+        <input type="text" id="itemName" placeholder="Item Name">
+        <input type="number" id="price" placeholder="Price">
+        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveInv()">SAVE ITEM</button>
+        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModals()">Cancel</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj8-yKsrfRjamJ5rbOH7p5VUNb_n1-6ueoPBeFbbvqGR3Xo1BVH1RVeyATVBDNCctW/exec";
-    let editMode = false;
-    let currentEditId = "";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
+    let activeTab = "Users";
 
     async function switchTab(tabName) {
+        activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
-        view.innerHTML = "Loading...";
+        view.innerHTML = "Loading " + tabName + "...";
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
@@ -80,88 +88,55 @@
     function renderTable(type, data) {
         let html = `<div class="card">`;
         if (type === 'Users') {
-            html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD USER</button>`;
-            html += `<h3>Users Management</h3><table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
-            
+            html += `<button class="btn btn-blue btn-add" onclick="document.getElementById('userModal').style.display='flex'">+ ADD USER</button><h3>Users</h3>`;
+            html += `<table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                if (item.Username && item.Username.toString().trim() !== "") {
-                    // Optimized Checkbox Logic: Finds the key even with small typos
-                    const invKey = Object.keys(item).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('inv'));
-                    const custKey = Object.keys(item).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('cust'));
-                    
-                    const hasInv = item[invKey] === true || item[invKey] === "TRUE";
-                    const hasCust = item[custKey] === true || item[custKey] === "TRUE";
-                    const jsonStr = JSON.stringify(item).replace(/"/g, '&quot;');
-
-                    html += `<tr>
-                        <td><b>${item.Username}</b></td>
-                        <td>${item.Role || 'Staff'}</td>
-                        <td>${item["Display Name"] || ''}</td>
-                        <td style="text-align:center">${hasInv ? '✅' : '❌'}</td>
-                        <td style="text-align:center">${hasCust ? '✅' : '❌'}</td>
-                        <td>
-                            <button class="btn btn-blue" onclick="openModal(true, '${jsonStr}')">EDIT</button>
-                            <button class="btn btn-red" onclick="deleteUser('${item.Username}')">DEL</button>
-                        </td>
-                    </tr>`;
+                if (item.Username) {
+                    const invK = Object.keys(item).find(k => k.toLowerCase().includes('inv'));
+                    const custK = Object.keys(item).find(k => k.toLowerCase().includes('cust'));
+                    html += `<tr><td><b>${item.Username}</b></td><td>${item.Role || ''}</td><td>${item["Display Name"] || ''}</td>
+                    <td style="text-align:center">${(item[invK] === true || item[invK] === "TRUE") ? '✅' : '❌'}</td>
+                    <td style="text-align:center">${(item[custK] === true || item[custK] === "TRUE") ? '✅' : '❌'}</td>
+                    <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red" onclick="deleteRow('Users', '${item.Username}')">DEL</button></td></tr>`;
+                }
+            });
+        } else if (type === 'Inventory') {
+            html += `<button class="btn btn-blue btn-add" onclick="document.getElementById('invModal').style.display='flex'">+ ADD ITEM</button><h3>Inventory</h3>`;
+            html += `<table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => {
+                if (item.SKU) {
+                    html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"] || ''}</td><td>$${item.Price || '0.00'}</td>
+                    <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red" onclick="deleteRow('Inventory', '${item.SKU}')">DEL</button></td></tr>`;
                 }
             });
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
 
-    function openModal(isEdit, dataStr = null) {
-        editMode = isEdit;
-        document.getElementById('userModal').style.display = 'flex';
-        if (isEdit) {
-            const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
-            currentEditId = data.Username;
-            document.getElementById('modalTitle').innerText = "Edit User";
-            document.getElementById('saveBtn').innerText = "UPDATE USER";
-            document.getElementById('nu').value = data.Username;
-            document.getElementById('nu').disabled = true;
-            document.getElementById('np').value = data.Password || '';
-            document.getElementById('nr').value = data.Role || 'Staff';
-            document.getElementById('nd').value = data["Display Name"] || '';
-            
-            const invKey = Object.keys(data).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('inv'));
-            const custKey = Object.keys(data).find(k => k.toLowerCase().includes('edit') && k.toLowerCase().includes('cust'));
-            document.getElementById('ci').checked = data[invKey] === true || data[invKey] === "TRUE";
-            document.getElementById('cc').checked = data[custKey] === true || data[custKey] === "TRUE";
-        } else {
-            document.getElementById('modalTitle').innerText = "Add New User";
-            document.getElementById('saveBtn').innerText = "SAVE USER";
-            document.getElementById('nu').disabled = false;
-            document.querySelectorAll('#userModal input').forEach(i => i.type === 'checkbox' ? i.checked = false : i.value = '');
-            document.getElementById('nr').value = 'Staff';
-        }
-    }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-    function closeModal() { document.getElementById('userModal').style.display = 'none'; }
-
-    async function handleSave() {
-        const payload = {
-            action: editMode ? 'editRow' : 'addRow',
-            sheetName: 'Users',
-            id: currentEditId,
-            data: [
-                document.getElementById('nu').value,
-                document.getElementById('np').value,
-                document.getElementById('nr').value,
-                document.getElementById('nd').value,
-                document.getElementById('ci').checked,
-                document.getElementById('cc').checked
-            ]
-        };
+    async function saveUser() {
+        const payload = { action: 'addRow', sheetName: 'Users', data: [
+            document.getElementById('nu').value, document.getElementById('np').value,
+            document.getElementById('nr').value, document.getElementById('nd').value,
+            document.getElementById('ci').checked, document.getElementById('cc').checked
+        ]};
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        closeModal();
-        switchTab('Users');
+        closeModals(); switchTab('Users');
     }
 
-    async function deleteUser(id) {
+    async function saveInv() {
+        const payload = { action: 'addRow', sheetName: 'Inventory', data: [
+            document.getElementById('sku').value, document.getElementById('itemName').value, document.getElementById('price').value
+        ]};
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        closeModals(); switchTab('Inventory');
+    }
+
+    async function deleteRow(sheet, id) {
         if(confirm(`Delete ${id}?`)) {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: 'Users', id: id}) });
-            switchTab('Users');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: sheet, id: id}) });
+            switchTab(sheet);
         }
     }
 
