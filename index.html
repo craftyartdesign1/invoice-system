@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAD | Admin Portal</title>
     <style>
-        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --grey: #6c757d; }
+        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --white: #fff; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #f4f7f6; margin: 0; }
 
@@ -14,27 +14,25 @@
         .login-box { background: white; padding: 40px; border-radius: 12px; width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .login-box h2 { color: var(--blue); margin-bottom: 20px; }
 
-        /* Dashboard */
+        /* Dashboard Header & Nav */
         #dashboard { display: none; }
         header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
 
-        /* Table & Cards */
+        /* Content Area */
         .content { padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
 
         /* Buttons */
-        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; }
-        
-        .status-icon { font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -72,13 +70,13 @@
         const u = document.getElementById('userInput').value;
         const p = document.getElementById('passInput').value;
         const err = document.getElementById('errorMsg');
-        err.innerText = "Authenticating...";
+        err.innerText = "Connecting...";
 
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getUsers`);
             const users = await res.json();
             
-            // Matches exact headers from your sheet
+            // Checks for exact match in your Users sheet
             const found = users.find(x => x.Username === u && x.Password === p);
 
             if (found) {
@@ -91,25 +89,21 @@
                 err.innerText = "Invalid Username or Password";
             }
         } catch (e) {
-            err.innerText = "Error connecting to database.";
+            err.innerText = "Connection error. Check script deployment.";
         }
     }
 
     async function switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab').forEach(t => {
-            t.classList.toggle('active', t.innerText === tabName);
-        });
-
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
-        view.innerHTML = "<p>Loading " + tabName + "...</p>";
+        view.innerHTML = "Loading " + tabName + "...";
 
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
             renderTable(tabName, data);
         } catch (e) {
-            view.innerHTML = "<p style='color:red'>Failed to load data.</p>";
+            view.innerHTML = "<p style='color:red'>Failed to load data from " + tabName + ".</p>";
         }
     }
 
@@ -119,26 +113,53 @@
         if (type === 'Users') {
             html += `<th>Username</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                html += `<tr>
-                    <td><b>${item.Username}</b></td>
-                    <td>${item["Display Name"]}</td>
-                    <td><span class="status-icon">${item["Can Edit Inventory"] ? '✅' : '❌'}</span></td>
-                    <td><span class="status-icon">${item["Can Edit Customers"] ? '✅' : '❌'}</span></td>
-                    <td>
-                        <button class="btn btn-blue">EDIT</button>
-                        <button class="btn btn-red">DEL</button>
-                    </td>
-                </tr>`;
+                // HIDE BUTTONS IF NO USERNAME EXISTS
+                if (item.Username && item.Username.toString().trim() !== "") {
+                    html += `<tr>
+                        <td><b>${item.Username}</b></td>
+                        <td>${item["Display Name"] || ''}</td>
+                        <td style="text-align:center">${item["Can Edit Inventory"] ? '✅' : '❌'}</td>
+                        <td style="text-align:center">${item["Can Edit Customers"] ? '✅' : '❌'}</td>
+                        <td>
+                            <button class="btn btn-blue" onclick="alert('Edit logic for ${item.Username} ready')">EDIT</button>
+                            <button class="btn btn-red" onclick="alert('Delete logic for ${item.Username} ready')">DEL</button>
+                        </td>
+                    </tr>`;
+                }
             });
         } else if (type === 'Customers') {
             html += `<th>Name</th><th>Company</th><th>Email</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                html += `<tr>
-                    <td><b>${item.name || item.Name}</b></td>
-                    <td>${item.company || ''}</td>
-                    <td>${item.email || ''}</td>
-                    <td><button class="btn btn-blue">EDIT</button></td>
-                </tr>`;
+                const cName = item.name || item.Name;
+                // HIDE BUTTONS IF NO NAME EXISTS
+                if (cName && cName.toString().trim() !== "") {
+                    html += `<tr>
+                        <td><b>${cName}</b></td>
+                        <td>${item.company || item.Company || ''}</td>
+                        <td>${item.email || item.Email || ''}</td>
+                        <td>
+                            <button class="btn btn-blue">EDIT</button>
+                            <button class="btn btn-red">DEL</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+        } else if (type === 'Inventory') {
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => {
+                const sku = item.sku || item.SKU;
+                // HIDE BUTTONS IF NO SKU EXISTS
+                if (sku && sku.toString().trim() !== "") {
+                    html += `<tr>
+                        <td><b>${sku}</b></td>
+                        <td>${item.item_name || item["Item Name"] || ''}</td>
+                        <td>$${item.price || item.Price || '0.00'}</td>
+                        <td>
+                            <button class="btn btn-blue">EDIT</button>
+                            <button class="btn btn-red">DEL</button>
+                        </td>
+                    </tr>`;
+                }
             });
         }
 
