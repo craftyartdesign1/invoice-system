@@ -21,7 +21,7 @@
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
-        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
         .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
@@ -39,45 +39,29 @@
         <button class="tab" onclick="switchTab('Customers')">Customers</button>
         <button class="tab active" onclick="switchTab('Users')">Users</button>
     </nav>
-    <div class="content">
-        <div id="mainView"></div>
-    </div>
+    <div class="content"><div id="mainView"></div></div>
 </div>
 
-<div id="userModal" class="modal">
+<div id="appModal" class="modal">
     <div class="modal-body">
-        <h3 id="uModalTitle" style="color:var(--blue)">Add New User</h3>
-        <input type="text" id="nu" placeholder="Username">
-        <input type="password" id="np" placeholder="Password">
-        <select id="nr"><option value="Staff">Staff</option><option value="Admin">Admin</option></select>
-        <input type="text" id="nd" placeholder="Display Name">
-        <div class="check-group"><input type="checkbox" id="ci"> <label>Can Edit Inventory</label></div>
-        <div class="check-group"><input type="checkbox" id="cc"> <label>Can Edit Customers</label></div>
-        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveUser()">SAVE USER</button>
-        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModals()">Cancel</button>
-    </div>
-</div>
-
-<div id="invModal" class="modal">
-    <div class="modal-body">
-        <h3 style="color:var(--blue)">Add Inventory Item</h3>
-        <input type="text" id="sku" placeholder="SKU">
-        <input type="text" id="itemName" placeholder="Item Name">
-        <input type="number" id="price" placeholder="Price">
-        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveInv()">SAVE ITEM</button>
-        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModals()">Cancel</button>
+        <h3 id="modalTitle" style="color:var(--blue)">Action</h3>
+        <div id="modalFields"></div>
+        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;">SAVE</button>
+        <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
     let activeTab = "Users";
+    let editMode = false;
+    let currentId = "";
 
     async function switchTab(tabName) {
         activeTab = tabName;
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
-        view.innerHTML = "Loading " + tabName + "...";
+        view.innerHTML = "Loading...";
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
@@ -86,57 +70,110 @@
     }
 
     function renderTable(type, data) {
-        let html = `<div class="card">`;
+        let html = `<div class="card"><button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button><h3>${type} Management</h3><table><thead><tr>`;
+        
         if (type === 'Users') {
-            html += `<button class="btn btn-blue btn-add" onclick="document.getElementById('userModal').style.display='flex'">+ ADD USER</button><h3>Users</h3>`;
-            html += `<table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                if (item.Username) {
+                if (item.Username && item.Username.toString().trim() !== "") {
                     const invK = Object.keys(item).find(k => k.toLowerCase().includes('inv'));
                     const custK = Object.keys(item).find(k => k.toLowerCase().includes('cust'));
+                    const json = JSON.stringify(item).replace(/"/g, '&quot;');
                     html += `<tr><td><b>${item.Username}</b></td><td>${item.Role || ''}</td><td>${item["Display Name"] || ''}</td>
                     <td style="text-align:center">${(item[invK] === true || item[invK] === "TRUE") ? '✅' : '❌'}</td>
                     <td style="text-align:center">${(item[custK] === true || item[custK] === "TRUE") ? '✅' : '❌'}</td>
-                    <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red" onclick="deleteRow('Users', '${item.Username}')">DEL</button></td></tr>`;
+                    <td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.Username}')">DEL</button></td></tr>`;
                 }
             });
         } else if (type === 'Inventory') {
-            html += `<button class="btn btn-blue btn-add" onclick="document.getElementById('invModal').style.display='flex'">+ ADD ITEM</button><h3>Inventory</h3>`;
-            html += `<table><thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`;
+            // Updated Headers to match spreadsheet Column D and E
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => {
-                if (item.SKU) {
+                if (item.SKU && item.SKU.toString().trim() !== "") {
+                    const taxK = Object.keys(item).find(k => k.toLowerCase().includes('tax'));
+                    const isExempt = item[taxK] === true || item[taxK] === "TRUE";
+                    const json = JSON.stringify(item).replace(/"/g, '&quot;');
                     html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"] || ''}</td><td>$${item.Price || '0.00'}</td>
-                    <td><button class="btn btn-blue">EDIT</button><button class="btn btn-red" onclick="deleteRow('Inventory', '${item.SKU}')">DEL</button></td></tr>`;
+                    <td>${item.Size || ''}</td><td style="text-align:center">${isExempt ? '✅' : '❌'}</td>
+                    <td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button></td></tr>`;
                 }
             });
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
 
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+    function openModal(isEdit, dataStr = null) {
+        editMode = isEdit;
+        const fields = document.getElementById('modalFields');
+        const title = document.getElementById('modalTitle');
+        fields.innerHTML = "";
+        
+        if (activeTab === 'Users') {
+            title.innerText = isEdit ? "Edit User" : "Add User";
+            fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}>
+                                <input id="f2" type="password" placeholder="Password">
+                                <select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select>
+                                <input id="f4" placeholder="Display Name">
+                                <div class="check-group"><input type="checkbox" id="f5"> <label>Can Edit Inventory</label></div>
+                                <div class="check-group"><input type="checkbox" id="f6"> <label>Can Edit Customers</label></div>`;
+        } else if (activeTab === 'Inventory') {
+            // Updated Inputs for Inventory
+            title.innerText = isEdit ? "Edit Item" : "Add Item";
+            fields.innerHTML = `<input id="f1" placeholder="SKU" ${isEdit ? 'disabled' : ''}>
+                                <input id="f2" placeholder="Item Name">
+                                <input id="f3" type="number" placeholder="Price">
+                                <input id="f4" placeholder="Size (e.g. XL, XS)">
+                                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+        }
 
-    async function saveUser() {
-        const payload = { action: 'addRow', sheetName: 'Users', data: [
-            document.getElementById('nu').value, document.getElementById('np').value,
-            document.getElementById('nr').value, document.getElementById('nd').value,
-            document.getElementById('ci').checked, document.getElementById('cc').checked
-        ]};
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        closeModals(); switchTab('Users');
+        if (isEdit && dataStr) {
+            const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
+            currentId = data.Username || data.SKU;
+            document.getElementById('f1').value = currentId;
+            if (activeTab === 'Users') {
+                document.getElementById('f2').value = data.Password || '';
+                document.getElementById('f3').value = data.Role || 'Staff';
+                document.getElementById('f4').value = data["Display Name"] || '';
+                const invK = Object.keys(data).find(k => k.toLowerCase().includes('inv'));
+                const custK = Object.keys(data).find(k => k.toLowerCase().includes('cust'));
+                document.getElementById('f5').checked = (data[invK] === true || data[invK] === "TRUE");
+                document.getElementById('f6').checked = (data[custK] === true || data[custK] === "TRUE");
+            } else {
+                document.getElementById('f2').value = data["Item Name"] || '';
+                document.getElementById('f3').value = data.Price || '';
+                document.getElementById('f4').value = data.Size || '';
+                const taxK = Object.keys(data).find(k => k.toLowerCase().includes('tax'));
+                document.getElementById('f5').checked = (data[taxK] === true || data[taxK] === "TRUE");
+            }
+        }
+        
+        document.getElementById('saveBtn').onclick = handleSave;
+        document.getElementById('appModal').style.display = 'flex';
     }
 
-    async function saveInv() {
-        const payload = { action: 'addRow', sheetName: 'Inventory', data: [
-            document.getElementById('sku').value, document.getElementById('itemName').value, document.getElementById('price').value
-        ]};
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-        closeModals(); switchTab('Inventory');
+    async function handleSave() {
+        let rowData = [];
+        if (activeTab === 'Users') {
+            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
+                       document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
+        } else {
+            // Matches columns A, B, C, D, E in Inventory sheet
+            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, 
+                       document.getElementById('f4').value, document.getElementById('f5').checked];
+        }
+        
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
+            action: editMode ? 'editRow' : 'addRow', sheetName: activeTab, id: currentId, data: rowData
+        })});
+        closeModal(); switchTab(activeTab);
     }
 
-    async function deleteRow(sheet, id) {
+    function closeModal() { document.getElementById('appModal').style.display = 'none'; }
+
+    async function deleteRow(id) {
         if(confirm(`Delete ${id}?`)) {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: sheet, id: id}) });
-            switchTab(sheet);
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: activeTab, id: id}) });
+            switchTab(activeTab);
         }
     }
 
