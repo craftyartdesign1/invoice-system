@@ -32,7 +32,7 @@
         }
         .modal-header { 
             background: var(--blue); color: white; padding: 12px; border-radius: 12px 12px 0 0; 
-            cursor: move; user-select: none; font-size: 0.8rem; text-align: center;
+            cursor: move; user-select: none; font-size: 0.8rem; text-align: center; font-weight: bold;
         }
         .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
@@ -58,7 +58,7 @@
 
 <div id="appModal" class="modal">
     <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
+        <div class="modal-header" id="modalHeader">⁝⁝ CLICK AND DRAG TO MOVE ⁝⁝</div>
         <div class="modal-content">
             <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
             <div id="modalFields"></div>
@@ -107,11 +107,11 @@
                 html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
             }});
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Full Address</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Name</th><th>Location</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                const fullAddr = `${item.Street || ''}, ${item.City || ''} ${item.State || ''} ${item["Zip Code"] || ''}`;
-                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+                const loc = `${item.City || ''}, ${item.State || ''}`;
+                html += `<tr><td><b>${item.Name}</b></td><td>${loc}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
             }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
@@ -125,7 +125,6 @@
         const isOwner = currentUser.username === OWNER_ID;
         fields.innerHTML = "";
         
-        // Reset modal position
         const m = document.getElementById('draggableModal');
         m.style.left = '50%'; m.style.top = '50%'; m.style.transform = 'translate(-50%, -50%)';
         xOffset = 0; yOffset = 0;
@@ -214,7 +213,7 @@
         }
     }
 
-    // Draggable Logic
+    // Draggable Window Script
     const dragItem = document.getElementById("draggableModal");
     const dragHeader = document.getElementById("modalHeader");
     let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
