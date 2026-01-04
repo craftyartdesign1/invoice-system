@@ -8,28 +8,20 @@
         :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --white: #fff; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #f4f7f6; margin: 0; }
-
-        /* Header & Nav */
         header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
-
-        /* Content Area */
         .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
-
-        /* Buttons & Inputs */
         .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
         input[type="text"], input[type="password"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
-
-        /* Modal Popup */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
         .modal-body { background: white; padding: 30px; border-radius: 12px; width: 400px; }
         .check-group { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.9rem; }
@@ -54,7 +46,7 @@
 
 <div id="userModal" class="modal">
     <div class="modal-body">
-        <h3 style="color:var(--blue)">Add New User</h3>
+        <h3 id="modalTitle" style="color:var(--blue)">Add New User</h3>
         <input type="text" id="nu" placeholder="Username">
         <input type="password" id="np" placeholder="Password">
         <select id="nr">
@@ -65,41 +57,37 @@
         <input type="text" id="nd" placeholder="Display Name">
         <div class="check-group"><input type="checkbox" id="ci"> <label>Can Edit Inventory</label></div>
         <div class="check-group"><input type="checkbox" id="cc"> <label>Can Edit Customers</label></div>
-        <button class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="saveUser()">SAVE USER</button>
+        <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:15px;" onclick="handleSave()">SAVE USER</button>
         <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer;" onclick="closeModal()">Cancel</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzS_aQhdRtUSsnj5Q0853z9gFuU1poDmdIv3xNnMr8nW_K9Ev6UzJg6OKP2IDp8X4ch/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLcNLS3iIhem3gmS4sluLIIfe99WyhbfSEex8YfHZ07IveJe1fRyh5DZeAnUKQMOg4/exec";
+    let editMode = false;
+    let currentEditId = "";
 
     async function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
         const view = document.getElementById('mainView');
         view.innerHTML = "Loading " + tabName + "...";
-
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
             renderTable(tabName, data);
-        } catch (e) {
-            view.innerHTML = "<p style='color:red'>Error loading data.</p>";
-        }
+        } catch (e) { view.innerHTML = "<p style='color:red'>Error loading data.</p>"; }
     }
 
     function renderTable(type, data) {
         let html = `<div class="card">`;
-        
         if (type === 'Users') {
-            html += `<button class="btn btn-blue btn-add" onclick="openModal()">+ ADD USER</button>`;
+            html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD USER</button>`;
             html += `<h3>Users Management</h3><table><thead><tr><th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
-            
             data.forEach(item => {
-                // Ensure buttons only show if Username exists
                 if (item.Username && item.Username.toString().trim() !== "") {
-                    // Normalize boolean values for checkmarks
                     const hasInv = item["Can Edit Inventory"] === true || item["Can Edit Inventory"] === "TRUE";
                     const hasCust = item["Can Edit Customers"] === true || item["Can Edit Customers"] === "TRUE";
+                    const jsonStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
                     html += `<tr>
                         <td><b>${item.Username}</b></td>
@@ -108,26 +96,48 @@
                         <td style="text-align:center">${hasInv ? '✅' : '❌'}</td>
                         <td style="text-align:center">${hasCust ? '✅' : '❌'}</td>
                         <td>
-                            <button class="btn btn-blue">EDIT</button>
-                            <button class="btn btn-red">DEL</button>
+                            <button class="btn btn-blue" onclick="openModal(true, '${jsonStr}')">EDIT</button>
+                            <button class="btn btn-red" onclick="deleteUser('${item.Username}')">DEL</button>
                         </td>
                     </tr>`;
                 }
             });
-        } else {
-            html += `<h3>${type} Management</h3><p>Tab functionality for ${type} is ready to be linked.</p>`;
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
     }
 
-    function openModal() { document.getElementById('userModal').style.display = 'flex'; }
+    function openModal(isEdit, dataStr = null) {
+        editMode = isEdit;
+        const modal = document.getElementById('userModal');
+        modal.style.display = 'flex';
+        
+        if (isEdit && dataStr) {
+            const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
+            currentEditId = data.Username;
+            document.getElementById('modalTitle').innerText = "Edit User";
+            document.getElementById('saveBtn').innerText = "UPDATE USER";
+            document.getElementById('nu').value = data.Username;
+            document.getElementById('nu').disabled = true; // Username is the ID
+            document.getElementById('np').value = data.Password || '';
+            document.getElementById('nr').value = data.Role || 'Staff';
+            document.getElementById('nd').value = data["Display Name"] || '';
+            document.getElementById('ci').checked = data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE";
+            document.getElementById('cc').checked = data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE";
+        } else {
+            document.getElementById('modalTitle').innerText = "Add New User";
+            document.getElementById('saveBtn').innerText = "SAVE USER";
+            document.getElementById('nu').disabled = false;
+            document.querySelectorAll('#userModal input, #userModal select').forEach(i => { if(i.type === 'checkbox') i.checked = false; else i.value = ''; });
+        }
+    }
+
     function closeModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    async function saveUser() {
-        // Data follows spreadsheet order: A:Username, B:Password, C:Role, D:DisplayName, E:Inv, F:Cust
+    async function handleSave() {
         const payload = {
-            action: 'addRow',
+            action: editMode ? 'editRow' : 'addRow',
             sheetName: 'Users',
+            id: currentEditId,
             data: [
                 document.getElementById('nu').value,
                 document.getElementById('np').value,
@@ -140,6 +150,14 @@
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
         closeModal();
         switchTab('Users');
+    }
+
+    async function deleteUser(username) {
+        if (confirm(`Are you sure you want to delete user: ${username}?`)) {
+            const payload = { action: 'deleteRow', sheetName: 'Users', id: username };
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            switchTab('Users');
+        }
     }
 
     switchTab('Users');
