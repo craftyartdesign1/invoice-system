@@ -107,11 +107,17 @@
                 html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
             }});
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Location</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Name</th><th>Full Address</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                const loc = `${item.City || ''}, ${item.State || ''}`;
-                html += `<tr><td><b>${item.Name}</b></td><td>${loc}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
+                // FIXED: Displays Street (B), City (C), State (D), and Zip (E) from spreadsheet
+                const street = item.Street || '';
+                const city = item.City || '';
+                const state = item.State || '';
+                const zip = item["Zip Code"] || '';
+                const fullAddr = `${street}${street ? ', ' : ''}${city}${city ? ', ' : ''}${state} ${zip}`.trim();
+
+                html += `<tr><td><b>${item.Name}</b></td><td>${fullAddr}</td><td>${item.Email || ''}</td><td>${item.Phone || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Standard'}</td><td><button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}</td></tr>`;
             }});
         }
         document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
@@ -184,14 +190,14 @@
         let rowData = [];
         if (activeTab === 'Customers') {
             rowData = [
-                document.getElementById('f1').value, // Name
-                document.getElementById('f2').value, // Street
-                document.getElementById('f3').value, // City
-                document.getElementById('f4').value, // State
-                document.getElementById('f5').value, // Zip Code
-                document.getElementById('f6').value, // Email
-                document.getElementById('f7').value, // Phone
-                document.getElementById('f8').checked // Tax Exempt
+                document.getElementById('f1').value, // Name (A)
+                document.getElementById('f2').value, // Street (B)
+                document.getElementById('f3').value, // City (C)
+                document.getElementById('f4').value, // State (D)
+                document.getElementById('f5').value, // Zip Code (E)
+                document.getElementById('f6').value, // Email (F)
+                document.getElementById('f7').value, // Phone (G)
+                document.getElementById('f8').checked // Tax Exempt (H)
             ];
         } else if (activeTab === 'Inventory') {
             let sVal = document.getElementById('f4').value;
@@ -213,7 +219,7 @@
         }
     }
 
-    // Draggable Window Script
+    // Draggable Window Logic
     const dragItem = document.getElementById("draggableModal");
     const dragHeader = document.getElementById("modalHeader");
     let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
