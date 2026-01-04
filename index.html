@@ -3,220 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crafty Art Design | Admin POS 2026</title>
+    <title>CAD Admin | Pro Secure Portal</title>
     <style>
-        :root { --primary: #000000; --bg: #f3f4f6; --white: #ffffff; --text: #1f2937; --danger: #ef4444; --success: #22c55e; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); }
+        :root { 
+            --primary-blue: #007bff; 
+            --danger-red: #dc3545; 
+            --bg-light: #f8f9fa; 
+            --dark-grey: #343a40;
+            --border: #dee2e6;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #e9ecef; margin: 0; color: #333; }
         
-        /* Login */
-        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; }
-        .login-box { background: var(--white); width: 90%; max-width: 400px; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        
-        /* Layout */
-        #mainApp { display: none; }
-        header { background: var(--white); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
-        .nav-tabs { display: flex; background: #e5e7eb; padding: 10px 20px; gap: 10px; overflow-x: auto; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #f3f4f6; border-radius: 6px; font-weight: bold; white-space: nowrap; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        
-        .content-area { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* POS Side-by-Side */
-        .pos-container { display: flex; gap: 20px; height: calc(100vh - 180px); }
-        .pos-form { flex: 1.2; background: white; padding: 1.5rem; border-radius: 12px; overflow-y: auto; }
-        .pos-preview { flex: 0.8; background: #fafafa; padding: 1.5rem; border-radius: 12px; overflow-y: auto; }
-        
-        /* Tables & UI */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        
-        input, select { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 15px; }
-        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; }
-        .btn-danger { background: var(--danger); color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; }
-        
-        /* Receipt */
-        .receipt-paper { background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: 'Courier New', monospace; }
-        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: var(--dark-grey); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .login-box { background: white; padding: 40px; border-radius: 15px; width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--primary-blue); margin-bottom: 20px; letter-spacing: 1px; }
 
-        @media print { body * { visibility: hidden; } #printableReceipt, #printableReceipt * { visibility: visible; } #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; } }
+        /* Dashboard Layout */
+        #dashboard { display: none; }
+        header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary-blue); }
+        .nav-tabs { display: flex; background: var(--dark-grey); padding: 10px 20px; gap: 10px; }
+        .tab-btn { padding: 10px 25px; border: none; background: #495057; color: white; border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .tab-btn:hover { background: #6c757d; }
+        .tab-btn.active { background: var(--primary-blue); }
+
+        .content { padding: 2rem; max-width: 1600px; margin: auto; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow-x: auto; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; background: #e7f1ff; color: #004085; padding: 15px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+
+        /* Buttons */
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-blue { background: var(--primary-blue); }
+        .btn-blue:hover { background: #0056b3; }
+        .btn-red { background: var(--danger-red); }
+        .btn-red:hover { background: #a71d2a; }
+        .btn-add { float: right; margin-bottom: 15px; padding: 12px 25px; font-size: 1rem; }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ced4da; border-radius: 8px; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-body { background: white; padding: 2rem; border-radius: 15px; width: 550px; max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h1 style="margin-bottom:20px;">CAD Master Admin</h1>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
-        </div>
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>CRAFTY ART DESIGN</h2>
+        <p>Admin Login</p>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn btn-blue" style="width:100%; padding: 15px;" onclick="checkLogin()">LOGIN</button>
+        <p id="errMsg" style="color:var(--danger-red); font-size:0.85rem; margin-top:15px;"></p>
     </div>
+</div>
 
-    <div id="mainApp">
-        <header>
-            <h2>CRAFTY ART DESIGN</h2>
-            <div>User: <span id="userDisplay" style="font-weight:bold;"></span> | <a href="#" onclick="location.reload()" style="color:var(--danger); text-decoration:none; font-size:0.8rem;">LOGOUT</a></div>
-        </header>
-        
-        <nav class="nav-tabs">
-            <button class="tab-btn active" id="tab-sales" onclick="loadInvoices()">Sales History</button>
-            <button class="tab-btn" id="tab-pos" onclick="openPOS()">POS (New Sale)</button>
-            <button class="tab-btn" id="tab-inv" onclick="loadInventory()">Manage Inventory</button>
-            <button class="tab-btn" id="tab-cust" onclick="loadCustomers()">Manage Customers</button>
-        </nav>
-
-        <div class="content-area" id="pageContent"></div>
+<div id="dashboard">
+    <header>
+        <h2>CRAFTY ART DESIGN</h2>
+        <div id="welcomeUser" style="font-weight: bold; color: var(--primary-blue);"></div>
+    </header>
+    <nav class="nav-tabs">
+        <button class="tab-btn" onclick="loadTab('Inventory')">INVENTORY</button>
+        <button class="tab-btn active" onclick="loadTab('Customers')">CUSTOMERS</button>
+        <button class="tab-btn" onclick="loadTab('Users')">USERS</button>
+    </nav>
+    <div class="content">
+        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Search records..." style="margin-bottom:20px;">
+        <div id="main"></div>
     </div>
+</div>
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxceWhfXU1ykFbao-9eG6x-mthdr6o9J5Q72tjqna6-tUQIz-C9uOTZfpw-hGfrAXma/exec";
-        const NYC_TAX_RATE = 0.08875;
-        let globalInv = [], globalCust = [], cart = [], currentUser = "";
+<div id="m" class="modal">
+    <div class="modal-body">
+        <h3 id="mt" style="color: var(--primary-blue);"></h3>
+        <div id="mf"></div>
+        <button class="btn btn-blue" id="saveBtn" style="width:100%; margin-top:20px; padding:15px;" onclick="save()">SAVE TO SYSTEM</button>
+        <button onclick="closeM()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--danger-red); font-weight:bold; cursor:pointer;">CANCEL</button>
+    </div>
+</div>
 
-        // LOGIN
-        async function handleLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const res = await fetch(`${SCRIPT_URL}?action=login&username=${u}&password=${p}`);
-            const data = await res.json();
-            if(data.success) {
-                currentUser = data.user.display_name;
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('userDisplay').innerText = currentUser;
-                loadInvoices();
-            } else { alert("Invalid Credentials"); }
-        }
-
-        // TAB 1: SALES HISTORY
-        async function loadInvoices() {
-            setActiveTab('tab-sales');
-            const res = await fetch(`${SCRIPT_URL}?action=getInvoices`);
-            const data = await res.json();
-            let h = `<div class="card"><h3>Recent Transactions</h3><table><tr><th>Inv #</th><th>Customer</th><th>Total</th></tr>`;
-            data.reverse().forEach(i => h += `<tr><td><b>${i.invoice_number}</b></td><td>${i.customer}</td><td>$${parseFloat(i.total).toFixed(2)}</td></tr>`);
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
-
-        // TAB 2: POINT OF SALE
-        async function openPOS() {
-            setActiveTab('tab-pos');
-            cart = [];
-            const [cRes, iRes, nRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getCustomers`), fetch(`${SCRIPT_URL}?action=getInventory`), fetch(`${SCRIPT_URL}?action=getNextInvoiceNumber`)
-            ]);
-            globalCust = await cRes.json(); globalInv = await iRes.json();
-            const invNum = (await nRes.json()).nextInvoice;
-
-            document.getElementById('pageContent').innerHTML = `
-                <div class="pos-container">
-                    <div class="pos-form">
-                        <label>Customer Name</label>
-                        <select id="custSelect" onchange="updatePOSPreview()"><option value="">-- Choose --</option></select>
-                        <label>Company</label><input id="compDisplay" readonly>
-                        <hr style="margin:20px 0;">
-                        <label>Scan SKU</label><input type="text" id="skuScan" placeholder="Type SKU..." oninput="searchSKU(this.value)" autofocus>
-                        <div id="foundArea" style="display:none; background:#f0fdf4; padding:15px; border-radius:8px;">
-                            <p><strong id="foundName"></strong></p>
-                            <p id="foundPrice" style="color:var(--success); font-weight:bold;"></p>
-                            <button class="btn btn-primary" style="margin-top:10px;" onclick="addToCart()">Add to Receipt</button>
-                        </div>
-                    </div>
-                    <div class="pos-preview">
-                        <div class="receipt-paper" id="printableReceipt">
-                            <h2 style="text-align:center;">INVOICE</h2>
-                            <p style="text-align:center; font-size:0.8rem;">${invNum}</p>
-                            <hr style="margin:10px 0;">
-                            <div id="p-items"></div>
-                            <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px;">
-                                <div class="receipt-line"><span>Subtotal:</span><span id="p-sub">$0.00</span></div>
-                                <div class="receipt-line"><span>NYC Tax (8.875%):</span><span id="p-tax">$0.00</span></div>
-                                <div class="receipt-line" style="font-weight:bold;"><span>TOTAL:</span><span id="p-total">$0.00</span></div>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary" style="margin-top:15px;" onclick="finalizePOS()">Finish & Print</button>
-                    </div>
-                </div>`;
-            const sel = document.getElementById('custSelect');
-            globalCust.forEach(c => sel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-        }
-
-        function searchSKU(sku) {
-            const item = globalInv.find(i => i.sku.toString() === sku.trim());
-            if(item) {
-                activeItem = item;
-                document.getElementById('foundArea').style.display = "block";
-                document.getElementById('foundName').innerText = item.item_name;
-                document.getElementById('foundPrice').innerText = "$" + parseFloat(item.price).toFixed(2);
-            } else { document.getElementById('foundArea').style.display = "none"; }
-        }
-
-        function addToCart() {
-            cart.push(activeItem);
-            document.getElementById('skuScan').value = "";
-            document.getElementById('foundArea').style.display = "none";
-            updatePOSPreview();
-            document.getElementById('skuScan').focus();
-        }
-
-        function updatePOSPreview() {
-            const c = globalCust.find(x => x.name === document.getElementById('custSelect').value);
-            document.getElementById('compDisplay').value = c ? c.company : "";
-            let h = "", sub = 0, tax = 0;
-            cart.forEach(i => {
-                sub += parseFloat(i.price);
-                if(i.tax_exempt === "No" || i.tax_exempt === false) tax += (parseFloat(i.price) * NYC_TAX_RATE);
-                h += `<div class="receipt-line"><span>1x ${i.item_name}</span><span>$${parseFloat(i.price).toFixed(2)}</span></div>`;
-            });
-            document.getElementById('p-items').innerHTML = h;
-            document.getElementById('p-sub').innerText = "$" + sub.toFixed(2);
-            document.getElementById('p-tax').innerText = "$" + tax.toFixed(2);
-            document.getElementById('p-total').innerText = "$" + (sub + tax).toFixed(2);
-        }
-
-        // TAB 3: MANAGE INVENTORY
-        async function loadInventory() {
-            setActiveTab('tab-inv');
-            const res = await fetch(`${SCRIPT_URL}?action=getInventory`);
-            const data = await res.json();
-            let h = `<div class="card"><h3>Inventory Control</h3><table><tr><th>SKU</th><th>Item</th><th>Price</th><th>Action</th></tr>`;
-            data.forEach(i => h += `<tr><td>${i.sku}</td><td>${i.item_name}</td><td>$${parseFloat(i.price).toFixed(2)}</td><td><button class="btn-danger" onclick="deleteEntry('Inventory','${i.sku}')">Delete</button></td></tr>`);
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
-
-        // TAB 4: MANAGE CUSTOMERS
-        async function loadCustomers() {
-            setActiveTab('tab-cust');
-            const res = await fetch(`${SCRIPT_URL}?action=getCustomers`);
-            const data = await res.json();
-            let h = `<div class="card"><h3>Customer Database</h3><table><tr><th>Name</th><th>Company</th><th>Action</th></tr>`;
-            data.forEach(c => h += `<tr><td>${c.name}</td><td>${c.company}</td><td><button class="btn-danger" onclick="deleteEntry('Customers','${c.name}')">Delete</button></td></tr>`);
-            document.getElementById('pageContent').innerHTML = h + `</table></div>`;
-        }
-
-        // ADMIN DELETE FUNCTION
-        async function deleteEntry(sheet, id) {
-            if(!confirm(`Are you sure you want to delete ${id}?`)) return;
-            const payload = { action: 'deleteRow', sheetName: sheet, id: id };
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Deleted successfully.");
-            sheet === 'Inventory' ? loadInventory() : loadCustomers();
-        }
-
-        async function finalizePOS() {
-            if(!cart.length) return alert("Add items first.");
-            window.print();
-            location.reload();
-        }
-
-        function setActiveTab(id) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-    </script>
-</body>
-</html>
+<script>
+    const SCRIPT_URL = "
