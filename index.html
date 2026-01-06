@@ -3,43 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Admin Portal & Invoicing</title>
+    <title>Crafty Art Design | Portal</title>
     <style>
-        :root { --blue: #004080; --red: #dc3545; --dark: #343a40; --white: #fff; --green: #28a745; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f4f7f6; margin: 0; padding: 0; }
-        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
+        :root { --blue: #004080; --dark: #343a40; --light: #f4f7f6; --white: #ffffff; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: var(--light); margin: 0; }
+        
+        /* Layout */
+        header { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
         .content { padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; overflow-x: auto; }
-        
-        /* Table Styling */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        
-        /* Buttons */
-        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
-        .btn-blue { background: var(--blue); }
-        .btn-green { background: var(--green); }
-        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; margin-left: 5px; color: #333; }
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Invoice Specific Styling */
+        /* Search Bar */
+        .search-area { margin-bottom: 15px; }
+        #mainSearch { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; outline: none; }
+        #mainSearch:focus { border-color: var(--blue); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; background: var(--white); }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; color: #666; font-size: 0.9rem; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; }
+        .btn-green { background: #28a745; }
+        .btn-blue { background: var(--blue); }
+
+        /* Invoice Template */
         .invoice-container { background: white; padding: 40px; color: #333; border: 1px solid #ddd; min-height: 1050px; font-family: Arial, sans-serif; }
         .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .inv-bill-to-header { background: #004080; color: white; padding: 5px 15px; font-weight: bold; width: 300px; margin-bottom: 5px; }
+        .inv-brand { font-size: 28px; font-weight: bold; }
+        .inv-brand span { font-size: 45px; }
+        .inv-bill-to-header { background: var(--blue); color: white; padding: 5px 15px; font-weight: bold; width: 300px; margin-bottom: 5px; }
         .inv-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .inv-table th { background: #004080; color: white; border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .inv-table td { border: 1px solid #ddd; padding: 8px; height: 35px; text-align: center; }
+        .inv-table th { background: var(--blue); color: white; border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .inv-table td { border: 1px solid #ddd; padding: 8px; height: 38px; text-align: center; }
         .inv-footer { display: flex; justify-content: space-between; margin-top: 30px; }
-        .notes-box { border: 2px solid #004080; width: 55%; height: 120px; position: relative; padding-top: 25px; }
-        .notes-label { position: absolute; top: 0; left: 0; right: 0; background: #004080; color: white; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
-        .totals-area { width: 40%; text-align: right; line-height: 1.8; }
+        .notes-box { border: 2px solid var(--blue); width: 55%; height: 120px; position: relative; padding: 10px; }
+        .notes-label { position: absolute; top: 0; left: 0; right: 0; background: var(--blue); color: white; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
+        .totals-area { width: 40%; text-align: right; line-height: 1.8; font-size: 1rem; }
 
         @media print {
-            .nav, header, .btn-no-print { display: none !important; }
+            .nav, header, .btn-no-print, .search-area { display: none !important; }
             body { background: white; }
             .content { padding: 0; max-width: 100%; }
             .invoice-container { border: none; padding: 0; }
@@ -59,84 +65,112 @@
 </nav>
 
 <div class="content" id="mainView">
-    <div class="card"><h3>Loading System...</h3></div>
+    <div class="card"><h3>Connecting to Database...</h3></div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
+    let currentData = [];
+
+    // Load Inventory by default
+    window.onload = () => switchTab('Inventory');
 
     async function switchTab(tabName) {
+        // Toggle Buttons
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        const tabBtn = (tabName === 'Inventory') ? document.getElementById('tab-Inv') : document.getElementById('tab-Cust');
-        tabBtn.classList.add('active');
+        document.getElementById(tabName === 'Inventory' ? 'tab-Inv' : 'tab-Cust').classList.add('active');
         
         const view = document.getElementById('mainView');
         view.innerHTML = `<div class="card"><h3>Loading ${tabName}...</h3></div>`;
 
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
-            const data = await res.json();
-            renderTable(tabName, data);
+            currentData = await res.json();
+            renderTable(tabName, currentData);
         } catch (e) {
-            view.innerHTML = `<div class="card"><h3 style="color:red">Error connecting to Google Sheets. Check your Script URL.</h3></div>`;
+            view.innerHTML = `<div class="card"><h3 style="color:red">Error: Could not load data.</h3></div>`;
         }
     }
 
     function renderTable(type, data) {
-        let html = `<div class="card"><h3>${type} Management</h3><table><thead><tr>`;
+        let html = `
+            <div class="search-area">
+                <input type="text" id="mainSearch" onkeyup="filterRows()" placeholder="Search ${type}...">
+            </div>
+            <div class="card">
+                <table id="dataTable">
+                    <thead><tr>`;
         
         if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Status</th></tr></thead><tbody>`;
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody>`;
             data.forEach(item => { if(item.SKU) {
-                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td>${item["Tax Exempt"] ? 'Exempt' : 'Taxable'}</td></tr>`;
+                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || '-'}</td></tr>`;
             }});
-        } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Actions</th></tr></thead><tbody>`;
+        } else {
+            html += `<th>Name</th><th>Company</th><th>City</th><th>Action</th></tr></thead><tbody>`;
             data.forEach(item => { if(item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                const fullAddr = `${item["Street Address"]}, ${item.City}, ${item.State} ${item["Zip Code"]}`;
                 html += `<tr>
                     <td><b>${item.Name}</b></td>
                     <td>${item.Company || ''}</td>
-                    <td>${item["Street Address"] || ''} <span class="info-pill" onclick="alert('Full Address: ${fullAddr}')">Info</span></td>
-                    <td><button class="btn btn-green" onclick="viewInvoice('${json}')">BILL</button></td>
+                    <td>${item.City || ''}</td>
+                    <td><button class="btn btn-green" onclick="generateInvoice('${json}')">Bill Customer</button></td>
                 </tr>`;
             }});
         }
-        document.getElementById('mainView').innerHTML = html + `</table></div>`;
+        document.getElementById('mainView').innerHTML = html + `</tbody></table></div>`;
     }
 
-    function viewInvoice(json) {
+    function filterRows() {
+        const query = document.getElementById("mainSearch").value.toLowerCase();
+        const rows = document.getElementById("dataTable").getElementsByTagName("tr");
+        for (let i = 1; i < rows.length; i++) {
+            rows[i].style.display = rows[i].innerText.toLowerCase().includes(query) ? "" : "none";
+        }
+    }
+
+    function generateInvoice(json) {
         const cust = JSON.parse(json.replace(/&quot;/g, '"'));
-        const taxRate = cust["Tax Exempt"] ? 0 : 0.08875; // 8.875% tax as per
+        const taxRate = cust["Tax Exempt"] ? 0 : 0.08875;
 
         document.getElementById('mainView').innerHTML = `
             <div class="btn-no-print" style="margin-bottom:20px;">
                 <button class="btn btn-blue" onclick="switchTab('Customers')">← Back to List</button>
-                <button class="btn btn-green" style="float:right" onclick="window.print()">PRINT / SAVE AS PDF</button>
+                <button class="btn btn-green" style="float:right" onclick="window.print()">Print / Save PDF</button>
             </div>
 
             <div class="invoice-container">
                 <div class="inv-header">
-                    <div><span style="font-size:30px;font-weight:bold;">crafty</span> <span style="font-size:50px;">A</span>rt <span style="font-size:30px;">design</span></div>
-                    <div style="text-align:right"><h1 style="color:#004080;margin:0">Invoice</h1><b>Crafty Art Design</b><br>Let's stay crafty.</div>
+                    <div class="inv-brand">crafty <span>A</span>rt design</div>
+                    <div style="text-align:right">
+                        <h1 style="color:var(--blue); margin:0; font-size:36px;">Invoice</h1>
+                        <b>Crafty Art Design</b><br>Let's stay crafty.
+                    </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between">
+                <div style="display:flex; justify-content:space-between; margin-top:20px;">
                     <div>
                         <div class="inv-bill-to-header">Bill To:</div>
-                        ${cust.Name}<br>${cust.Company || ''}<br>${cust["Street Address"]}<br>${cust.City}, ${cust.State} ${cust["Zip Code"]}
+                        <div style="padding-left:5px; line-height:1.4;">
+                            <strong>${cust.Name}</strong><br>
+                            ${cust.Company || ''}<br>
+                            ${cust["Street Address"]}<br>
+                            ${cust.City}, ${cust.State} ${cust["Zip Code"]}
+                        </div>
                     </div>
-                    <table style="width:220px; border:1px solid #ddd; font-size:0.8rem">
-                        <tr><td style="background:#eee">Date</td><td>${new Date().toLocaleDateString()}</td></tr>
-                        <tr><td style="background:#eee">Invoice #</td><td>INV-${Math.floor(Math.random()*9000)+1000}</td></tr>
-                        <tr><td style="background:yellow">Cust. ID</td><td>${cust.Name.substring(0,4).toUpperCase()}</td></tr>
-                    </table>
+                    <div style="width:220px;">
+                        <table style="border:1px solid #ddd; font-size:0.85rem;">
+                            <tr><td style="background:#eee; font-weight:bold;">Date</td><td>${new Date().toLocaleDateString()}</td></tr>
+                            <tr><td style="background:#eee; font-weight:bold;">Invoice #</td><td>T11</td></tr>
+                            <tr><td style="background:yellow; font-weight:bold;">Cust. ID</td><td>${cust.Name.substring(0,4).toUpperCase()}</td></tr>
+                        </table>
+                    </div>
                 </div>
 
                 <table class="inv-table">
-                    <thead><tr><th>SKU</th><th>Description</th><th>Color</th><th>Size</th><th>Quantity</th><th>Price</th><th>Line Total</th></tr></thead>
+                    <thead><tr><th>SKU</th><th>Description</th><th>Color</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
                     <tbody>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                         <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                         <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
                         <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
@@ -147,20 +181,21 @@
                     <div class="notes-box"><div class="notes-label">Special Notes and Instructions</div></div>
                     <div class="totals-area">
                         Subtotal: $0.00<br>
-                        Sales Tax Rate: ${(taxRate*100).toFixed(3)}%<br>
+                        Sales Tax Rate: ${(taxRate * 100).toFixed(3)}%<br>
                         Sales Tax: $0.00<br>
-                        <div style="border:2px solid #000; padding:5px; margin-top:5px; font-weight:bold; font-size:1.2rem">Order Total: $0.00</div>
+                        <div style="border:2px solid black; padding:5px; margin-top:10px; font-weight:bold; font-size:1.2rem;">
+                            Order Total: $0.00
+                        </div>
                     </div>
                 </div>
 
-                <div style="text-align:center; margin-top:50px; font-size:0.8rem">
-                    Make all checks payable to Crafty Art Design<br><strong>Thank you for your business!</strong><br>Brooklyn, NY 11223 | Craftyartdesign1@gmail.com
+                <div style="text-align:center; margin-top:60px; font-size:0.8rem; line-height:1.5;">
+                    Make all checks payable to Crafty Art Design<br>
+                    <strong>Thank you for your business!</strong><br>
+                    Brooklyn, NY 11223 | Craftyartdesign1@gmail.com
                 </div>
             </div>`;
     }
-
-    // Default to Inventory on load
-    switchTab('Inventory');
 </script>
 </body>
 </html>
