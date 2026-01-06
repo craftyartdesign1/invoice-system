@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Admin Portal</title>
+    <title>CAD | Secured Admin Portal</title>
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -16,8 +16,8 @@
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
-        .tab.admin-btn { border: 1px solid var(--red); color: var(--red); margin-left: auto; }
-        .tab.admin-btn.active { background: var(--red); color: white; }
+        .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; } /* Hidden by default */
+        .tab.admin-only.active { background: var(--red); color: white; }
 
         .content { padding: 20px; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -46,7 +46,10 @@
 <div class="header-section">
     <div class="header-top">
         <div id="logoContainer"><h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2></div>
-        <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span></div>
+        <div style="text-align: right;">
+            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span> (<span id="displayRole">Admin</span>)</div>
+            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()">Switch Role (Test Only)</button>
+        </div>
     </div>
     <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search through any list...">
 </div>
@@ -55,7 +58,7 @@
     <button class="tab active" id="tab-Invoices" onclick="loadTab('Invoices')">Invoices</button>
     <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
     <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
-    <button class="tab admin-btn" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
+    <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
 </nav>
 
 <div class="content" id="mainView"></div>
@@ -63,17 +66,44 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuxvj3hA_AuPgScYJ9TZDnwJjenv8QYqA3zXJ5xS0Z4YBm4Hyt0K-0yRPwOwRaIgSe/exec";
     
-    // States
+    // Application State
+    let currentUser = { name: 'Alessio', role: 'Admin' }; // Default for testing
     let logoData = localStorage.getItem('cad_logo') || '';
     let bgData = localStorage.getItem('cad_bg') || '';
     let users = JSON.parse(localStorage.getItem('cad_users')) || [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
 
     window.onload = () => {
-        if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
+        applyBranding();
+        checkPermissions();
         loadTab('Invoices');
     };
 
+    function applyBranding() {
+        if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
+    }
+
+    function checkPermissions() {
+        document.getElementById('displayUser').innerText = currentUser.name;
+        document.getElementById('displayRole').innerText = currentUser.role;
+        const adminTab = document.getElementById('tab-Admin');
+        // Only show Admin Tab if role is Admin
+        adminTab.style.display = (currentUser.role === 'Admin') ? "block" : "none";
+    }
+
+    // Temporary function for you to test both views
+    function toggleUserRole() {
+        currentUser.role = (currentUser.role === 'Admin') ? 'Staff' : 'Admin';
+        currentUser.name = (currentUser.role === 'Admin') ? 'Alessio' : 'Staff Member';
+        checkPermissions();
+        loadTab('Invoices');
+    }
+
     async function loadTab(tabName) {
+        if(tabName === 'Admin' && currentUser.role !== 'Admin') {
+            alert("Access Denied: Admin Only");
+            return;
+        }
+
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`tab-${tabName}`).classList.add('active');
         const view = document.getElementById('mainView');
