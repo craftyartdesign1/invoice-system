@@ -3,45 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Master Admin Portal</title>
+    <title>CAD | Admin Portal</title>
     <style>
-        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; }
+        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Header & Search */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         #mainSearch { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
 
-        /* Navigation Tabs */
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
         .tab.admin-btn { border: 1px solid var(--red); color: var(--red); margin-left: auto; }
         .tab.admin-btn.active { background: var(--red); color: white; }
 
-        /* Content Area */
         .content { padding: 20px; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; color: #666; font-size: 0.85rem; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        
         .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
-        .btn-green { background: #28a745; }
+        .btn-green { background: var(--green); }
         .btn-blue { background: var(--blue); }
+        .btn-red { background: var(--red); }
+        .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
 
-        /* Invoice Style */
+        input[type="text"], input[type="password"], select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+
         .invoice-container { background: white; padding: 40px; border: 1px solid #ddd; min-height: 1000px; background-size: cover; background-position: center; }
         .inv-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .inv-bill-to { background: var(--blue); color: white; padding: 5px 15px; width: 300px; font-weight: bold; }
         
-        @media print {
-            .nav-bar, .header-section, .btn-no-print { display: none !important; }
-            .invoice-container { border: none; padding: 0; }
-        }
+        @media print { .nav-bar, .header-section, .btn-no-print { display: none !important; } .invoice-container { border: none; padding: 0; } }
     </style>
 </head>
 <body>
@@ -49,9 +46,9 @@
 <div class="header-section">
     <div class="header-top">
         <div id="logoContainer"><h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2></div>
-        <div style="font-weight:bold; color:#666;">Logged in as: <span id="currentUser">Admin</span></div>
+        <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span></div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search SKUs, Names, or Invoice Numbers...">
+    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search through any list...">
 </div>
 
 <nav class="nav-bar">
@@ -64,16 +61,16 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // Your provided Script URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuxvj3hA_AuPgScYJ9TZDnwJjenv8QYqA3zXJ5xS0Z4YBm4Hyt0K-0yRPwOwRaIgSe/exec";
     
-    // Branding Settings
+    // States
     let logoData = localStorage.getItem('cad_logo') || '';
     let bgData = localStorage.getItem('cad_bg') || '';
+    let users = JSON.parse(localStorage.getItem('cad_users')) || [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
 
     window.onload = () => {
         if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
-        loadTab('Invoices'); // Default to Invoices as seen in your sheet
+        loadTab('Invoices');
     };
 
     async function loadTab(tabName) {
@@ -88,27 +85,19 @@
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
             renderTable(tabName, data, view);
-        } catch (e) { 
-            view.innerHTML = `<div class="card"><h3 style="color:red">Connection Error. Check your Google Script Deployment.</h3></div>`; 
-        }
+        } catch (e) { view.innerHTML = `<div class="card">Sync Error. Please check your Script URL.</div>`; }
     }
 
     function renderTable(type, data, view) {
         let html = `<div class="card"><h3>${type} Management</h3><table id="dataTable"><thead><tr>`;
-        
-        // Match columns to your spreadsheet screenshots
         if (type === 'Invoices') {
-            html += `<th>Invoice Number</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Subtotal</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i["Invoice Number"]) {
-                html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Company || ''}</td><td>${i.Employee || ''}</td><td>$${i.Subtotal}</td></tr>`;
-            }});
+            html += `<th>Invoice #</th><th>Date</th><th>Customer</th><th>Employee</th><th>Total</th></tr></thead><tbody>`;
+            data.forEach(i => { if(i["Invoice Number"]) html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Employee || ''}</td><td>$${i.Subtotal}</td></tr>`; });
         } else if (type === 'Inventory') {
             html += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.SKU) {
-                html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>$${i.Price}</td></tr>`;
-            }});
+            data.forEach(i => { if(i.SKU) html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>$${i.Price}</td></tr>`; });
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Action</th></tr></thead><tbody>`;
+            html += `<th>Name</th><th>Company</th><th>Address</th><th>Action</th></tr></thead><tbody>`;
             data.forEach(i => { if(i.Name) {
                 const json = JSON.stringify(i).replace(/"/g, '&quot;');
                 html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green" onclick="viewInvoice('${json}')">BILL</button></td></tr>`;
@@ -118,61 +107,90 @@
     }
 
     function renderAdmin(view) {
+        let userRows = '';
+        users.forEach((u, index) => {
+            userRows += `<tr>
+                <td>${u.name}</td><td>${u.user}</td><td>${u.role}</td><td>••••</td>
+                <td>
+                    <button class="btn btn-blue btn-sm" onclick="editUser(${index})">Edit</button>
+                    <button class="btn btn-red btn-sm" onclick="deleteUser(${index})">Delete</button>
+                </td>
+            </tr>`;
+        });
+
         view.innerHTML = `
             <div class="card">
-                <h3>Branding Settings</h3>
-                <p>Paste image URLs here to customize your portal and invoices.</p>
-                <div style="margin-bottom:15px;">
-                    <label>Logo URL:</label><br>
-                    <input type="text" id="logoInp" value="${logoData}" style="width:70%; padding:8px;">
-                    <button class="btn btn-blue" onclick="saveAdmin('logo')">Save Logo</button>
-                </div>
-                <div>
-                    <label>Invoice Background URL:</label><br>
-                    <input type="text" id="bgInp" value="${bgData}" style="width:70%; padding:8px;">
-                    <button class="btn btn-blue" onclick="saveAdmin('bg')">Save Background</button>
-                </div>
+                <h3>System Branding</h3>
+                <label>Logo URL:</label><br><input type="text" id="logoInp" value="${logoData}" style="width:70%"><button class="btn btn-blue" onclick="saveAdmin('logo')">Save</button><br><br>
+                <label>Invoice BG URL:</label><br><input type="text" id="bgInp" value="${bgData}" style="width:70%"><button class="btn btn-blue" onclick="saveAdmin('bg')">Save</button>
             </div>
             <div class="card">
-                <h3>Delegate Management (Admin Tab)</h3>
-                <table id="dataTable"><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
-                <tbody><tr><td>Alessio</td><td>Admin</td><td>Active</td></tr></tbody></table>
+                <h3>Delegate & User Management</h3>
+                <div style="background:#f1f1f1; padding:15px; border-radius:8px; margin-bottom:20px;">
+                    <input type="hidden" id="editIdx">
+                    <input type="text" id="uName" placeholder="Full Name">
+                    <input type="text" id="uUser" placeholder="Username">
+                    <input type="password" id="uPass" placeholder="Password">
+                    <select id="uRole"><option>Admin</option><option>Staff</option></select>
+                    <button class="btn btn-green" id="userBtn" onclick="saveUser()">+ Add User</button>
+                </div>
+                <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Password</th><th>Actions</th></tr></thead>
+                <tbody>${userRows}</tbody></table>
             </div>`;
+    }
+
+    function saveUser() {
+        const idx = document.getElementById('editIdx').value;
+        const newUser = {
+            name: document.getElementById('uName').value,
+            user: document.getElementById('uUser').value,
+            pass: document.getElementById('uPass').value,
+            role: document.getElementById('uRole').value
+        };
+        if(!newUser.name || !newUser.user || !newUser.pass) return alert("Fill all fields");
+        
+        if(idx === "") users.push(newUser);
+        else users[idx] = newUser;
+
+        localStorage.setItem('cad_users', JSON.stringify(users));
+        renderAdmin(document.getElementById('mainView'));
+    }
+
+    function editUser(idx) {
+        const u = users[idx];
+        document.getElementById('editIdx').value = idx;
+        document.getElementById('uName').value = u.name;
+        document.getElementById('uUser').value = u.user;
+        document.getElementById('uPass').value = u.pass;
+        document.getElementById('uRole').value = u.role;
+        document.getElementById('userBtn').innerText = "Update User";
+    }
+
+    function deleteUser(idx) {
+        if(confirm("Delete this user?")) {
+            users.splice(idx, 1);
+            localStorage.setItem('cad_users', JSON.stringify(users));
+            renderAdmin(document.getElementById('mainView'));
+        }
     }
 
     function saveAdmin(type) {
         const val = document.getElementById(type === 'logo' ? 'logoInp' : 'bgInp').value;
         localStorage.setItem(type === 'logo' ? 'cad_logo' : 'cad_bg', val);
-        alert("Settings saved! Refreshing...");
         location.reload();
     }
 
     function viewInvoice(json) {
         const cust = JSON.parse(json.replace(/&quot;/g, '"'));
         document.getElementById('mainView').innerHTML = `
-            <div class="btn-no-print" style="margin-bottom:20px;">
-                <button class="btn btn-blue" onclick="loadTab('Customers')">← Back to Customers</button>
-                <button class="btn btn-green" style="float:right" onclick="window.print()">Print / Save as PDF</button>
-            </div>
+            <div class="btn-no-print" style="margin-bottom:20px;"><button class="btn btn-blue" onclick="loadTab('Customers')">← Back</button><button class="btn btn-green" style="float:right" onclick="window.print()">Print PDF</button></div>
             <div class="invoice-container" style="background-image: url('${bgData}')">
-                <div class="inv-header">
-                    <div>${logoData ? `<img src="${logoData}" style="max-height:80px">` : '<h2 style="margin:0">CRAFTY ART DESIGN</h2>'}</div>
-                    <div style="text-align:right"><h1 style="color:var(--blue); margin:0;">INVOICE</h1></div>
-                </div>
+                <div class="inv-header"><div>${logoData ? `<img src="${logoData}" style="max-height:80px">` : '<h2>CRAFTY ART DESIGN</h2>'}</div><div style="text-align:right"><h1>INVOICE</h1></div></div>
                 <div class="inv-bill-to">Bill To:</div>
-                <div style="padding: 10px; line-height:1.5;">
-                    <strong>${cust.Name}</strong><br>
-                    ${cust.Company || ''}<br>
-                    ${cust["Street Address"]}<br>
-                    ${cust.City || ''}, ${cust.State || ''} ${cust["Zip Code"] || ''}
-                </div>
-                <table style="width:100%; border:1px solid #ddd; margin-top:30px; border-collapse: collapse;">
-                    <thead style="background:var(--blue); color:white;">
-                        <tr><th style="color:white">SKU</th><th style="color:white">Description</th><th style="color:white">Qty</th><th style="color:white">Price</th><th style="color:white">Total</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="5" style="height:200px; text-align:center; color:#ccc;">Ready for manual entry after printing.</td></tr>
-                    </tbody>
+                <p><strong>${cust.Name}</strong><br>${cust.Company || ''}<br>${cust["Street Address"]}</p>
+                <table style="width:100%; border:1px solid #ddd; margin-top:20px;">
+                    <thead style="background:var(--blue); color:white;"><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                    <tbody><tr><td colspan="5" style="height:150px; text-align:center; color:#ccc;">Ready for manual entry.</td></tr></tbody>
                 </table>
             </div>`;
     }
@@ -181,9 +199,7 @@
         const q = document.getElementById("mainSearch").value.toLowerCase();
         const rows = document.getElementById("dataTable")?.getElementsByTagName("tr");
         if(!rows) return;
-        for (let i = 1; i < rows.length; i++) {
-            rows[i].style.display = rows[i].innerText.toLowerCase().includes(q) ? "" : "none";
-        }
+        for (let i = 1; i < rows.length; i++) rows[i].style.display = rows[i].innerText.toLowerCase().includes(q) ? "" : "none";
     }
 </script>
 </body>
