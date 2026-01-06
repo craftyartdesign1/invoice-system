@@ -1,77 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Admin Portal</title>
-    <style>
-        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --white: #fff; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f4f7f6; margin: 0; }
-        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
-        .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
-        .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .tab.active { background: var(--blue); }
-        .content { padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
-        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
-        .btn-blue { background: var(--blue); }
-        .btn-red { background: var(--red); }
-        .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
-        
-        /* Draggable Modal Styles */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; pointer-events: none; }
-        .modal-body { 
-            background: white; padding: 0; border-radius: 12px; width: 450px; 
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
-        }
-        .modal-header { 
-            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
-            cursor: move; user-select: none; font-size: 0.9rem; text-align: center; font-weight: bold;
-        }
-        .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
-        .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
-        .check-group input { width: auto; margin: 0; }
-        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; }
-    </style>
-</head>
-<body>
-
-<div id="dashboard">
-    <header>
-        <h2>CRAFTY ART DESIGN</h2>
-        <div id="currentUserDisplay" style="font-weight:bold; color:var(--blue)">User: Loading...</div>
-    </header>
-    <nav class="nav">
-        <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
-        <button class="tab" onclick="switchTab('Customers')">Customers</button>
-        <button class="tab active" onclick="switchTab('Users')">Users</button>
-    </nav>
-    <div class="content"><div id="mainView"></div></div>
-</div>
-
-<div id="appModal" class="modal">
-    <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
-        <div class="modal-content">
-            <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
-            <div id="modalFields"></div>
-            <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
-            <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
-</div>
-
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
     const OWNER_ID = "craftyartdesign1"; 
-    let currentUser = { username: "craftyartdesign1", role: "Admin" }; 
+    
+    // In a real scenario, this would be set by your login. 
+    // For now, it's set to you (the Owner).
+    let currentUser = { 
+        username: "craftyartdesign1", 
+        role: "Admin",
+        canEditInv: true,
+        canEditCust: true
+    }; 
+
     document.getElementById('currentUserDisplay').innerText = `User: ${currentUser.username}`;
 
     let activeTab = "Users";
@@ -96,7 +35,15 @@
 
     function renderTable(type, data) {
         const isOwner = currentUser.username === OWNER_ID;
-        let html = `<div class="card"><button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button><h3>${type} Management</h3><table><thead><tr>`;
+        let html = `<div class="card">`;
+        
+        // Show "Add" button only if user has permission
+        if ((type === 'Inventory' && currentUser.canEditInv) || 
+            (type === 'Customers' && currentUser.canEditCust) || isOwner) {
+            html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button>`;
+        }
+
+        html += `<h3>${type} Management</h3><table><thead><tr>`;
         
         if (type === 'Users') {
             html += `<th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
@@ -105,22 +52,26 @@
                 html += `<tr><td><b>${item.Username}</b></td><td>${item.Role}</td><td>${item["Display Name"]}</td><td style="text-align:center">${item["Can Edit Inventory"]?'✅':'❌'}</td><td style="text-align:center">${item["Can Edit Customers"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.Username}')">DEL</button>`:''}</td></tr>`;
             }});
         } else if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Exempt</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.SKU) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>`:`<button class="btn btn-blue">SELECT</button>`}</td></tr>`;
+                html += `<tr>
+                    <td><b>${item.SKU}</b></td>
+                    <td>${item["Item Name"]}</td>
+                    <td>$${item.Price}</td>
+                    <td>${item.Size || ''}</td>
+                    <td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Taxed'}</td>
+                    <td>
+                        ${currentUser.canEditInv || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}
+                        ${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>` : ''}
+                    </td></tr>`;
             }});
         } else if (type === 'Customers') {
             html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                
-                // SYNCED TO SPREADSHEET
                 const street = item["Street Address"] || '';
-                const city = item.City || '';
-                const state = item.State || '';
-                const zip = item["Zip Code"] || '';
-                const fullAddr = `${street}, ${city}, ${state} ${zip}`;
+                const fullAddr = `${street}, ${item.City || ''}, ${item.State || ''} ${item["Zip Code"] || ''}`;
 
                 html += `<tr>
                     <td><b>${item.Name}</b></td>
@@ -128,14 +79,14 @@
                     <td>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span>${street || 'No Street'}</span>
-                            <span class="info-pill" onclick="showAddressPopup('${item.Name}', '${fullAddr}')">Address Info</span>
+                            <span class="info-pill" onclick="showAddressPopup('${item.Name}', '${fullAddr}')">Info</span>
                         </div>
                     </td>
                     <td>${item.Email || ''}</td>
                     <td>${item.Phone || ''}</td>
                     <td>
-                        <button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>
-                        ${isOwner?`<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>`:''}
+                        ${currentUser.canEditCust || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}
+                        ${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>` : ''}
                     </td>
                 </tr>`;
             }});
@@ -155,7 +106,6 @@
 
         if (activeTab === 'Customers') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
-            // Fields: Name(f1), Company(f2), Street(f3), City(f4), State(f5), Zip(f6), Email(f7), Phone(f8)
             fields.innerHTML = `
                 <input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}>
                 <input id="f2" placeholder="Company Name">
@@ -166,7 +116,12 @@
                 <div class="check-group"><input type="checkbox" id="f9"> <label>Tax Exempt Customer</label></div>`;
         } else if (activeTab === 'Inventory') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><input id="f4" placeholder="Size"><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+            fields.innerHTML = `
+                <input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}>
+                <input id="f2" placeholder="Item Name">
+                <input id="f3" type="number" placeholder="Price">
+                <input id="f4" placeholder="Size (e.g. XL or 24x36)">
+                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         } else {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
             fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
@@ -205,24 +160,12 @@
     async function handleSave() {
         let rowData = [];
         if (activeTab === 'Customers') {
-            // MATCHING YOUR SPREADSHEET COLUMNS A through H
-            rowData = [
-                document.getElementById('f1').value, // Name
-                document.getElementById('f2').value, // Company
-                document.getElementById('f3').value, // Street Address
-                document.getElementById('f4').value, // City
-                document.getElementById('f5').value, // State
-                document.getElementById('f6').value, // Zip Code
-                document.getElementById('f7').value, // Email
-                document.getElementById('f8').value, // Phone
-                document.getElementById('f9').checked // Tax Exempt (Col I)
-            ];
+            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').value, document.getElementById('f6').value, document.getElementById('f7').value, document.getElementById('f8').value, document.getElementById('f9').checked];
         } else if (activeTab === 'Inventory') {
             rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked];
         } else {
             rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
         }
-        
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: editMode ? 'editRow' : 'addRow', sheetName: activeTab, id: currentId, data: rowData })});
         closeModal(); switchTab(activeTab);
     }
@@ -256,5 +199,3 @@
 
     switchTab('Users');
 </script>
-</body>
-</html>
