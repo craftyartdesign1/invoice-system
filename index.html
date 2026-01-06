@@ -1,9 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAD | Admin Portal</title>
+    <style>
+        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --white: #fff; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f7f6; margin: 0; }
+        header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
+        .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
+        .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .tab.active { background: var(--blue); }
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
+        .btn-blue { background: var(--blue); }
+        .btn-red { background: var(--red); }
+        .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; pointer-events: none; }
+        .modal-body { 
+            background: white; padding: 0; border-radius: 12px; width: 450px; 
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
+        }
+        .modal-header { 
+            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
+            cursor: move; user-select: none; font-size: 0.9rem; text-align: center; font-weight: bold;
+        }
+        .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
+        .check-group input { width: auto; margin: 0; }
+        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <header>
+        <h2>CRAFTY ART DESIGN</h2>
+        <div id="currentUserDisplay" style="font-weight:bold; color:var(--blue)">User: Loading...</div>
+    </header>
+    <nav class="nav">
+        <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
+        <button class="tab" onclick="switchTab('Customers')">Customers</button>
+        <button class="tab active" onclick="switchTab('Users')">Users</button>
+    </nav>
+    <div class="content"><div id="mainView"></div></div>
+</div>
+
+<div id="appModal" class="modal">
+    <div class="modal-body" id="draggableModal">
+        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
+        <div class="modal-content">
+            <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
+            <div id="modalFields"></div>
+            <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
+            <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    // MAKE SURE THIS URL IS CORRECT FROM YOUR APPS SCRIPT DEPLOYMENT
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
     const OWNER_ID = "craftyartdesign1"; 
     
-    // In a real scenario, this would be set by your login. 
-    // For now, it's set to you (the Owner).
+    // Default logged-in user state
     let currentUser = { 
         username: "craftyartdesign1", 
         role: "Admin",
@@ -37,9 +106,8 @@
         const isOwner = currentUser.username === OWNER_ID;
         let html = `<div class="card">`;
         
-        // Show "Add" button only if user has permission
-        if ((type === 'Inventory' && currentUser.canEditInv) || 
-            (type === 'Customers' && currentUser.canEditCust) || isOwner) {
+        // Permission check for Add button
+        if ((type === 'Inventory' && currentUser.canEditInv) || (type === 'Customers' && currentUser.canEditCust) || isOwner) {
             html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button>`;
         }
 
@@ -55,21 +123,14 @@
             html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.SKU) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                html += `<tr>
-                    <td><b>${item.SKU}</b></td>
-                    <td>${item["Item Name"]}</td>
-                    <td>$${item.Price}</td>
-                    <td>${item.Size || ''}</td>
-                    <td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Taxed'}</td>
-                    <td>
-                        ${currentUser.canEditInv || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}
-                        ${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>` : ''}
-                    </td></tr>`;
+                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Taxed'}</td><td>${currentUser.canEditInv || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>` : ''}</td></tr>`;
             }});
         } else if (type === 'Customers') {
             html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
             data.forEach(item => { if (item.Name) {
                 const json = JSON.stringify(item).replace(/"/g, '&quot;');
+                
+                // FIXED MAPPING: B=Company, C=Street Address
                 const street = item["Street Address"] || '';
                 const fullAddr = `${street}, ${item.City || ''}, ${item.State || ''} ${item["Zip Code"] || ''}`;
 
@@ -84,10 +145,7 @@
                     </td>
                     <td>${item.Email || ''}</td>
                     <td>${item.Phone || ''}</td>
-                    <td>
-                        ${currentUser.canEditCust || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}
-                        ${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>` : ''}
-                    </td>
+                    <td>${currentUser.canEditCust || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>` : ''}</td>
                 </tr>`;
             }});
         }
@@ -106,22 +164,10 @@
 
         if (activeTab === 'Customers') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
-            fields.innerHTML = `
-                <input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}>
-                <input id="f2" placeholder="Company Name">
-                <input id="f3" placeholder="Street Address">
-                <div class="address-grid"><input id="f4" placeholder="City"><input id="f5" placeholder="State"></div>
-                <div class="address-grid"><input id="f6" placeholder="Zip Code"><input id="f7" placeholder="Email Address"></div>
-                <input id="f8" placeholder="Phone Number">
-                <div class="check-group"><input type="checkbox" id="f9"> <label>Tax Exempt Customer</label></div>`;
+            fields.innerHTML = `<input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Company Name"><input id="f3" placeholder="Street Address"><div class="address-grid"><input id="f4" placeholder="City"><input id="f5" placeholder="State"></div><div class="address-grid"><input id="f6" placeholder="Zip Code"><input id="f7" placeholder="Email Address"></div><input id="f8" placeholder="Phone Number"><div class="check-group"><input type="checkbox" id="f9"> <label>Tax Exempt Customer</label></div>`;
         } else if (activeTab === 'Inventory') {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `
-                <input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}>
-                <input id="f2" placeholder="Item Name">
-                <input id="f3" type="number" placeholder="Price">
-                <input id="f4" placeholder="Size (e.g. XL or 24x36)">
-                <div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
+            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><input id="f4" placeholder="Size"><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
         } else {
             document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
             fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
@@ -178,24 +224,14 @@
         }
     }
 
-    // Draggable Window Logic
     const dragItem = document.getElementById("draggableModal");
     const dragHeader = document.getElementById("modalHeader");
-    let active = false; let currentX; let currentY; let initialX; let initialY; let xOffset = 0; let yOffset = 0;
-
-    dragHeader.onmousedown = (e) => {
-        initialX = e.clientX - xOffset; initialY = e.clientY - yOffset;
-        active = true;
-    };
+    let active = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+    dragHeader.onmousedown = (e) => { initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; active = true; };
     document.onmouseup = () => { active = false; };
-    document.onmousemove = (e) => {
-        if (active) {
-            e.preventDefault();
-            currentX = e.clientX - initialX; currentY = e.clientY - initialY;
-            xOffset = currentX; yOffset = currentY;
-            dragItem.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
-        }
-    };
+    document.onmousemove = (e) => { if (active) { e.preventDefault(); currentX = e.clientX - initialX; currentY = e.clientY - initialY; xOffset = currentX; yOffset = currentY; dragItem.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`; } };
 
     switchTab('Users');
 </script>
+</body>
+</html>
