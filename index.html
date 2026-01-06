@@ -5,41 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAD | Master Admin Portal</title>
     <style>
-        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; }
+        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Top Navigation & Search */
-        .header-section { background: white; padding: 20px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #mainSearch { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        /* Header & Search */
+        .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        #mainSearch { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
 
-        /* All Tabs Bar */
-        .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 8px; overflow-x: auto; }
-        .tab { padding: 12px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; transition: 0.3s; }
+        /* Navigation Tabs */
+        .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
+        .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
-        .tab:hover { background: #666; }
+        .tab.admin-btn { border: 1px solid var(--red); color: var(--red); margin-left: auto; }
+        .tab.admin-btn.active { background: var(--red); color: white; }
 
         /* Content Area */
         .content { padding: 20px; max-width: 1300px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
         /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; color: #666; font-size: 0.85rem; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
         .btn-green { background: #28a745; }
         .btn-blue { background: var(--blue); }
 
-        /* Invoice Layout */
-        .invoice-container { background: white; padding: 40px; border: 1px solid #ddd; min-height: 1000px; margin-top: 20px; }
+        /* Invoice Style */
+        .invoice-container { background: white; padding: 40px; border: 1px solid #ddd; min-height: 1000px; background-size: cover; background-position: center; }
         .inv-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .inv-bill-to { background: var(--blue); color: white; padding: 5px 15px; width: 300px; font-weight: bold; }
         
         @media print {
             .nav-bar, .header-section, .btn-no-print { display: none !important; }
-            .invoice-container { border: none; padding: 0; margin: 0; }
+            .invoice-container { border: none; padding: 0; }
         }
     </style>
 </head>
@@ -47,110 +48,142 @@
 
 <div class="header-section">
     <div class="header-top">
-        <h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2>
-        <div style="font-weight:bold; color:#666;">User: craftyartdesign1</div>
+        <div id="logoContainer"><h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2></div>
+        <div style="font-weight:bold; color:#666;">Logged in as: <span id="currentUser">Admin</span></div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search anything (SKUs, Names, Invoice #, Orders)...">
+    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search SKUs, Names, or Invoice Numbers...">
 </div>
 
 <nav class="nav-bar">
-    <button class="tab active" onclick="loadTab('Inventory')">📦 INVENTORY</button>
-    <button class="tab" onclick="loadTab('Customers')">👥 CUSTOMERS</button>
-    <button class="tab" onclick="loadTab('Invoices')">📄 INVOICE LOOKUP</button>
-    <button class="tab" onclick="loadTab('Orders')">🛒 ORDERS</button>
+    <button class="tab active" id="tab-Invoices" onclick="loadTab('Invoices')">Invoices</button>
+    <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
+    <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
+    <button class="tab admin-btn" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
 </nav>
 
-<div class="content" id="mainView">
-    <div class="card"><h3>Loading Dashboard...</h3></div>
-</div>
+<div class="content" id="mainView"></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
+    // Your provided Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuxvj3hA_AuPgScYJ9TZDnwJjenv8QYqA3zXJ5xS0Z4YBm4Hyt0K-0yRPwOwRaIgSe/exec";
+    
+    // Branding Settings
+    let logoData = localStorage.getItem('cad_logo') || '';
+    let bgData = localStorage.getItem('cad_bg') || '';
 
-    // Load Inventory by default
-    window.onload = () => loadTab('Inventory');
+    window.onload = () => {
+        if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
+        loadTab('Invoices'); // Default to Invoices as seen in your sheet
+    };
 
     async function loadTab(tabName) {
-        // Update Tab UI
-        document.querySelectorAll('.tab').forEach(t => {
-            t.classList.remove('active');
-            if(t.innerText.includes(tabName.toUpperCase())) t.classList.add('active');
-        });
-        
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
         const view = document.getElementById('mainView');
-        view.innerHTML = `<div class="card"><h3>Fetching ${tabName} Data...</h3></div>`;
+        
+        if(tabName === 'Admin') { renderAdmin(view); return; }
 
+        view.innerHTML = `<div class="card"><h3>Fetching ${tabName} data...</h3></div>`;
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
             const data = await res.json();
-            renderContent(tabName, data);
-        } catch (e) {
-            view.innerHTML = `<div class="card"><h3 style="color:red">Error loading ${tabName}. Please check your Google Script.</h3></div>`;
+            renderTable(tabName, data, view);
+        } catch (e) { 
+            view.innerHTML = `<div class="card"><h3 style="color:red">Connection Error. Check your Google Script Deployment.</h3></div>`; 
         }
     }
 
-    function renderContent(type, data) {
+    function renderTable(type, data, view) {
         let html = `<div class="card"><h3>${type} Management</h3><table id="dataTable"><thead><tr>`;
         
-        if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.SKU) html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>$${i.Price}</td><td>${i.Size || '-'}</td></tr>`; });
-        } 
-        else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>City</th><th>Action</th></tr></thead><tbody>`;
+        // Match columns to your spreadsheet screenshots
+        if (type === 'Invoices') {
+            html += `<th>Invoice Number</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Subtotal</th></tr></thead><tbody>`;
+            data.forEach(i => { if(i["Invoice Number"]) {
+                html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Company || ''}</td><td>${i.Employee || ''}</td><td>$${i.Subtotal}</td></tr>`;
+            }});
+        } else if (type === 'Inventory') {
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
+            data.forEach(i => { if(i.SKU) {
+                html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>$${i.Price}</td></tr>`;
+            }});
+        } else if (type === 'Customers') {
+            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Action</th></tr></thead><tbody>`;
             data.forEach(i => { if(i.Name) {
                 const json = JSON.stringify(i).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i.City || ''}</td><td><button class="btn btn-green" onclick="openInvoice('${json}')">CREATE INVOICE</button></td></tr>`;
+                html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green" onclick="viewInvoice('${json}')">BILL</button></td></tr>`;
             }});
         }
-        else if (type === 'Invoices') {
-            html += `<th>Date</th><th>Inv #</th><th>Customer</th><th>Amount</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.InvoiceNo) html += `<tr><td>${i.Date}</td><td><b>${i.InvoiceNo}</b></td><td>${i.Customer}</td><td>$${i.Total}</td></tr>`; });
-        }
-        else if (type === 'Orders') {
-            html += `<th>Order ID</th><th>Customer</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.OrderID) html += `<tr><td><b>${i.OrderID}</b></td><td>${i.Customer}</td><td>${i.Status}</td><td>${i.Date}</td></tr>`; });
-        }
+        view.innerHTML = html + `</tbody></table></div>`;
+    }
 
-        document.getElementById('mainView').innerHTML = html + `</tbody></table></div>`;
+    function renderAdmin(view) {
+        view.innerHTML = `
+            <div class="card">
+                <h3>Branding Settings</h3>
+                <p>Paste image URLs here to customize your portal and invoices.</p>
+                <div style="margin-bottom:15px;">
+                    <label>Logo URL:</label><br>
+                    <input type="text" id="logoInp" value="${logoData}" style="width:70%; padding:8px;">
+                    <button class="btn btn-blue" onclick="saveAdmin('logo')">Save Logo</button>
+                </div>
+                <div>
+                    <label>Invoice Background URL:</label><br>
+                    <input type="text" id="bgInp" value="${bgData}" style="width:70%; padding:8px;">
+                    <button class="btn btn-blue" onclick="saveAdmin('bg')">Save Background</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Delegate Management (Admin Tab)</h3>
+                <table id="dataTable"><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+                <tbody><tr><td>Alessio</td><td>Admin</td><td>Active</td></tr></tbody></table>
+            </div>`;
+    }
+
+    function saveAdmin(type) {
+        const val = document.getElementById(type === 'logo' ? 'logoInp' : 'bgInp').value;
+        localStorage.setItem(type === 'logo' ? 'cad_logo' : 'cad_bg', val);
+        alert("Settings saved! Refreshing...");
+        location.reload();
+    }
+
+    function viewInvoice(json) {
+        const cust = JSON.parse(json.replace(/&quot;/g, '"'));
+        document.getElementById('mainView').innerHTML = `
+            <div class="btn-no-print" style="margin-bottom:20px;">
+                <button class="btn btn-blue" onclick="loadTab('Customers')">← Back to Customers</button>
+                <button class="btn btn-green" style="float:right" onclick="window.print()">Print / Save as PDF</button>
+            </div>
+            <div class="invoice-container" style="background-image: url('${bgData}')">
+                <div class="inv-header">
+                    <div>${logoData ? `<img src="${logoData}" style="max-height:80px">` : '<h2 style="margin:0">CRAFTY ART DESIGN</h2>'}</div>
+                    <div style="text-align:right"><h1 style="color:var(--blue); margin:0;">INVOICE</h1></div>
+                </div>
+                <div class="inv-bill-to">Bill To:</div>
+                <div style="padding: 10px; line-height:1.5;">
+                    <strong>${cust.Name}</strong><br>
+                    ${cust.Company || ''}<br>
+                    ${cust["Street Address"]}<br>
+                    ${cust.City || ''}, ${cust.State || ''} ${cust["Zip Code"] || ''}
+                </div>
+                <table style="width:100%; border:1px solid #ddd; margin-top:30px; border-collapse: collapse;">
+                    <thead style="background:var(--blue); color:white;">
+                        <tr><th style="color:white">SKU</th><th style="color:white">Description</th><th style="color:white">Qty</th><th style="color:white">Price</th><th style="color:white">Total</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" style="height:200px; text-align:center; color:#ccc;">Ready for manual entry after printing.</td></tr>
+                    </tbody>
+                </table>
+            </div>`;
     }
 
     function filterTable() {
-        const query = document.getElementById("mainSearch").value.toLowerCase();
+        const q = document.getElementById("mainSearch").value.toLowerCase();
         const rows = document.getElementById("dataTable")?.getElementsByTagName("tr");
         if(!rows) return;
         for (let i = 1; i < rows.length; i++) {
-            rows[i].style.display = rows[i].innerText.toLowerCase().includes(query) ? "" : "none";
+            rows[i].style.display = rows[i].innerText.toLowerCase().includes(q) ? "" : "none";
         }
-    }
-
-    function openInvoice(json) {
-        const cust = JSON.parse(json.replace(/&quot;/g, '"'));
-        document.getElementById('mainView').innerHTML = `
-            <button class="btn btn-blue btn-no-print" onclick="loadTab('Customers')">← BACK TO LIST</button>
-            <button class="btn btn-green btn-no-print" style="float:right" onclick="window.print()">PRINT TO PDF</button>
-            <div class="invoice-container">
-                <div class="inv-header">
-                    <div style="font-size:26px; font-weight:bold;">crafty Art design</div>
-                    <div style="text-align:right"><h1>INVOICE</h1><b>Crafty Art Design</b></div>
-                </div>
-                <div style="display:flex; justify-content:space-between">
-                    <div>
-                        <div class="inv-bill-to">Bill To:</div>
-                        <strong>${cust.Name}</strong><br>${cust.Company || ''}<br>${cust["Street Address"]}<br>${cust.City}, ${cust.State}
-                    </div>
-                    <div style="border:1px solid #ddd; padding:10px; width:180px">
-                        Date: ${new Date().toLocaleDateString()}<br>Inv #: T11
-                    </div>
-                </div>
-                <table class="inv-table">
-                    <thead><tr><th>SKU</th><th>Description</th><th>Color</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                    <tbody><tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody>
-                </table>
-                <div style="text-align:right; margin-top:20px; line-height:2;">
-                    Subtotal: $0.00<br>Sales Tax (8.875%): $0.00<br><strong>Order Total: $0.00</strong>
-                </div>
-            </div>`;
     }
 </script>
 </body>
