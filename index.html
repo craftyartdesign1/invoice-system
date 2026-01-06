@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Billing & Admin</title>
+    <title>CAD | Admin Portal & Invoicing</title>
     <style>
         :root { --blue: #004080; --red: #dc3545; --dark: #343a40; --white: #fff; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -12,18 +12,22 @@
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
-        .content { padding: 20px; max-width: 1100px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; overflow-x: auto; }
+        
+        /* Table Styling */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
+        
+        /* Buttons */
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
-        .btn-red { background: var(--red); }
-        
-        /* Invoice Styling matching IMG_0091 & IMG_0092 */
-        .invoice-container { background: white; padding: 40px; color: #333; border: 1px solid #ddd; min-height: 1050px; }
+        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; margin-left: 5px; color: #333; }
+
+        /* Invoice Specific Styling */
+        .invoice-container { background: white; padding: 40px; color: #333; border: 1px solid #ddd; min-height: 1050px; font-family: Arial, sans-serif; }
         .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .inv-bill-to-header { background: #004080; color: white; padding: 5px 15px; font-weight: bold; width: 300px; margin-bottom: 5px; }
         .inv-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -33,10 +37,9 @@
         .notes-box { border: 2px solid #004080; width: 55%; height: 120px; position: relative; padding-top: 25px; }
         .notes-label { position: absolute; top: 0; left: 0; right: 0; background: #004080; color: white; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
         .totals-area { width: 40%; text-align: right; line-height: 1.8; }
-        .item-picker-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed var(--blue); }
-        
+
         @media print {
-            .nav, header, .btn-no-print, .item-picker-box, .btn-back { display: none !important; }
+            .nav, header, .btn-no-print { display: none !important; }
             body { background: white; }
             .content { padding: 0; max-width: 100%; }
             .invoice-container { border: none; padding: 0; }
@@ -47,72 +50,70 @@
 
 <header>
     <h2>CRAFTY ART DESIGN</h2>
-    <div id="userDisplay" style="font-weight:bold; color:var(--blue)">User: craftyartdesign1</div>
+    <div style="font-weight:bold; color:var(--blue)">User: craftyartdesign1</div>
 </header>
+
 <nav class="nav">
-    <button class="tab" onclick="location.reload()">Inventory</button>
-    <button class="tab" onclick="location.reload()">Customers</button>
+    <button class="tab" id="tab-Inv" onclick="switchTab('Inventory')">Inventory</button>
+    <button class="tab" id="tab-Cust" onclick="switchTab('Customers')">Customers</button>
 </nav>
 
 <div class="content" id="mainView">
-    <div class="card"><h3>Syncing Data...</h3></div>
+    <div class="card"><h3>Loading System...</h3></div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
-    let inventory = [];
-    let invoiceItems = [];
-    let currentCustomer = {};
 
-    window.onload = async () => {
-        const invRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
-        inventory = await invRes.json();
-        const custRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
-        const customers = await custRes.json();
-        renderCustomers(customers);
-    };
+    async function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const tabBtn = (tabName === 'Inventory') ? document.getElementById('tab-Inv') : document.getElementById('tab-Cust');
+        tabBtn.classList.add('active');
+        
+        const view = document.getElementById('mainView');
+        view.innerHTML = `<div class="card"><h3>Loading ${tabName}...</h3></div>`;
 
-    function renderCustomers(data) {
-        let html = `<div class="card"><h3>Customer Billing List</h3><table><thead><tr><th>Name</th><th>Company</th><th>Action</th></tr></thead>`;
-        data.forEach(c => { if(c.Name) {
-            const json = JSON.stringify(c).replace(/"/g, '&quot;');
-            html += `<tr><td><b>${c.Name}</b></td><td>${c.Company || ''}</td><td style="text-align:right"><button class="btn btn-green" onclick="startInvoice('${json}')">BILL CUSTOMER</button></td></tr>`;
-        }});
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
+            const data = await res.json();
+            renderTable(tabName, data);
+        } catch (e) {
+            view.innerHTML = `<div class="card"><h3 style="color:red">Error connecting to Google Sheets. Check your Script URL.</h3></div>`;
+        }
+    }
+
+    function renderTable(type, data) {
+        let html = `<div class="card"><h3>${type} Management</h3><table><thead><tr>`;
+        
+        if (type === 'Inventory') {
+            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax Status</th></tr></thead><tbody>`;
+            data.forEach(item => { if(item.SKU) {
+                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td>${item["Tax Exempt"] ? 'Exempt' : 'Taxable'}</td></tr>`;
+            }});
+        } else if (type === 'Customers') {
+            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(item => { if(item.Name) {
+                const json = JSON.stringify(item).replace(/"/g, '&quot;');
+                const fullAddr = `${item["Street Address"]}, ${item.City}, ${item.State} ${item["Zip Code"]}`;
+                html += `<tr>
+                    <td><b>${item.Name}</b></td>
+                    <td>${item.Company || ''}</td>
+                    <td>${item["Street Address"] || ''} <span class="info-pill" onclick="alert('Full Address: ${fullAddr}')">Info</span></td>
+                    <td><button class="btn btn-green" onclick="viewInvoice('${json}')">BILL</button></td>
+                </tr>`;
+            }});
+        }
         document.getElementById('mainView').innerHTML = html + `</table></div>`;
     }
 
-    function startInvoice(json) {
-        currentCustomer = JSON.parse(json.replace(/&quot;/g, '"'));
-        invoiceItems = [];
-        renderInvoiceUI();
-    }
-
-    function renderInvoiceUI() {
-        let itemsHtml = "";
-        let subtotal = 0;
-        for(let i=0; i<10; i++) {
-            const itm = invoiceItems[i] || {};
-            const lineTotal = (itm.Price * itm.Qty) || 0;
-            subtotal += lineTotal;
-            itemsHtml += `<tr><td>${itm.SKU || ''}</td><td>${itm.Desc || ''}</td><td>${itm.Color || ''}</td><td>${itm.Size || ''}</td><td>${itm.Qty || ''}</td><td>${itm.Price ? '$'+itm.Price : ''}</td><td>${lineTotal ? '$'+lineTotal.toFixed(2) : ''}</td></tr>`;
-        }
-
-        const taxRate = currentCustomer["Tax Exempt"] ? 0 : 0.08875;
-        const taxVal = subtotal * taxRate;
+    function viewInvoice(json) {
+        const cust = JSON.parse(json.replace(/&quot;/g, '"'));
+        const taxRate = cust["Tax Exempt"] ? 0 : 0.08875; // 8.875% tax as per
 
         document.getElementById('mainView').innerHTML = `
-            <div class="item-picker-box btn-no-print">
-                <div style="margin-bottom:10px">
-                    <strong>1. Add Item:</strong> 
-                    <select id="selItm" style="width:180px">${inventory.map(i=>`<option value="${i.SKU}">${i["Item Name"]}</option>`).join('')}</select>
-                    Color: <input type="text" id="selCol" placeholder="Color" style="width:80px">
-                    Qty: <input type="number" id="selQty" value="1" style="width:50px">
-                    <button class="btn btn-blue" onclick="addItem()">Add</button>
-                </div>
-                <div>
-                    <strong>2. Notes:</strong> <input type="text" id="noteInput" placeholder="Special Instructions..." style="width:300px">
-                    <button class="btn btn-green" style="float:right" onclick="printInv()">PRINT / SAVE PDF</button>
-                </div>
+            <div class="btn-no-print" style="margin-bottom:20px;">
+                <button class="btn btn-blue" onclick="switchTab('Customers')">← Back to List</button>
+                <button class="btn btn-green" style="float:right" onclick="window.print()">PRINT / SAVE AS PDF</button>
             </div>
 
             <div class="invoice-container">
@@ -120,49 +121,46 @@
                     <div><span style="font-size:30px;font-weight:bold;">crafty</span> <span style="font-size:50px;">A</span>rt <span style="font-size:30px;">design</span></div>
                     <div style="text-align:right"><h1 style="color:#004080;margin:0">Invoice</h1><b>Crafty Art Design</b><br>Let's stay crafty.</div>
                 </div>
+
                 <div style="display:flex; justify-content:space-between">
                     <div>
                         <div class="inv-bill-to-header">Bill To:</div>
-                        ${currentCustomer.Name}<br>${currentCustomer.Company || ''}<br>${currentCustomer["Street Address"]}<br>${currentCustomer.City}, ${currentCustomer.State} ${currentCustomer["Zip Code"]}
+                        ${cust.Name}<br>${cust.Company || ''}<br>${cust["Street Address"]}<br>${cust.City}, ${cust.State} ${cust["Zip Code"]}
                     </div>
                     <table style="width:220px; border:1px solid #ddd; font-size:0.8rem">
                         <tr><td style="background:#eee">Date</td><td>${new Date().toLocaleDateString()}</td></tr>
                         <tr><td style="background:#eee">Invoice #</td><td>INV-${Math.floor(Math.random()*9000)+1000}</td></tr>
-                        <tr><td style="background:yellow">Cust. ID</td><td>${currentCustomer.Name.substring(0,4).toUpperCase()}</td></tr>
+                        <tr><td style="background:yellow">Cust. ID</td><td>${cust.Name.substring(0,4).toUpperCase()}</td></tr>
                     </table>
                 </div>
+
                 <table class="inv-table">
                     <thead><tr><th>SKU</th><th>Description</th><th>Color</th><th>Size</th><th>Quantity</th><th>Price</th><th>Line Total</th></tr></thead>
-                    <tbody>${itemsHtml}</tbody>
+                    <tbody>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    </tbody>
                 </table>
+
                 <div class="inv-footer">
-                    <div class="notes-box"><div class="notes-label">Special Notes and Instructions</div><div id="noteDisplay" style="padding:5px"></div></div>
+                    <div class="notes-box"><div class="notes-label">Special Notes and Instructions</div></div>
                     <div class="totals-area">
-                        Subtotal: $${subtotal.toFixed(2)}<br>
+                        Subtotal: $0.00<br>
                         Sales Tax Rate: ${(taxRate*100).toFixed(3)}%<br>
-                        Sales Tax: $${taxVal.toFixed(2)}<br>
-                        <div style="border:2px solid #000; padding:5px; margin-top:5px; font-weight:bold; font-size:1.2rem">Order Total: $${(subtotal + taxVal).toFixed(2)}</div>
+                        Sales Tax: $0.00<br>
+                        <div style="border:2px solid #000; padding:5px; margin-top:5px; font-weight:bold; font-size:1.2rem">Order Total: $0.00</div>
                     </div>
                 </div>
+
                 <div style="text-align:center; margin-top:50px; font-size:0.8rem">
                     Make all checks payable to Crafty Art Design<br><strong>Thank you for your business!</strong><br>Brooklyn, NY 11223 | Craftyartdesign1@gmail.com
                 </div>
             </div>`;
     }
 
-    function addItem() {
-        const sku = document.getElementById('selItm').value;
-        const prod = inventory.find(i => i.SKU === sku);
-        if(prod) {
-            invoiceItems.push({ SKU: prod.SKU, Desc: prod["Item Name"], Color: document.getElementById('selCol').value || "N/A", Size: prod.Size, Qty: parseFloat(document.getElementById('selQty').value), Price: prod.Price });
-            renderInvoiceUI();
-        }
-    }
-
-    function printInv() {
-        document.getElementById('noteDisplay').innerText = document.getElementById('noteInput').value;
-        window.print();
-    }
+    // Default to Inventory on load
+    switchTab('Inventory');
 </script>
 </body>
 </html>
