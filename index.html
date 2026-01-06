@@ -3,235 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Admin Portal</title>
+    <title>CAD | Billing & Admin</title>
     <style>
-        :root { --blue: #007bff; --red: #dc3545; --dark: #343a40; --white: #fff; }
+        :root { --blue: #004080; --red: #dc3545; --dark: #343a40; --white: #fff; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f4f7f6; margin: 0; }
+        body { background: #f4f7f6; margin: 0; padding: 0; }
         header { background: white; padding: 15px 30px; display: flex; justify-content: space-between; border-bottom: 3px solid var(--blue); align-items: center; }
         .nav { display: flex; background: var(--dark); padding: 10px; gap: 10px; }
         .tab { padding: 10px 20px; color: white; border: none; background: #495057; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .tab.active { background: var(--blue); }
-        .content { padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        .content { padding: 20px; max-width: 1100px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; color: #666; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
-        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
         .btn-blue { background: var(--blue); }
+        .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
-        .btn-add { float: right; margin-bottom: 15px; padding: 10px 20px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; pointer-events: none; }
-        .modal-body { 
-            background: white; padding: 0; border-radius: 12px; width: 450px; 
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto;
+        /* Invoice Styling matching IMG_0091 & IMG_0092 */
+        .invoice-container { background: white; padding: 40px; color: #333; border: 1px solid #ddd; min-height: 1050px; }
+        .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .inv-bill-to-header { background: #004080; color: white; padding: 5px 15px; font-weight: bold; width: 300px; margin-bottom: 5px; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .inv-table th { background: #004080; color: white; border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .inv-table td { border: 1px solid #ddd; padding: 8px; height: 35px; text-align: center; }
+        .inv-footer { display: flex; justify-content: space-between; margin-top: 30px; }
+        .notes-box { border: 2px solid #004080; width: 55%; height: 120px; position: relative; padding-top: 25px; }
+        .notes-label { position: absolute; top: 0; left: 0; right: 0; background: #004080; color: white; padding: 2px 10px; font-weight: bold; font-size: 0.8rem; }
+        .totals-area { width: 40%; text-align: right; line-height: 1.8; }
+        .item-picker-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed var(--blue); }
+        
+        @media print {
+            .nav, header, .btn-no-print, .item-picker-box, .btn-back { display: none !important; }
+            body { background: white; }
+            .content { padding: 0; max-width: 100%; }
+            .invoice-container { border: none; padding: 0; }
         }
-        .modal-header { 
-            background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; 
-            cursor: move; user-select: none; font-size: 0.9rem; text-align: center; font-weight: bold;
-        }
-        .modal-content { padding: 20px; max-height: 85vh; overflow-y: auto; }
-        .check-group { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.9rem; }
-        .check-group input { width: auto; margin: 0; }
-        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .info-pill { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
-<div id="dashboard">
-    <header>
-        <h2>CRAFTY ART DESIGN</h2>
-        <div id="currentUserDisplay" style="font-weight:bold; color:var(--blue)">User: Loading...</div>
-    </header>
-    <nav class="nav">
-        <button class="tab" onclick="switchTab('Inventory')">Inventory</button>
-        <button class="tab" onclick="switchTab('Customers')">Customers</button>
-        <button class="tab active" onclick="switchTab('Users')">Users</button>
-    </nav>
-    <div class="content"><div id="mainView"></div></div>
-</div>
+<header>
+    <h2>CRAFTY ART DESIGN</h2>
+    <div id="userDisplay" style="font-weight:bold; color:var(--blue)">User: craftyartdesign1</div>
+</header>
+<nav class="nav">
+    <button class="tab" onclick="location.reload()">Inventory</button>
+    <button class="tab" onclick="location.reload()">Customers</button>
+</nav>
 
-<div id="appModal" class="modal">
-    <div class="modal-body" id="draggableModal">
-        <div class="modal-header" id="modalHeader">⁝⁝ DRAG TO MOVE WINDOW ⁝⁝</div>
-        <div class="modal-content">
-            <h3 id="modalTitle" style="color:var(--blue); margin-top:0;">Action</h3>
-            <div id="modalFields"></div>
-            <button id="saveBtn" class="btn btn-blue" style="width:100%; padding:12px; margin-top:10px;">SAVE</button>
-            <button style="width:100%; margin-top:10px; border:none; background:none; color:var(--red); cursor:pointer; display:block; margin-inline:auto;" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
+<div class="content" id="mainView">
+    <div class="card"><h3>Syncing Data...</h3></div>
 </div>
 
 <script>
-    // MAKE SURE THIS URL IS CORRECT FROM YOUR APPS SCRIPT DEPLOYMENT
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOdk22rBVmow1ZkVp9QVHic_Moo4prKkBLe4gF7-52JAXGncOs0XD96huFUyfQyRIp/exec";
-    const OWNER_ID = "craftyartdesign1"; 
-    
-    // Default logged-in user state
-    let currentUser = { 
-        username: "craftyartdesign1", 
-        role: "Admin",
-        canEditInv: true,
-        canEditCust: true
-    }; 
+    let inventory = [];
+    let invoiceItems = [];
+    let currentCustomer = {};
 
-    document.getElementById('currentUserDisplay').innerText = `User: ${currentUser.username}`;
+    window.onload = async () => {
+        const invRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
+        inventory = await invRes.json();
+        const custRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+        const customers = await custRes.json();
+        renderCustomers(customers);
+    };
 
-    let activeTab = "Users";
-    let editMode = false;
-    let currentId = "";
-
-    async function switchTab(tabName) {
-        activeTab = tabName;
-        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === tabName));
-        const view = document.getElementById('mainView');
-        view.innerHTML = "Loading...";
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
-            const data = await res.json();
-            renderTable(tabName, data);
-        } catch (e) { view.innerHTML = "<p style='color:red'>Error loading data.</p>"; }
+    function renderCustomers(data) {
+        let html = `<div class="card"><h3>Customer Billing List</h3><table><thead><tr><th>Name</th><th>Company</th><th>Action</th></tr></thead>`;
+        data.forEach(c => { if(c.Name) {
+            const json = JSON.stringify(c).replace(/"/g, '&quot;');
+            html += `<tr><td><b>${c.Name}</b></td><td>${c.Company || ''}</td><td style="text-align:right"><button class="btn btn-green" onclick="startInvoice('${json}')">BILL CUSTOMER</button></td></tr>`;
+        }});
+        document.getElementById('mainView').innerHTML = html + `</table></div>`;
     }
 
-    function showAddressPopup(name, addr) {
-        alert(`Full Address for ${name}:\n\n${addr}`);
+    function startInvoice(json) {
+        currentCustomer = JSON.parse(json.replace(/&quot;/g, '"'));
+        invoiceItems = [];
+        renderInvoiceUI();
     }
 
-    function renderTable(type, data) {
-        const isOwner = currentUser.username === OWNER_ID;
-        let html = `<div class="card">`;
-        
-        // Permission check for Add button
-        if ((type === 'Inventory' && currentUser.canEditInv) || (type === 'Customers' && currentUser.canEditCust) || isOwner) {
-            html += `<button class="btn btn-blue btn-add" onclick="openModal(false)">+ ADD ${type.toUpperCase()}</button>`;
+    function renderInvoiceUI() {
+        let itemsHtml = "";
+        let subtotal = 0;
+        for(let i=0; i<10; i++) {
+            const itm = invoiceItems[i] || {};
+            const lineTotal = (itm.Price * itm.Qty) || 0;
+            subtotal += lineTotal;
+            itemsHtml += `<tr><td>${itm.SKU || ''}</td><td>${itm.Desc || ''}</td><td>${itm.Color || ''}</td><td>${itm.Size || ''}</td><td>${itm.Qty || ''}</td><td>${itm.Price ? '$'+itm.Price : ''}</td><td>${lineTotal ? '$'+lineTotal.toFixed(2) : ''}</td></tr>`;
         }
 
-        html += `<h3>${type} Management</h3><table><thead><tr>`;
-        
-        if (type === 'Users') {
-            html += `<th>Username</th><th>Role</th><th>Display Name</th><th>Inv Access</th><th>Cust Access</th><th>Actions</th></tr></thead><tbody>`;
-            data.forEach(item => { if (item.Username) {
-                const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${item.Username}</b></td><td>${item.Role}</td><td>${item["Display Name"]}</td><td style="text-align:center">${item["Can Edit Inventory"]?'✅':'❌'}</td><td style="text-align:center">${item["Can Edit Customers"]?'✅':'❌'}</td><td>${isOwner?`<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button><button class="btn btn-red" onclick="deleteRow('${item.Username}')">DEL</button>`:''}</td></tr>`;
-            }});
-        } else if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Tax</th><th>Actions</th></tr></thead><tbody>`;
-            data.forEach(item => { if (item.SKU) {
-                const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${item.SKU}</b></td><td>${item["Item Name"]}</td><td>$${item.Price}</td><td>${item.Size || ''}</td><td style="text-align:center">${item["Tax Exempt"]?'Exempt':'Taxed'}</td><td>${currentUser.canEditInv || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.SKU}')">DEL</button>` : ''}</td></tr>`;
-            }});
-        } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>Street Address</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
-            data.forEach(item => { if (item.Name) {
-                const json = JSON.stringify(item).replace(/"/g, '&quot;');
-                
-                // FIXED MAPPING: B=Company, C=Street Address
-                const street = item["Street Address"] || '';
-                const fullAddr = `${street}, ${item.City || ''}, ${item.State || ''} ${item["Zip Code"] || ''}`;
+        const taxRate = currentCustomer["Tax Exempt"] ? 0 : 0.08875;
+        const taxVal = subtotal * taxRate;
 
-                html += `<tr>
-                    <td><b>${item.Name}</b></td>
-                    <td>${item.Company || ''}</td>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span>${street || 'No Street'}</span>
-                            <span class="info-pill" onclick="showAddressPopup('${item.Name}', '${fullAddr}')">Info</span>
-                        </div>
-                    </td>
-                    <td>${item.Email || ''}</td>
-                    <td>${item.Phone || ''}</td>
-                    <td>${currentUser.canEditCust || isOwner ? `<button class="btn btn-blue" onclick="openModal(true, '${json}')">EDIT</button>` : ''}${isOwner ? `<button class="btn btn-red" onclick="deleteRow('${item.Name}')">DEL</button>` : ''}</td>
-                </tr>`;
-            }});
-        }
-        document.getElementById('mainView').innerHTML = html + "</tbody></table></div>";
+        document.getElementById('mainView').innerHTML = `
+            <div class="item-picker-box btn-no-print">
+                <div style="margin-bottom:10px">
+                    <strong>1. Add Item:</strong> 
+                    <select id="selItm" style="width:180px">${inventory.map(i=>`<option value="${i.SKU}">${i["Item Name"]}</option>`).join('')}</select>
+                    Color: <input type="text" id="selCol" placeholder="Color" style="width:80px">
+                    Qty: <input type="number" id="selQty" value="1" style="width:50px">
+                    <button class="btn btn-blue" onclick="addItem()">Add</button>
+                </div>
+                <div>
+                    <strong>2. Notes:</strong> <input type="text" id="noteInput" placeholder="Special Instructions..." style="width:300px">
+                    <button class="btn btn-green" style="float:right" onclick="printInv()">PRINT / SAVE PDF</button>
+                </div>
+            </div>
+
+            <div class="invoice-container">
+                <div class="inv-header">
+                    <div><span style="font-size:30px;font-weight:bold;">crafty</span> <span style="font-size:50px;">A</span>rt <span style="font-size:30px;">design</span></div>
+                    <div style="text-align:right"><h1 style="color:#004080;margin:0">Invoice</h1><b>Crafty Art Design</b><br>Let's stay crafty.</div>
+                </div>
+                <div style="display:flex; justify-content:space-between">
+                    <div>
+                        <div class="inv-bill-to-header">Bill To:</div>
+                        ${currentCustomer.Name}<br>${currentCustomer.Company || ''}<br>${currentCustomer["Street Address"]}<br>${currentCustomer.City}, ${currentCustomer.State} ${currentCustomer["Zip Code"]}
+                    </div>
+                    <table style="width:220px; border:1px solid #ddd; font-size:0.8rem">
+                        <tr><td style="background:#eee">Date</td><td>${new Date().toLocaleDateString()}</td></tr>
+                        <tr><td style="background:#eee">Invoice #</td><td>INV-${Math.floor(Math.random()*9000)+1000}</td></tr>
+                        <tr><td style="background:yellow">Cust. ID</td><td>${currentCustomer.Name.substring(0,4).toUpperCase()}</td></tr>
+                    </table>
+                </div>
+                <table class="inv-table">
+                    <thead><tr><th>SKU</th><th>Description</th><th>Color</th><th>Size</th><th>Quantity</th><th>Price</th><th>Line Total</th></tr></thead>
+                    <tbody>${itemsHtml}</tbody>
+                </table>
+                <div class="inv-footer">
+                    <div class="notes-box"><div class="notes-label">Special Notes and Instructions</div><div id="noteDisplay" style="padding:5px"></div></div>
+                    <div class="totals-area">
+                        Subtotal: $${subtotal.toFixed(2)}<br>
+                        Sales Tax Rate: ${(taxRate*100).toFixed(3)}%<br>
+                        Sales Tax: $${taxVal.toFixed(2)}<br>
+                        <div style="border:2px solid #000; padding:5px; margin-top:5px; font-weight:bold; font-size:1.2rem">Order Total: $${(subtotal + taxVal).toFixed(2)}</div>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:50px; font-size:0.8rem">
+                    Make all checks payable to Crafty Art Design<br><strong>Thank you for your business!</strong><br>Brooklyn, NY 11223 | Craftyartdesign1@gmail.com
+                </div>
+            </div>`;
     }
 
-    function openModal(isEdit, dataStr = null) {
-        editMode = isEdit;
-        const fields = document.getElementById('modalFields');
-        const isOwner = currentUser.username === OWNER_ID;
-        fields.innerHTML = "";
-        
-        const m = document.getElementById('draggableModal');
-        m.style.left = '50%'; m.style.top = '50%'; m.style.transform = 'translate(-50%, -50%)';
-        xOffset = 0; yOffset = 0;
-
-        if (activeTab === 'Customers') {
-            document.getElementById('modalTitle').innerText = isEdit ? "Edit Customer" : "Add Customer";
-            fields.innerHTML = `<input id="f1" placeholder="Customer Name" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Company Name"><input id="f3" placeholder="Street Address"><div class="address-grid"><input id="f4" placeholder="City"><input id="f5" placeholder="State"></div><div class="address-grid"><input id="f6" placeholder="Zip Code"><input id="f7" placeholder="Email Address"></div><input id="f8" placeholder="Phone Number"><div class="check-group"><input type="checkbox" id="f9"> <label>Tax Exempt Customer</label></div>`;
-        } else if (activeTab === 'Inventory') {
-            document.getElementById('modalTitle').innerText = isEdit ? "Edit Item" : "Add Item";
-            fields.innerHTML = `<input id="f1" placeholder="SKU" ${(isEdit && !isOwner) ? 'disabled' : ''}><input id="f2" placeholder="Item Name"><input id="f3" type="number" placeholder="Price"><input id="f4" placeholder="Size"><div class="check-group"><input type="checkbox" id="f5"> <label>Tax Exempt</label></div>`;
-        } else {
-            document.getElementById('modalTitle').innerText = isEdit ? "Edit User" : "Add User";
-            fields.innerHTML = `<input id="f1" placeholder="Username" ${isEdit ? 'disabled' : ''}><input id="f2" type="password" placeholder="Pass"><select id="f3"><option value="Staff">Staff</option><option value="Admin">Admin</option></select><input id="f4" placeholder="Name"><div class="check-group"><input type="checkbox" id="f5"> <label>Inv Access</label></div><div class="check-group"><input type="checkbox" id="f6"> <label>Cust Access</label></div>`;
-        }
-
-        if (isEdit && dataStr) {
-            const data = JSON.parse(dataStr.replace(/&quot;/g, '"'));
-            currentId = data.Username || data.SKU || data.Name;
-            document.getElementById('f1').value = currentId;
-            if (activeTab === 'Customers') {
-                document.getElementById('f2').value = data.Company || '';
-                document.getElementById('f3').value = data["Street Address"] || '';
-                document.getElementById('f4').value = data.City || '';
-                document.getElementById('f5').value = data.State || '';
-                document.getElementById('f6').value = data["Zip Code"] || '';
-                document.getElementById('f7').value = data.Email || '';
-                document.getElementById('f8').value = data.Phone || '';
-                document.getElementById('f9').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
-            } else if (activeTab === 'Inventory') {
-                document.getElementById('f2').value = data["Item Name"] || '';
-                document.getElementById('f3').value = data.Price || '';
-                document.getElementById('f4').value = data.Size || '';
-                document.getElementById('f5').checked = (data["Tax Exempt"] === true || data["Tax Exempt"] === "TRUE");
-            } else {
-                document.getElementById('f2').value = data.Password || '';
-                document.getElementById('f3').value = data.Role || 'Staff';
-                document.getElementById('f4').value = data["Display Name"] || '';
-                document.getElementById('f5').checked = (data["Can Edit Inventory"] === true || data["Can Edit Inventory"] === "TRUE");
-                document.getElementById('f6').checked = (data["Can Edit Customers"] === true || data["Can Edit Customers"] === "TRUE");
-            }
-        }
-        document.getElementById('saveBtn').onclick = handleSave;
-        document.getElementById('appModal').style.display = 'block';
-    }
-
-    async function handleSave() {
-        let rowData = [];
-        if (activeTab === 'Customers') {
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').value, document.getElementById('f6').value, document.getElementById('f7').value, document.getElementById('f8').value, document.getElementById('f9').checked];
-        } else if (activeTab === 'Inventory') {
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked];
-        } else {
-            rowData = [document.getElementById('f1').value, document.getElementById('f2').value, document.getElementById('f3').value, document.getElementById('f4').value, document.getElementById('f5').checked, document.getElementById('f6').checked];
-        }
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: editMode ? 'editRow' : 'addRow', sheetName: activeTab, id: currentId, data: rowData })});
-        closeModal(); switchTab(activeTab);
-    }
-
-    function closeModal() { document.getElementById('appModal').style.display = 'none'; }
-    async function deleteRow(id) {
-        if(confirm(`Delete ${id}?`)) {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'deleteRow', sheetName: activeTab, id: id}) });
-            switchTab(activeTab);
+    function addItem() {
+        const sku = document.getElementById('selItm').value;
+        const prod = inventory.find(i => i.SKU === sku);
+        if(prod) {
+            invoiceItems.push({ SKU: prod.SKU, Desc: prod["Item Name"], Color: document.getElementById('selCol').value || "N/A", Size: prod.Size, Qty: parseFloat(document.getElementById('selQty').value), Price: prod.Price });
+            renderInvoiceUI();
         }
     }
 
-    const dragItem = document.getElementById("draggableModal");
-    const dragHeader = document.getElementById("modalHeader");
-    let active = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
-    dragHeader.onmousedown = (e) => { initialX = e.clientX - xOffset; initialY = e.clientY - yOffset; active = true; };
-    document.onmouseup = () => { active = false; };
-    document.onmousemove = (e) => { if (active) { e.preventDefault(); currentX = e.clientX - initialX; currentY = e.clientY - initialY; xOffset = currentX; yOffset = currentY; dragItem.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`; } };
-
-    switchTab('Users');
+    function printInv() {
+        document.getElementById('noteDisplay').innerText = document.getElementById('noteInput').value;
+        window.print();
+    }
 </script>
 </body>
 </html>
