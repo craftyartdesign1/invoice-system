@@ -9,7 +9,7 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Navigation & Header */
+        /* Header & Nav */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
@@ -18,10 +18,10 @@
         .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Professional Tables */
+        /* Table Styling */
         .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .pos-table th { background: #f1f5f9; color: #475569; padding: 12px; text-align: left; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; }
-        .pos-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .pos-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: middle; }
         
         .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-green { background: var(--green); width: 100%; font-size: 1.2rem; margin-top: 20px; }
@@ -35,6 +35,11 @@
         .badge-taxable { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
+        input:disabled { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; border: 1px solid #e5e7eb; }
+
+        .tax-checkbox { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; }
+        .tax-checkbox:disabled { cursor: not-allowed; }
+        
         .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
         .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
@@ -90,6 +95,11 @@
         loadTab('Generator');
     }
 
+    // Helper to format numbers as $0.00
+    const formatCurrency = (num) => {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0);
+    };
+
     async function loadTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`tab-${tabName}`).classList.add('active');
@@ -130,7 +140,15 @@
                 </div>
                 <table class="pos-table">
                     <thead>
-                        <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th><th class="btn-no-print"></th></tr>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th style="text-align:center;">Tax Exempt</th>
+                            <th>Total</th>
+                            <th class="btn-no-print"></th>
+                        </tr>
                     </thead>
                     <tbody id="posBody"></tbody>
                 </table>
@@ -146,12 +164,14 @@
     }
 
     function addRow() {
+        const isAdmin = currentUser.role === 'Admin';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
-            <td><input type="text" placeholder="Item Name"></td>
-            <td><input type="number" value="1" oninput="calcTotal()"></td>
-            <td><input type="text" oninput="calcTotal()" placeholder="0.00"></td>
+            <td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td>
+            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
+            <td><input type="text" oninput="calcTotal()" placeholder="0.00" ${!isAdmin ? 'disabled' : ''}></td>
+            <td style="text-align:center;"><input type="checkbox" class="tax-checkbox" onchange="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td>
             <td class="row-total" data-taxable="true">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
         `;
@@ -160,14 +180,23 @@
 
     function autoFill(input) {
         const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
+        const tr = input.parentElement.parentElement;
+        const isAdmin = currentUser.role === 'Admin';
+
         if(item) {
-            const tr = input.parentElement.parentElement;
             tr.cells[1].children[0].value = item["Item Name"];
-            tr.cells[3].children[0].value = String(item.Price).replace(/[$,]/g,'');
-            // Check for Custom Checkbox Values
-            tr.cells[4].dataset.taxable = (item["Tax Exempt"] === "Exempt") ? "false" : "true";
-            calcTotal();
+            const rawPrice = parseFloat(String(item.Price).replace(/[$,]/g,'')) || 0;
+            tr.cells[3].children[0].value = rawPrice.toFixed(2);
+            
+            const isExempt = (item["Tax Exempt"] === "Exempt");
+            tr.cells[4].children[0].checked = isExempt;
+            
+            // Re-check permissions in case user switched roles mid-session
+            tr.cells[1].children[0].disabled = !isAdmin;
+            tr.cells[3].children[0].disabled = !isAdmin;
+            tr.cells[4].children[0].disabled = !isAdmin;
         }
+        calcTotal();
     }
 
     function calcTotal() {
@@ -175,35 +204,35 @@
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const qty = parseFloat(tr.cells[2].children[0].value) || 0;
             const price = parseFloat(tr.cells[3].children[0].value) || 0;
+            const isExempt = tr.cells[4].children[0].checked;
+            
             const rowTotal = qty * price;
-            tr.cells[4].innerText = "$" + rowTotal.toFixed(2);
+            tr.cells[5].innerText = formatCurrency(rowTotal);
+            
             sub += rowTotal;
-            if (tr.cells[4].dataset.taxable === "true") taxableSub += rowTotal;
+            if (!isExempt) taxableSub += rowTotal;
         });
+        
         const tax = taxableSub * NYC_TAX_RATE;
-        document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
-        document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
-        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
+        document.getElementById('subDisp').innerText = formatCurrency(sub);
+        document.getElementById('taxDisp').innerText = formatCurrency(tax);
+        document.getElementById('grandDisp').innerText = formatCurrency(sub + tax);
     }
 
     function renderTable(type, data, view) {
         let h = `<div class="card"><h3>${type} Management</h3><table class="pos-table"><thead><tr>`;
-        
-        // FILTER: Hide rows where the SKU is empty
         const activeData = data.filter(r => r.SKU && String(r.SKU).trim() !== "");
 
         if (type === 'Inventory') {
             h += `<th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Tax Status</th></tr></thead><tbody>`;
             activeData.forEach(r => {
                 const isExempt = (r["Tax Exempt"] === "Exempt");
-                const priceClean = String(r.Price || "0").replace(/[$,]/g, '');
-                const formattedPrice = new Number(priceClean).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                
+                const priceClean = parseFloat(String(r.Price || "0").replace(/[$,]/g, ''));
                 h += `<tr>
                     <td>${r.SKU}</td>
                     <td>${r["Item Name"] || '---'}</td>
                     <td>${r["Size"] || '---'}</td>
-                    <td>${formattedPrice}</td>
+                    <td>${formatCurrency(priceClean)}</td>
                     <td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td>
                 </tr>`;
             });
@@ -211,11 +240,6 @@
             h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
             activeData.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
         }
-        
-        if (activeData.length === 0) {
-            h += `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No active items found.</td></tr>`;
-        }
-
         view.innerHTML = h + `</tbody></table></div>`;
     }
 
@@ -226,18 +250,19 @@
                 <table class="pos-table">
                     <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
                     <tbody>
-                        ${data.map(r => `
-                            <tr>
+                        ${data.map(r => {
+                            const totalVal = parseFloat(String(r.Total).replace(/[$,]/g, ''));
+                            return `<tr>
                                 <td><b>${r["Invoice Number"]}</b></td>
                                 <td>${r["Date"]}</td>
                                 <td>${r["Customer"]}</td>
-                                <td><b>${r["Total"]}</b></td>
+                                <td><b>${formatCurrency(totalVal)}</b></td>
                                 <td>
                                     <button class="btn btn-blue btn-sm">Print</button>
                                     ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm">Delete</button>` : ''}
                                 </td>
-                            </tr>
-                        `).join('')}
+                            </tr>`;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>`;
@@ -245,7 +270,7 @@
 
     async function saveInvoice() {
         if (!document.getElementById('posCustomer').value) return alert("Select a Customer");
-        alert("Invoice Data Sent to Sheet!");
+        alert("Invoice Data Saved!");
         window.print();
         loadTab('Generator');
     }
