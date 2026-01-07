@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | Master Admin Portal</title>
+    <title>CAD | POS System</title>
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Header Section */
+        /* Header */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         #mainSearch { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
@@ -21,7 +21,7 @@
         .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; }
         .tab.admin-only.active { background: var(--red); color: white; }
 
-        /* Content Area */
+        /* Content Layout */
         .content { padding: 20px; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
@@ -30,24 +30,17 @@
         th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; color: #666; font-size: 0.85rem; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
         
+        /* UI Elements */
         .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
         .btn-green { background: var(--green); }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
-        .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
-        .eye-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0 5px; opacity: 0.7; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; margin-right: 5px; }
+        .eye-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; vertical-align: middle; }
 
-        input[type="text"], input[type="password"], select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 5px; margin-bottom: 10px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; width: 100%; }
 
-        /* Invoice Layout */
-        .invoice-container { background: white; padding: 40px; border: 1px solid #ddd; min-height: 1000px; background-size: cover; background-position: center; position: relative; }
-        .inv-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .inv-bill-to { background: var(--blue); color: white; padding: 5px 15px; width: 300px; font-weight: bold; margin-top: 20px; }
-        
-        @media print { 
-            .nav-bar, .header-section, .btn-no-print { display: none !important; } 
-            .invoice-container { border: none; padding: 0; } 
-        }
+        @media print { .nav-bar, .header-section, .btn-no-print { display: none !important; } }
     </style>
 </head>
 <body>
@@ -56,18 +49,16 @@
     <div class="header-top">
         <div id="logoContainer"><h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
-            <div style="font-weight:bold; color:#666; font-size:0.9rem;">
-                User: <span id="displayUser">Alessio</span> 
-                [<span id="displayRole">Admin</span>]
-            </div>
-            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="margin-top:5px; background:#666;">🛠️ TEST: Switch Role</button>
+            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span> (<span id="displayRole">Admin</span>)</div>
+            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role (Test Mode)</button>
         </div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search through all records...">
+    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search Invoice #, Customer, or Delegate...">
 </div>
 
 <nav class="nav-bar">
-    <button class="tab active" id="tab-Invoices" onclick="loadTab('Invoices')">Invoices</button>
+    <button class="tab active" id="tab-Generator" onclick="loadTab('Generator')">Invoice Generator</button>
+    <button class="tab" id="tab-Lookup" onclick="loadTab('Lookup')">Invoice Lookup</button>
     <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
     <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
     <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
@@ -76,24 +67,19 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // YOUR UPDATED SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoqiDjmr206Cek1K0-jf0em-WBS581qKE-Se93z7SlE6Sx7TjyWzfpnjrNgAwDaa_9/exec";
+    // UPDATED SCRIPT URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzK5pTYqaYlm2DjbhpPZ_2_5HaFQRSPSI1APjTeguLvMvE_KAWjclejSDiehxmkQLG8/exec";
     
-    // Global State
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
     let logoData = localStorage.getItem('cad_logo') || '';
     let bgData = localStorage.getItem('cad_bg') || '';
     let users = JSON.parse(localStorage.getItem('cad_users')) || [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
 
     window.onload = () => {
-        applyBranding();
-        syncUIRole();
-        loadTab('Invoices');
-    };
-
-    function applyBranding() {
         if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
-    }
+        syncUIRole();
+        loadTab('Generator');
+    };
 
     function syncUIRole() {
         document.getElementById('displayUser').innerText = currentUser.name;
@@ -105,40 +91,69 @@
     function toggleUserRole() {
         currentUser = (currentUser.role === 'Admin') ? { name: 'Staff User', role: 'Staff' } : { name: 'Alessio', role: 'Admin' };
         syncUIRole();
-        loadTab('Invoices');
+        loadTab('Generator');
     }
 
     async function loadTab(tabName) {
-        if(tabName === 'Admin' && currentUser.role !== 'Admin') return alert("Access Denied");
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`tab-${tabName}`).classList.add('active');
         const view = document.getElementById('mainView');
-        
+
+        if(tabName === 'Generator') { renderGenerator(view); return; }
         if(tabName === 'Admin') { renderAdmin(view); return; }
 
-        view.innerHTML = `<div class="card"><h3>Fetching ${tabName} Data...</h3></div>`;
+        view.innerHTML = `<div class="card"><h3>Fetching ${tabName} data...</h3></div>`;
         try {
-            const res = await fetch(`${SCRIPT_URL}?action=get${tabName}`);
+            const action = (tabName === 'Lookup') ? 'getInvoices' : 'get' + tabName;
+            const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
             renderTable(tabName, data, view);
         } catch (e) { 
-            view.innerHTML = `<div class="card"><h3 style="color:red">Connection Error. Please ensure your Google Script is deployed as "Anyone".</h3></div>`; 
+            view.innerHTML = `<div class="card"><h3 style="color:red">Error: Could not connect to Google Sheets.</h3><p>Verify your script is deployed as 'Anyone'.</p></div>`; 
         }
     }
 
+    function renderGenerator(view) {
+        view.innerHTML = `
+            <div class="card">
+                <h3>New Invoice Generator</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>Customer Name</label><input type="text" id="invCust" placeholder="Enter Name"></div>
+                    <div><label>Delegate (Logged In)</label><input type="text" id="invEmp" value="${currentUser.name}" readonly style="background:#f0f0f0;"></div>
+                    <div style="grid-column: span 2;">
+                        <label>Quick Inventory Search</label>
+                        <input type="text" placeholder="Search SKU or Item Name...">
+                    </div>
+                </div>
+                <button class="btn btn-green" style="width:100%; margin-top:20px;">Save & Preview Invoice</button>
+            </div>`;
+    }
+
     function renderTable(type, data, view) {
-        let html = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
-        if (type === 'Invoices') {
-            html += `<th>Invoice #</th><th>Date</th><th>Customer</th><th>Employee</th><th>Total</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i["Invoice Number"]) html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Employee || ''}</td><td>${i.Subtotal || i.Total || '$0.00'}</td></tr>`; });
+        let html = `<div class="card"><h3>${type === 'Lookup' ? 'Invoice History' : type}</h3><table id="dataTable"><thead><tr>`;
+        
+        if (type === 'Lookup') {
+            html += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Delegate</th><th>Total</th><th>Actions</th></tr></thead><tbody>`;
+            data.forEach(i => {
+                html += `<tr>
+                    <td><b>${i["Invoice Number"] || '---'}</b></td>
+                    <td>${i.Date || '---'}</td>
+                    <td>${i.Customer || '---'}</td>
+                    <td>${i.Employee || '---'}</td>
+                    <td>${i.Subtotal || i.Total || '$0.00'}</td>
+                    <td>
+                        <button class="btn btn-blue btn-sm" onclick="alert('Viewing Invoice Details...')">View</button>
+                        ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm" onclick="confirm('Delete this record?')">Delete</button>` : ''}
+                    </td>
+                </tr>`;
+            });
         } else if (type === 'Inventory') {
             html += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.SKU) html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>${i.Price || '$0.00'}</td></tr>`; });
+            data.forEach(i => { if(i.SKU) html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>${i.Price}</td></tr>`; });
         } else if (type === 'Customers') {
             html += `<th>Name</th><th>Company</th><th>Address</th><th>Action</th></tr></thead><tbody>`;
             data.forEach(i => { if(i.Name) {
-                const json = JSON.stringify(i).replace(/"/g, '&quot;');
-                html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green" onclick="viewInvoice('${json}')">BILL</button></td></tr>`;
+                html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green btn-sm" onclick="loadTab('Generator')">Select</button></td></tr>`;
             }});
         }
         view.innerHTML = html + `</tbody></table></div>`;
@@ -160,21 +175,20 @@
 
         view.innerHTML = `
             <div class="card">
-                <h3>Branding Settings</h3>
-                <label>Logo URL:</label><br><input type="text" id="logoInp" value="${logoData}" style="width:70%"><button class="btn btn-blue" onclick="saveAdmin('logo')">Save</button><br><br>
-                <label>Invoice Background URL:</label><br><input type="text" id="bgInp" value="${bgData}" style="width:70%"><button class="btn btn-blue" onclick="saveAdmin('bg')">Save</button>
+                <h3>System Branding</h3>
+                <label>Logo URL:</label><input type="text" id="logoInp" value="${logoData}" placeholder="https://..."><button class="btn btn-blue" onclick="saveAdmin('logo')" style="margin-top:5px">Save Logo</button>
             </div>
             <div class="card">
-                <h3>User & Delegate Management</h3>
-                <div style="background:#f1f1f1; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h3>Delegate Management</h3>
+                <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <input type="hidden" id="editIdx">
-                    <input type="text" id="uName" placeholder="Full Name">
+                    <input type="text" id="uName" placeholder="Staff Full Name">
                     <input type="text" id="uUser" placeholder="Username">
                     <input type="text" id="uPass" placeholder="Password (Visible)">
                     <select id="uRole"><option>Admin</option><option>Staff</option></select>
-                    <button class="btn btn-green" id="userBtn" onclick="saveUser()">+ Create/Update User</button>
+                    <button class="btn btn-green" style="grid-column: span 2;" id="userBtn" onclick="saveUser()">Save User Credentials</button>
                 </div>
-                <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Password</th><th>Actions</th></tr></thead>
+                <table><thead><tr><th>Name</th><th>User</th><th>Role</th><th>Pass</th><th>Actions</th></tr></thead>
                 <tbody>${userRows}</tbody></table>
             </div>`;
     }
@@ -186,13 +200,8 @@
 
     function saveUser() {
         const idx = document.getElementById('editIdx').value;
-        const newUser = {
-            name: document.getElementById('uName').value,
-            user: document.getElementById('uUser').value,
-            pass: document.getElementById('uPass').value,
-            role: document.getElementById('uRole').value
-        };
-        if(!newUser.name || !newUser.user || !newUser.pass) return alert("All fields required");
+        const newUser = { name: document.getElementById('uName').value, user: document.getElementById('uUser').value, pass: document.getElementById('uPass').value, role: document.getElementById('uRole').value };
+        if(!newUser.name || !newUser.user || !newUser.pass) return alert("Please fill all fields");
         if(idx === "") users.push(newUser); else users[idx] = newUser;
         localStorage.setItem('cad_users', JSON.stringify(users));
         renderAdmin(document.getElementById('mainView'));
@@ -209,7 +218,7 @@
     }
 
     function deleteUser(idx) {
-        if(confirm("Delete this user?")) {
+        if(confirm("Confirm deletion?")) {
             users.splice(idx, 1);
             localStorage.setItem('cad_users', JSON.stringify(users));
             renderAdmin(document.getElementById('mainView'));
@@ -217,24 +226,9 @@
     }
 
     function saveAdmin(type) {
-        const val = document.getElementById(type === 'logo' ? 'logoInp' : 'bgInp').value;
-        localStorage.setItem(type === 'logo' ? 'cad_logo' : 'cad_bg', val);
+        const val = document.getElementById('logoInp').value;
+        localStorage.setItem('cad_logo', val);
         location.reload();
-    }
-
-    function viewInvoice(json) {
-        const cust = JSON.parse(json.replace(/&quot;/g, '"'));
-        document.getElementById('mainView').innerHTML = `
-            <div class="btn-no-print" style="margin-bottom:20px;"><button class="btn btn-blue" onclick="loadTab('Customers')">← Back</button><button class="btn btn-green" style="float:right" onclick="window.print()">Print/Save PDF</button></div>
-            <div class="invoice-container" style="background-image: url('${bgData}')">
-                <div class="inv-header"><div>${logoData ? `<img src="${logoData}" style="max-height:80px">` : '<h2>CRAFTY ART DESIGN</h2>'}</div><div style="text-align:right"><h1>INVOICE</h1></div></div>
-                <div class="inv-bill-to">Bill To:</div>
-                <p><strong>${cust.Name}</strong><br>${cust.Company || ''}<br>${cust["Street Address"]}<br>${cust.City || ''}, ${cust.State || ''} ${cust["Zip Code"] || ''}</p>
-                <table style="width:100%; border:1px solid #ddd; margin-top:20px; border-collapse: collapse;">
-                    <thead style="background:var(--blue); color:white;"><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                    <tbody><tr><td colspan="5" style="height:150px; text-align:center; color:#ccc;">Table for manual entry.</td></tr></tbody>
-                </table>
-            </div>`;
     }
 
     function filterTable() {
