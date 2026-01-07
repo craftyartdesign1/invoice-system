@@ -71,9 +71,9 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // YOUR NEW SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzy_6rH9RIdsMQ8KgkOrntQRyQrhh51wcPKu1to-oUeRaYioWpsUE-Hc2ZC84TYWMxg/exec";
-    const NYC_TAX_RATE = 0.08875; // 8.875%
+    // UPDATED SCRIPT URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywaKHypG2qPhGyMq0f45bZ5IRaGkRJx0PrxHLS96WFZ58fIINDRyKwnD8XQI9UIrk-/exec";
+    const NYC_TAX_RATE = 0.08875; 
 
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
     let inventory = [];
@@ -124,7 +124,7 @@
     function renderGenerator(view) {
         const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
         const today = new Date().toLocaleDateString();
-        let custOpts = customers.map(c => `<option value="${c.Name}">${c.Name} (${c.Company || 'Individual'})</option>`).join('');
+        let custOpts = customers.map(c => `<option value="${c.Name}" data-company="${c.Company || ''}">${c.Name} (${c.Company || 'Individual'})</option>`).join('');
 
         view.innerHTML = `
             <div class="card">
@@ -138,7 +138,7 @@
                     <label>Customer:</label>
                     <select id="posCustomer">
                         <option value="" disabled selected>Select Customer...</option>
-                        <option value="Self">Self</option>
+                        <option value="Self" data-company="N/A">Self</option>
                         ${custOpts}
                     </select>
                 </div>
@@ -146,10 +146,11 @@
                 <table class="pos-table">
                     <thead>
                         <tr>
-                            <th style="width:20%">SKU</th>
-                            <th>Description (Locked)</th>
+                            <th style="width:15%">SKU</th>
+                            <th>Description</th>
+                            <th style="width:10%">Size</th>
                             <th style="width:10%">Qty</th>
-                            <th style="width:15%">Price (Locked)</th>
+                            <th style="width:15%">Price</th>
                             <th style="width:15%">Total</th>
                             <th style="width:5%" class="btn-no-print"></th>
                         </tr>
@@ -174,9 +175,10 @@
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><input type="text" onchange="autoFill(this)" placeholder="SKU..."></td>
-            <td><input type="text" readonly tabindex="-1"></td>
+            <td><input type="text" placeholder="Item Name"></td>
+            <td><input type="text" placeholder="Size"></td>
             <td><input type="number" value="1" min="1" oninput="calcRow(this)"></td>
-            <td><input type="text" readonly tabindex="-1"></td>
+            <td><input type="text" oninput="calcRow(this)" placeholder="0.00"></td>
             <td class="row-total">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
         `;
@@ -184,20 +186,20 @@
     }
 
     function autoFill(input) {
-        const item = inventory.find(i => i.SKU.toString().toLowerCase() === input.value.toLowerCase());
+        const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
         if(item) {
             const tr = input.parentElement.parentElement;
             tr.cells[1].children[0].value = item["Item Name"];
-            tr.cells[3].children[0].value = item.Price.replace('$','');
-            calcRow(tr.cells[2].children[0]);
+            tr.cells[4].children[0].value = String(item.Price).replace('$','');
+            calcRow(tr.cells[3].children[0]);
         }
     }
 
     function calcRow(input) {
         const tr = input.parentElement.parentElement;
-        const q = parseFloat(tr.cells[2].children[0].value) || 0;
-        const p = parseFloat(tr.cells[3].children[0].value) || 0;
-        tr.cells[4].innerText = "$" + (q * p).toFixed(2);
+        const q = parseFloat(tr.cells[3].children[0].value) || 0;
+        const p = parseFloat(tr.cells[4].children[0].value) || 0;
+        tr.cells[5].innerText = "$" + (q * p).toFixed(2);
         calcTotal();
     }
 
@@ -211,18 +213,34 @@
     }
 
     async function saveInvoice() {
-        if (!document.getElementById('posCustomer').value) return alert("Select a customer");
+        const custSelect = document.getElementById('posCustomer');
+        if (!custSelect.value) return alert("Select a customer");
+        
         const btn = document.querySelector('.btn-green');
         btn.innerText = "Saving..."; btn.disabled = true;
+
+        const items = [];
+        document.querySelectorAll('#posBody tr').forEach(tr => {
+            items.push({
+                sku: tr.cells[0].children[0].value,
+                name: tr.cells[1].children[0].value,
+                size: tr.cells[2].children[0].value,
+                qty: tr.cells[3].children[0].value,
+                price: tr.cells[4].children[0].value,
+                total: tr.cells[5].innerText
+            });
+        });
 
         const data = {
             invNum: document.getElementById('invNumDisp').innerText,
             date: document.getElementById('dateDisp').innerText,
-            customer: document.getElementById('posCustomer').value,
+            customer: custSelect.value,
+            company: custSelect.options[custSelect.selectedIndex].getAttribute('data-company'),
             employee: currentUser.name,
             subtotal: document.getElementById('subDisp').innerText,
             taxAmount: document.getElementById('taxDisp').innerText,
-            total: document.getElementById('grandDisp').innerText
+            total: document.getElementById('grandDisp').innerText,
+            items: items 
         };
 
         try {
@@ -236,8 +254,19 @@
     function renderTable(type, data, view) {
         let h = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
         if (type === 'Lookup') {
+            // FIXED: Matches your Sheet header "Total" exactly to remove "undefined"
             h += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(r => h += `<tr><td><b>${r["Invoice Number"]}</b></td><td>${r.Date}</td><td>${r.Customer}</td><td>${r.Subtotal}</td><td>${r.Tax}</td><td><b>${r["Grand Total"]}</b></td><td><button class="btn btn-blue btn-sm">View</button></td></tr>`);
+            data.forEach(r => {
+                h += `<tr>
+                    <td><b>${r["Invoice Number"]}</b></td>
+                    <td>${r["Date"]}</td>
+                    <td>${r["Customer"]}</td>
+                    <td>${r["Subtotal"]}</td>
+                    <td>${r["Tax"]}</td>
+                    <td><b>${r["Total"]}</b></td>
+                    <td><button class="btn btn-blue btn-sm">View</button></td>
+                </tr>`;
+            });
         } else if (type === 'Inventory') {
             h += `<th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody>`;
             data.forEach(r => h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${r.Price}</td></tr>`);
