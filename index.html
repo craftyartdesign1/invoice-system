@@ -19,41 +19,44 @@
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
         .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; }
-        .tab.admin-only.active { background: var(--red); color: white; }
 
-        /* Content Layout */
+        /* Layout */
         .content { padding: 20px; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; color: #666; font-size: 0.85rem; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
+        /* POS Table */
+        .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .pos-table th { background: var(--blue); color: white; padding: 10px; text-align: left; font-size: 0.85rem; }
+        .pos-table td { padding: 8px; border-bottom: 1px solid #eee; }
         
-        /* UI Elements */
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
-        .btn-green { background: var(--green); }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
+        .btn-green { background: var(--green); width: 100%; font-size: 1.1rem; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
-        .btn-sm { padding: 5px 10px; font-size: 0.75rem; margin-right: 5px; }
-        .eye-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; vertical-align: middle; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
 
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; width: 100%; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
+        .row-input { border: 1px solid #ccc !important; }
 
-        @media print { .nav-bar, .header-section, .btn-no-print { display: none !important; } }
+        .total-box { text-align: right; margin-top: 20px; font-size: 1.8rem; font-weight: bold; color: var(--blue); }
+
+        @media print { 
+            .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red { display: none !important; } 
+            .card { box-shadow: none; border: none; }
+        }
     </style>
 </head>
 <body>
 
 <div class="header-section">
     <div class="header-top">
-        <div id="logoContainer"><h2 style="margin:0; color:var(--blue);">CRAFTY ART DESIGN</h2></div>
+        <div id="logoContainer"><h2>CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
-            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span> (<span id="displayRole">Admin</span>)</div>
-            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role (Test Mode)</button>
+            <div style="font-weight:bold; color:#666;">Logged in: <span id="displayUser">Admin</span></div>
+            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
         </div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search Invoice #, Customer, or Delegate...">
+    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search Inventory, Customers, or Invoices...">
 </div>
 
 <nav class="nav-bar">
@@ -67,25 +70,31 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // UPDATED SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzK5pTYqaYlm2DjbhpPZ_2_5HaFQRSPSI1APjTeguLvMvE_KAWjclejSDiehxmkQLG8/exec";
+    // YOUR NEW SCRIPT URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaCN3dh98ikNVx4UaKXgkV7ms9T51_CRQmsxRZHwmpCfAFTuJzuIj9P46fJSsq88Qr/exec";
     
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
-    let logoData = localStorage.getItem('cad_logo') || '';
-    let bgData = localStorage.getItem('cad_bg') || '';
-    let users = JSON.parse(localStorage.getItem('cad_users')) || [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
+    let customerList = [];
+    let inventoryList = [];
 
-    window.onload = () => {
-        if(logoData) document.getElementById('logoContainer').innerHTML = `<img src="${logoData}" style="max-height:50px">`;
+    window.onload = async () => {
         syncUIRole();
+        await refreshData();
         loadTab('Generator');
     };
 
+    async function refreshData() {
+        try {
+            const cRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+            customerList = await cRes.json();
+            const iRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
+            inventoryList = await iRes.json();
+        } catch(e) { console.error("Data Refresh Failed"); }
+    }
+
     function syncUIRole() {
         document.getElementById('displayUser').innerText = currentUser.name;
-        document.getElementById('displayRole').innerText = currentUser.role;
-        const adminTab = document.getElementById('tab-Admin');
-        adminTab.style.display = (currentUser.role === 'Admin') ? "block" : "none";
+        document.getElementById('tab-Admin').style.display = (currentUser.role === 'Admin') ? "block" : "none";
     }
 
     function toggleUserRole() {
@@ -100,135 +109,148 @@
         const view = document.getElementById('mainView');
 
         if(tabName === 'Generator') { renderGenerator(view); return; }
-        if(tabName === 'Admin') { renderAdmin(view); return; }
-
-        view.innerHTML = `<div class="card"><h3>Fetching ${tabName} data...</h3></div>`;
+        
+        view.innerHTML = `<div class="card"><h3>Fetching ${tabName}...</h3></div>`;
         try {
             const action = (tabName === 'Lookup') ? 'getInvoices' : 'get' + tabName;
             const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
             renderTable(tabName, data, view);
-        } catch (e) { 
-            view.innerHTML = `<div class="card"><h3 style="color:red">Error: Could not connect to Google Sheets.</h3><p>Verify your script is deployed as 'Anyone'.</p></div>`; 
-        }
+        } catch (e) { view.innerHTML = `<div class="card">Error connecting to Sheets.</div>`; }
     }
 
     function renderGenerator(view) {
+        const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
+        const today = new Date().toLocaleDateString();
+
+        let custOptions = customerList.map(c => `<option value="${c.Name}">${c.Name} ${c.Company ? '('+c.Company+')' : ''}</option>`).join('');
+
         view.innerHTML = `
             <div class="card">
-                <h3>New Invoice Generator</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><label>Customer Name</label><input type="text" id="invCust" placeholder="Enter Name"></div>
-                    <div><label>Delegate (Logged In)</label><input type="text" id="invEmp" value="${currentUser.name}" readonly style="background:#f0f0f0;"></div>
-                    <div style="grid-column: span 2;">
-                        <label>Quick Inventory Search</label>
-                        <input type="text" placeholder="Search SKU or Item Name...">
-                    </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">
+                    <div><strong>Invoice #:</strong> <span id="invNumDisplay">${invNum}</span></div>
+                    <div><strong>Date:</strong> <span id="dateDisplay">${today}</span></div>
+                    <div><strong>Delegate:</strong> <span id="empDisplay">${currentUser.name}</span></div>
                 </div>
-                <button class="btn btn-green" style="width:100%; margin-top:20px;">Save & Preview Invoice</button>
+
+                <div style="margin-bottom:20px;">
+                    <label>Select Customer:</label>
+                    <select id="posCustomer"><option value="Walk-in">Walk-in Customer</option>${custOptions}</select>
+                </div>
+
+                <table class="pos-table">
+                    <thead>
+                        <tr>
+                            <th style="width:20%">SKU</th>
+                            <th>Item Description</th>
+                            <th style="width:10%">Qty</th>
+                            <th style="width:15%">Price</th>
+                            <th style="width:15%">Total</th>
+                            <th style="width:5%" class="btn-no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="posBody"></tbody>
+                </table>
+                
+                <div class="btn-no-print" style="margin-top:15px;">
+                    <button class="btn btn-blue btn-sm" onclick="addRow()">+ Add Line Item</button>
+                </div>
+
+                <div class="total-box">Grand Total: <span id="grandTotal">$0.00</span></div>
+                
+                <div style="margin-top:30px;" class="btn-no-print">
+                    <button class="btn btn-green" onclick="saveInvoice()">SAVE & PRINT INVOICE</button>
+                </div>
             </div>`;
+        addRow();
+    }
+
+    function addRow() {
+        const tbody = document.getElementById('posBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="row-input" onchange="autoFill(this)" placeholder="SKU..."></td>
+            <td><input type="text" class="row-input" placeholder="Description"></td>
+            <td><input type="number" class="row-input" value="1" oninput="calcRow(this)"></td>
+            <td><input type="text" class="row-input" placeholder="0.00" oninput="calcRow(this)"></td>
+            <td class="row-total">$0.00</td>
+            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); updateGrandTotal();">X</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function autoFill(input) {
+        const sku = input.value.toLowerCase();
+        const item = inventoryList.find(i => i.SKU.toString().toLowerCase() === sku);
+        if(item) {
+            const row = input.parentElement.parentElement;
+            row.cells[1].children[0].value = item["Item Name"];
+            row.cells[3].children[0].value = item.Price.replace('$', '');
+            calcRow(row.cells[2].children[0]);
+        }
+    }
+
+    function calcRow(input) {
+        const row = input.parentElement.parentElement;
+        const qty = parseFloat(row.cells[2].children[0].value) || 0;
+        let price = row.cells[3].children[0].value.replace('$', '');
+        price = parseFloat(price) || 0;
+        const total = qty * price;
+        row.cells[4].innerText = "$" + total.toFixed(2);
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+        let grand = 0;
+        document.querySelectorAll('.row-total').forEach(cell => {
+            grand += parseFloat(cell.innerText.replace('$', '')) || 0;
+        });
+        document.getElementById('grandTotal').innerText = "$" + grand.toFixed(2);
+    }
+
+    async function saveInvoice() {
+        const btn = document.querySelector('.btn-green');
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        const invoiceData = {
+            invNum: document.getElementById('invNumDisplay').innerText,
+            date: document.getElementById('dateDisplay').innerText,
+            customer: document.getElementById('posCustomer').value,
+            employee: currentUser.name,
+            total: document.getElementById('grandTotal').innerText
+        };
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(invoiceData)
+            });
+            alert("Invoice Saved Successfully!");
+            window.print();
+            loadTab('Generator');
+        } catch (e) {
+            alert("Save failed. Try again.");
+            btn.innerText = "SAVE & PRINT INVOICE";
+            btn.disabled = false;
+        }
     }
 
     function renderTable(type, data, view) {
-        let html = `<div class="card"><h3>${type === 'Lookup' ? 'Invoice History' : type}</h3><table id="dataTable"><thead><tr>`;
-        
+        let html = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
         if (type === 'Lookup') {
-            html += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Delegate</th><th>Total</th><th>Actions</th></tr></thead><tbody>`;
+            html += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Delegate</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
             data.forEach(i => {
-                html += `<tr>
-                    <td><b>${i["Invoice Number"] || '---'}</b></td>
-                    <td>${i.Date || '---'}</td>
-                    <td>${i.Customer || '---'}</td>
-                    <td>${i.Employee || '---'}</td>
-                    <td>${i.Subtotal || i.Total || '$0.00'}</td>
-                    <td>
-                        <button class="btn btn-blue btn-sm" onclick="alert('Viewing Invoice Details...')">View</button>
-                        ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm" onclick="confirm('Delete this record?')">Delete</button>` : ''}
-                    </td>
-                </tr>`;
+                html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Employee}</td><td>${i.Subtotal}</td><td><button class="btn btn-blue btn-sm">View</button>${currentUser.role === 'Admin' ? '<button class="btn btn-red btn-sm">Delete</button>':''}</td></tr>`;
             });
         } else if (type === 'Inventory') {
             html += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.SKU) html += `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>${i.Price}</td></tr>`; });
+            data.forEach(i => { html += `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>${i.Price}</td></tr>`; });
         } else if (type === 'Customers') {
             html += `<th>Name</th><th>Company</th><th>Address</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.Name) {
-                html += `<tr><td><b>${i.Name}</b></td><td>${i.Company || ''}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green btn-sm" onclick="loadTab('Generator')">Select</button></td></tr>`;
-            }});
+            data.forEach(i => { html += `<tr><td>${i.Name}</td><td>${i.Company}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green btn-sm" onclick="loadTab('Generator')">Bill</button></td></tr>`; });
         }
         view.innerHTML = html + `</tbody></table></div>`;
-    }
-
-    function renderAdmin(view) {
-        let userRows = '';
-        users.forEach((u, index) => {
-            userRows += `<tr>
-                <td>${u.name}</td><td>${u.user}</td><td>${u.role}</td>
-                <td id="pass-cell-${index}">••••</td>
-                <td>
-                    <button class="eye-btn" onclick="togglePassView(${index}, '${u.pass}')">👁️</button>
-                    <button class="btn btn-blue btn-sm" onclick="editUser(${index})">Edit</button>
-                    <button class="btn btn-red btn-sm" onclick="deleteUser(${index})">Delete</button>
-                </td>
-            </tr>`;
-        });
-
-        view.innerHTML = `
-            <div class="card">
-                <h3>System Branding</h3>
-                <label>Logo URL:</label><input type="text" id="logoInp" value="${logoData}" placeholder="https://..."><button class="btn btn-blue" onclick="saveAdmin('logo')" style="margin-top:5px">Save Logo</button>
-            </div>
-            <div class="card">
-                <h3>Delegate Management</h3>
-                <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <input type="hidden" id="editIdx">
-                    <input type="text" id="uName" placeholder="Staff Full Name">
-                    <input type="text" id="uUser" placeholder="Username">
-                    <input type="text" id="uPass" placeholder="Password (Visible)">
-                    <select id="uRole"><option>Admin</option><option>Staff</option></select>
-                    <button class="btn btn-green" style="grid-column: span 2;" id="userBtn" onclick="saveUser()">Save User Credentials</button>
-                </div>
-                <table><thead><tr><th>Name</th><th>User</th><th>Role</th><th>Pass</th><th>Actions</th></tr></thead>
-                <tbody>${userRows}</tbody></table>
-            </div>`;
-    }
-
-    function togglePassView(idx, pass) {
-        const cell = document.getElementById(`pass-cell-${idx}`);
-        cell.innerText = (cell.innerText === '••••') ? pass : '••••';
-    }
-
-    function saveUser() {
-        const idx = document.getElementById('editIdx').value;
-        const newUser = { name: document.getElementById('uName').value, user: document.getElementById('uUser').value, pass: document.getElementById('uPass').value, role: document.getElementById('uRole').value };
-        if(!newUser.name || !newUser.user || !newUser.pass) return alert("Please fill all fields");
-        if(idx === "") users.push(newUser); else users[idx] = newUser;
-        localStorage.setItem('cad_users', JSON.stringify(users));
-        renderAdmin(document.getElementById('mainView'));
-    }
-
-    function editUser(idx) {
-        const u = users[idx];
-        document.getElementById('editIdx').value = idx;
-        document.getElementById('uName').value = u.name;
-        document.getElementById('uUser').value = u.user;
-        document.getElementById('uPass').value = u.pass;
-        document.getElementById('uRole').value = u.role;
-        document.getElementById('userBtn').innerText = "Update User";
-    }
-
-    function deleteUser(idx) {
-        if(confirm("Confirm deletion?")) {
-            users.splice(idx, 1);
-            localStorage.setItem('cad_users', JSON.stringify(users));
-            renderAdmin(document.getElementById('mainView'));
-        }
-    }
-
-    function saveAdmin(type) {
-        const val = document.getElementById('logoInp').value;
-        localStorage.setItem('cad_logo', val);
-        location.reload();
     }
 
     function filterTable() {
