@@ -37,6 +37,8 @@
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
         .row-input { border: 1px solid #ccc !important; }
+        /* Visual cue for locked fields */
+        input[readonly] { background-color: #f0f0f0; cursor: not-allowed; color: #666; }
 
         .total-box { text-align: right; margin-top: 20px; font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
@@ -70,7 +72,6 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // YOUR NEW SCRIPT URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaCN3dh98ikNVx4UaKXgkV7ms9T51_CRQmsxRZHwmpCfAFTuJzuIj9P46fJSsq88Qr/exec";
     
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
@@ -134,17 +135,21 @@
                 </div>
 
                 <div style="margin-bottom:20px;">
-                    <label>Select Customer:</label>
-                    <select id="posCustomer"><option value="Walk-in">Walk-in Customer</option>${custOptions}</select>
+                    <label>Customer:</label>
+                    <select id="posCustomer">
+                        <option value="" disabled selected>Select Customer...</option>
+                        <option value="Self">Self</option>
+                        ${custOptions}
+                    </select>
                 </div>
 
                 <table class="pos-table">
                     <thead>
                         <tr>
                             <th style="width:20%">SKU</th>
-                            <th>Item Description</th>
+                            <th>Item Description (Locked)</th>
                             <th style="width:10%">Qty</th>
-                            <th style="width:15%">Price</th>
+                            <th style="width:15%">Price (Locked)</th>
                             <th style="width:15%">Total</th>
                             <th style="width:5%" class="btn-no-print"></th>
                         </tr>
@@ -170,9 +175,9 @@
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><input type="text" class="row-input" onchange="autoFill(this)" placeholder="SKU..."></td>
-            <td><input type="text" class="row-input" placeholder="Description"></td>
-            <td><input type="number" class="row-input" value="1" oninput="calcRow(this)"></td>
-            <td><input type="text" class="row-input" placeholder="0.00" oninput="calcRow(this)"></td>
+            <td><input type="text" class="row-input" placeholder="Scanning SKU fills this..." readonly tabindex="-1"></td>
+            <td><input type="number" class="row-input" value="1" min="1" oninput="calcRow(this)"></td>
+            <td><input type="text" class="row-input" placeholder="0.00" readonly tabindex="-1"></td>
             <td class="row-total">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); updateGrandTotal();">X</button></td>
         `;
@@ -187,6 +192,9 @@
             row.cells[1].children[0].value = item["Item Name"];
             row.cells[3].children[0].value = item.Price.replace('$', '');
             calcRow(row.cells[2].children[0]);
+        } else {
+            alert("SKU Not Found in Inventory");
+            input.value = "";
         }
     }
 
@@ -209,6 +217,12 @@
     }
 
     async function saveInvoice() {
+        const custSelect = document.getElementById('posCustomer');
+        if (custSelect.value === "") {
+            alert("Please select a customer first.");
+            return;
+        }
+
         const btn = document.querySelector('.btn-green');
         btn.innerText = "Processing...";
         btn.disabled = true;
@@ -216,7 +230,7 @@
         const invoiceData = {
             invNum: document.getElementById('invNumDisplay').innerText,
             date: document.getElementById('dateDisplay').innerText,
-            customer: document.getElementById('posCustomer').value,
+            customer: custSelect.value,
             employee: currentUser.name,
             total: document.getElementById('grandTotal').innerText
         };
