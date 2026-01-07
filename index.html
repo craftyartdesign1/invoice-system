@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | POS System</title>
+    <title>CAD | NYC POS System</title>
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Header */
+        /* Header & Search */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         #mainSearch { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
@@ -20,8 +20,8 @@
         .tab.active { background: var(--blue); }
         .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; }
 
-        /* Layout */
-        .content { padding: 20px; max-width: 1300px; margin: auto; }
+        /* Content Layout */
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
         /* POS Table */
@@ -30,17 +30,16 @@
         .pos-table td { padding: 8px; border-bottom: 1px solid #eee; }
         
         .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
-        .btn-green { background: var(--green); width: 100%; font-size: 1.1rem; }
+        .btn-green { background: var(--green); width: 100%; font-size: 1.2rem; margin-top: 20px; }
         .btn-blue { background: var(--blue); }
         .btn-red { background: var(--red); }
         .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
-        .row-input { border: 1px solid #ccc !important; }
-        /* Visual cue for locked fields */
-        input[readonly] { background-color: #f0f0f0; cursor: not-allowed; color: #666; }
+        input[readonly] { background: #f0f0f0; cursor: not-allowed; color: #666; }
 
-        .total-box { text-align: right; margin-top: 20px; font-size: 1.8rem; font-weight: bold; color: var(--blue); }
+        .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
+        .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); margin-top: 10px; }
 
         @media print { 
             .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red { display: none !important; } 
@@ -54,11 +53,11 @@
     <div class="header-top">
         <div id="logoContainer"><h2>CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
-            <div style="font-weight:bold; color:#666;">Logged in: <span id="displayUser">Admin</span></div>
+            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span></div>
             <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
         </div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search Inventory, Customers, or Invoices...">
+    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search History, SKU, or Customers...">
 </div>
 
 <nav class="nav-bar">
@@ -66,17 +65,19 @@
     <button class="tab" id="tab-Lookup" onclick="loadTab('Lookup')">Invoice Lookup</button>
     <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
     <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
-    <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
+    <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin</button>
 </nav>
 
 <div class="content" id="mainView"></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaCN3dh98ikNVx4UaKXgkV7ms9T51_CRQmsxRZHwmpCfAFTuJzuIj9P46fJSsq88Qr/exec";
-    
+    // YOUR NEW SCRIPT URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzy_6rH9RIdsMQ8KgkOrntQRyQrhh51wcPKu1to-oUeRaYioWpsUE-Hc2ZC84TYWMxg/exec";
+    const NYC_TAX_RATE = 0.08875; // 8.875%
+
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
-    let customerList = [];
-    let inventoryList = [];
+    let inventory = [];
+    let customers = [];
 
     window.onload = async () => {
         syncUIRole();
@@ -86,11 +87,11 @@
 
     async function refreshData() {
         try {
-            const cRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
-            customerList = await cRes.json();
             const iRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
-            inventoryList = await iRes.json();
-        } catch(e) { console.error("Data Refresh Failed"); }
+            inventory = await iRes.json();
+            const cRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+            customers = await cRes.json();
+        } catch(e) { console.error("Sync Error"); }
     }
 
     function syncUIRole() {
@@ -117,21 +118,20 @@
             const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
             renderTable(tabName, data, view);
-        } catch (e) { view.innerHTML = `<div class="card">Error connecting to Sheets.</div>`; }
+        } catch (e) { view.innerHTML = `<div class="card">Connection Error</div>`; }
     }
 
     function renderGenerator(view) {
         const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
         const today = new Date().toLocaleDateString();
-
-        let custOptions = customerList.map(c => `<option value="${c.Name}">${c.Name} ${c.Company ? '('+c.Company+')' : ''}</option>`).join('');
+        let custOpts = customers.map(c => `<option value="${c.Name}">${c.Name} (${c.Company || 'Individual'})</option>`).join('');
 
         view.innerHTML = `
             <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">
-                    <div><strong>Invoice #:</strong> <span id="invNumDisplay">${invNum}</span></div>
-                    <div><strong>Date:</strong> <span id="dateDisplay">${today}</span></div>
-                    <div><strong>Delegate:</strong> <span id="empDisplay">${currentUser.name}</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:20px;">
+                    <div><strong>Invoice #:</strong> <span id="invNumDisp">${invNum}</span></div>
+                    <div><strong>Date:</strong> <span id="dateDisp">${today}</span></div>
+                    <div><strong>Delegate:</strong> ${currentUser.name}</div>
                 </div>
 
                 <div style="margin-bottom:20px;">
@@ -139,7 +139,7 @@
                     <select id="posCustomer">
                         <option value="" disabled selected>Select Customer...</option>
                         <option value="Self">Self</option>
-                        ${custOptions}
+                        ${custOpts}
                     </select>
                 </div>
 
@@ -147,7 +147,7 @@
                     <thead>
                         <tr>
                             <th style="width:20%">SKU</th>
-                            <th>Item Description (Locked)</th>
+                            <th>Description (Locked)</th>
                             <th style="width:10%">Qty</th>
                             <th style="width:15%">Price (Locked)</th>
                             <th style="width:15%">Total</th>
@@ -157,114 +157,95 @@
                     <tbody id="posBody"></tbody>
                 </table>
                 
-                <div class="btn-no-print" style="margin-top:15px;">
-                    <button class="btn btn-blue btn-sm" onclick="addRow()">+ Add Line Item</button>
-                </div>
+                <button class="btn btn-blue btn-sm btn-no-print" style="margin-top:15px;" onclick="addRow()">+ Add Line Item</button>
 
-                <div class="total-box">Grand Total: <span id="grandTotal">$0.00</span></div>
-                
-                <div style="margin-top:30px;" class="btn-no-print">
-                    <button class="btn btn-green" onclick="saveInvoice()">SAVE & PRINT INVOICE</button>
+                <div class="total-display">
+                    Subtotal: <span id="subDisp">$0.00</span><br>
+                    NYC Tax (8.875%): <span id="taxDisp">$0.00</span>
+                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
                 </div>
+                
+                <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT INVOICE</button>
             </div>`;
         addRow();
     }
 
     function addRow() {
-        const tbody = document.getElementById('posBody');
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><input type="text" class="row-input" onchange="autoFill(this)" placeholder="SKU..."></td>
-            <td><input type="text" class="row-input" placeholder="Scanning SKU fills this..." readonly tabindex="-1"></td>
-            <td><input type="number" class="row-input" value="1" min="1" oninput="calcRow(this)"></td>
-            <td><input type="text" class="row-input" placeholder="0.00" readonly tabindex="-1"></td>
+            <td><input type="text" onchange="autoFill(this)" placeholder="SKU..."></td>
+            <td><input type="text" readonly tabindex="-1"></td>
+            <td><input type="number" value="1" min="1" oninput="calcRow(this)"></td>
+            <td><input type="text" readonly tabindex="-1"></td>
             <td class="row-total">$0.00</td>
-            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); updateGrandTotal();">X</button></td>
+            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
         `;
-        tbody.appendChild(row);
+        document.getElementById('posBody').appendChild(row);
     }
 
     function autoFill(input) {
-        const sku = input.value.toLowerCase();
-        const item = inventoryList.find(i => i.SKU.toString().toLowerCase() === sku);
+        const item = inventory.find(i => i.SKU.toString().toLowerCase() === input.value.toLowerCase());
         if(item) {
-            const row = input.parentElement.parentElement;
-            row.cells[1].children[0].value = item["Item Name"];
-            row.cells[3].children[0].value = item.Price.replace('$', '');
-            calcRow(row.cells[2].children[0]);
-        } else {
-            alert("SKU Not Found in Inventory");
-            input.value = "";
+            const tr = input.parentElement.parentElement;
+            tr.cells[1].children[0].value = item["Item Name"];
+            tr.cells[3].children[0].value = item.Price.replace('$','');
+            calcRow(tr.cells[2].children[0]);
         }
     }
 
     function calcRow(input) {
-        const row = input.parentElement.parentElement;
-        const qty = parseFloat(row.cells[2].children[0].value) || 0;
-        let price = row.cells[3].children[0].value.replace('$', '');
-        price = parseFloat(price) || 0;
-        const total = qty * price;
-        row.cells[4].innerText = "$" + total.toFixed(2);
-        updateGrandTotal();
+        const tr = input.parentElement.parentElement;
+        const q = parseFloat(tr.cells[2].children[0].value) || 0;
+        const p = parseFloat(tr.cells[3].children[0].value) || 0;
+        tr.cells[4].innerText = "$" + (q * p).toFixed(2);
+        calcTotal();
     }
 
-    function updateGrandTotal() {
-        let grand = 0;
-        document.querySelectorAll('.row-total').forEach(cell => {
-            grand += parseFloat(cell.innerText.replace('$', '')) || 0;
-        });
-        document.getElementById('grandTotal').innerText = "$" + grand.toFixed(2);
+    function calcTotal() {
+        let sub = 0;
+        document.querySelectorAll('.row-total').forEach(cell => sub += parseFloat(cell.innerText.replace('$','')) || 0);
+        let tax = sub * NYC_TAX_RATE;
+        document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
+        document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
+        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
     }
 
     async function saveInvoice() {
-        const custSelect = document.getElementById('posCustomer');
-        if (custSelect.value === "") {
-            alert("Please select a customer first.");
-            return;
-        }
-
+        if (!document.getElementById('posCustomer').value) return alert("Select a customer");
         const btn = document.querySelector('.btn-green');
-        btn.innerText = "Processing...";
-        btn.disabled = true;
+        btn.innerText = "Saving..."; btn.disabled = true;
 
-        const invoiceData = {
-            invNum: document.getElementById('invNumDisplay').innerText,
-            date: document.getElementById('dateDisplay').innerText,
-            customer: custSelect.value,
+        const data = {
+            invNum: document.getElementById('invNumDisp').innerText,
+            date: document.getElementById('dateDisp').innerText,
+            customer: document.getElementById('posCustomer').value,
             employee: currentUser.name,
-            total: document.getElementById('grandTotal').innerText
+            subtotal: document.getElementById('subDisp').innerText,
+            taxAmount: document.getElementById('taxDisp').innerText,
+            total: document.getElementById('grandDisp').innerText
         };
 
         try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(invoiceData)
-            });
-            alert("Invoice Saved Successfully!");
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
+            alert("Invoice Saved!");
             window.print();
             loadTab('Generator');
-        } catch (e) {
-            alert("Save failed. Try again.");
-            btn.innerText = "SAVE & PRINT INVOICE";
-            btn.disabled = false;
-        }
+        } catch (e) { alert("Save Error"); btn.disabled = false; }
     }
 
     function renderTable(type, data, view) {
-        let html = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
+        let h = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
         if (type === 'Lookup') {
-            html += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Delegate</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(i => {
-                html += `<tr><td><b>${i["Invoice Number"]}</b></td><td>${i.Date}</td><td>${i.Customer}</td><td>${i.Employee}</td><td>${i.Subtotal}</td><td><button class="btn btn-blue btn-sm">View</button>${currentUser.role === 'Admin' ? '<button class="btn btn-red btn-sm">Delete</button>':''}</td></tr>`;
-            });
+            h += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
+            data.forEach(r => h += `<tr><td><b>${r["Invoice Number"]}</b></td><td>${r.Date}</td><td>${r.Customer}</td><td>${r.Subtotal}</td><td>${r.Tax}</td><td><b>${r["Grand Total"]}</b></td><td><button class="btn btn-blue btn-sm">View</button></td></tr>`);
         } else if (type === 'Inventory') {
-            html += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
-            data.forEach(i => { html += `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>${i.Price}</td></tr>`; });
+            h += `<th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody>`;
+            data.forEach(r => h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${r.Price}</td></tr>`);
         } else if (type === 'Customers') {
-            html += `<th>Name</th><th>Company</th><th>Address</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(i => { html += `<tr><td>${i.Name}</td><td>${i.Company}</td><td>${i["Street Address"]}</td><td><button class="btn btn-green btn-sm" onclick="loadTab('Generator')">Bill</button></td></tr>`; });
+            h += `<th>Name</th><th>Company</th><th>Action</th></tr></thead><tbody>`;
+            data.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company}</td><td><button class="btn btn-blue btn-sm" onclick="loadTab('Generator')">Bill</button></td></tr>`);
         }
-        view.innerHTML = html + `</tbody></table></div>`;
+        view.innerHTML = h + `</tbody></table></div>`;
     }
 
     function filterTable() {
