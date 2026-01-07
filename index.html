@@ -9,12 +9,11 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Navigation */
+        /* Navigation & Header */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
-        .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; }
 
         .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -30,7 +29,7 @@
         .btn-red { background: var(--red); }
         .btn-sm { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; }
 
-        /* Professional Status Badges */
+        /* Status Badges */
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .badge-exempt { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         .badge-taxable { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
@@ -46,7 +45,7 @@
 
 <div class="header-section">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div><h2>CRAFTY ART DESIGN</h2></div>
+        <h2>CRAFTY ART DESIGN</h2>
         <div style="text-align: right;">
             <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Alessio</span></div>
             <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
@@ -141,7 +140,7 @@
                     Tax (8.875%): <span id="taxDisp">$0.00</span>
                     <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
                 </div>
-                <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT INVOICE</button>
+                <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT</button>
             </div>`;
         addRow();
     }
@@ -151,7 +150,7 @@
         row.innerHTML = `
             <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
             <td><input type="text" placeholder="Item Name"></td>
-            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
+            <td><input type="number" value="1" oninput="calcTotal()"></td>
             <td><input type="text" oninput="calcTotal()" placeholder="0.00"></td>
             <td class="row-total" data-taxable="true">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
@@ -165,7 +164,7 @@
             const tr = input.parentElement.parentElement;
             tr.cells[1].children[0].value = item["Item Name"];
             tr.cells[3].children[0].value = String(item.Price).replace(/[$,]/g,'');
-            // This reads your new "Exempt" checkbox logic
+            // Check for Custom Checkbox Values
             tr.cells[4].dataset.taxable = (item["Tax Exempt"] === "Exempt") ? "false" : "true";
             calcTotal();
         }
@@ -174,9 +173,9 @@
     function calcTotal() {
         let sub = 0; let taxableSub = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
-            const q = parseFloat(tr.cells[2].children[0].value) || 0;
-            const p = parseFloat(tr.cells[3].children[0].value) || 0;
-            const rowTotal = q * p;
+            const qty = parseFloat(tr.cells[2].children[0].value) || 0;
+            const price = parseFloat(tr.cells[3].children[0].value) || 0;
+            const rowTotal = qty * price;
             tr.cells[4].innerText = "$" + rowTotal.toFixed(2);
             sub += rowTotal;
             if (tr.cells[4].dataset.taxable === "true") taxableSub += rowTotal;
@@ -188,19 +187,35 @@
     }
 
     function renderTable(type, data, view) {
-        let h = `<div class="card"><h3>${type}</h3><table class="pos-table"><thead><tr>`;
+        let h = `<div class="card"><h3>${type} Management</h3><table class="pos-table"><thead><tr>`;
+        
+        // FILTER: Hide rows where the SKU is empty
+        const activeData = data.filter(r => r.SKU && String(r.SKU).trim() !== "");
+
         if (type === 'Inventory') {
-            h += `<th>SKU</th><th>Item Name</th><th>Price</th><th>Tax Status</th></tr></thead><tbody>`;
-            data.forEach(r => {
+            h += `<th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Tax Status</th></tr></thead><tbody>`;
+            activeData.forEach(r => {
                 const isExempt = (r["Tax Exempt"] === "Exempt");
-                const formattedPrice = new Number(String(r.Price).replace(/[$,]/g, '')).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${formattedPrice}</td>
-                <td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
+                const priceClean = String(r.Price || "0").replace(/[$,]/g, '');
+                const formattedPrice = new Number(priceClean).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                
+                h += `<tr>
+                    <td>${r.SKU}</td>
+                    <td>${r["Item Name"] || '---'}</td>
+                    <td>${r["Size"] || '---'}</td>
+                    <td>${formattedPrice}</td>
+                    <td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td>
+                </tr>`;
             });
         } else {
             h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
-            data.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
+            activeData.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
         }
+        
+        if (activeData.length === 0) {
+            h += `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No active items found.</td></tr>`;
+        }
+
         view.innerHTML = h + `</tbody></table></div>`;
     }
 
@@ -229,8 +244,8 @@
     }
 
     async function saveInvoice() {
-        if (!document.getElementById('posCustomer').value) return alert("Please select a customer first.");
-        alert("Invoice Data Saved!");
+        if (!document.getElementById('posCustomer').value) return alert("Select a Customer");
+        alert("Invoice Data Sent to Sheet!");
         window.print();
         loadTab('Generator');
     }
