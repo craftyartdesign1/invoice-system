@@ -5,59 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAD | NYC POS System</title>
     <style>
-        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
+        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; --gray: #4b5563; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--light); margin: 0; }
         
-        /* Header & Search */
+        /* Header */
         .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        #mainSearch { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
-
+        
         /* Navigation */
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
         .tab.admin-only { border: 1px solid var(--red); color: var(--red); margin-left: auto; display: none; }
 
-        /* Content Layout */
+        /* Layout */
         .content { padding: 20px; max-width: 1200px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* POS Table */
-        .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .pos-table th { background: var(--blue); color: white; padding: 10px; text-align: left; font-size: 0.85rem; }
-        .pos-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        /* Filter Grid (Lookup UI) */
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+        .filter-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
         
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
+        /* Tables */
+        .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .pos-table th { background: #f1f5f9; color: #475569; padding: 12px; text-align: left; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; }
+        .pos-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        
+        /* Buttons */
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-green { background: var(--green); width: 100%; font-size: 1.2rem; margin-top: 20px; }
-        .btn-blue { background: var(--blue); }
+        .btn-blue { background: #2563eb; }
         .btn-red { background: var(--red); }
-        .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+        .btn:hover { opacity: 0.9; }
 
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
-        input[readonly] { background: #f0f0f0; cursor: not-allowed; color: #666; }
-
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
         .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
-        .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); margin-top: 10px; }
+        .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
-        @media print { 
-            .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red { display: none !important; } 
-            .card { box-shadow: none; border: none; }
-        }
+        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .filter-grid { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="header-section">
     <div class="header-top">
-        <div id="logoContainer"><h2>CRAFTY ART DESIGN</h2></div>
+        <div><h2>CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
             <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Admin</span></div>
             <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
         </div>
     </div>
-    <input type="text" id="mainSearch" onkeyup="filterTable()" placeholder="Search History, SKU, or Customers...">
 </div>
 
 <nav class="nav-bar">
@@ -71,8 +70,8 @@
 <div class="content" id="mainView"></div>
 
 <script>
-    // UPDATED SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywaKHypG2qPhGyMq0f45bZ5IRaGkRJx0PrxHLS96WFZ58fIINDRyKwnD8XQI9UIrk-/exec";
+    // UPDATED WITH YOUR NEW URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNDPBFyPktfE46fGJg8PhZSH9q7_LBDDJDZ-SLyjo5Pd27PQxKyVCoARhZCoyr0MCc/exec";
     const NYC_TAX_RATE = 0.08875; 
 
     let currentUser = { name: 'Alessio', role: 'Admin' }; 
@@ -80,7 +79,6 @@
     let customers = [];
 
     window.onload = async () => {
-        syncUIRole();
         await refreshData();
         loadTab('Generator');
     };
@@ -94,14 +92,10 @@
         } catch(e) { console.error("Sync Error"); }
     }
 
-    function syncUIRole() {
-        document.getElementById('displayUser').innerText = currentUser.name;
-        document.getElementById('tab-Admin').style.display = (currentUser.role === 'Admin') ? "block" : "none";
-    }
-
     function toggleUserRole() {
         currentUser = (currentUser.role === 'Admin') ? { name: 'Staff User', role: 'Staff' } : { name: 'Alessio', role: 'Admin' };
-        syncUIRole();
+        document.getElementById('displayUser').innerText = currentUser.name;
+        document.getElementById('tab-Admin').style.display = (currentUser.role === 'Admin') ? "block" : "none";
         loadTab('Generator');
     }
 
@@ -117,55 +111,46 @@
             const action = (tabName === 'Lookup') ? 'getInvoices' : 'get' + tabName;
             const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
-            renderTable(tabName, data, view);
+            
+            if (tabName === 'Lookup') renderLookupUI(data, view);
+            else renderTable(tabName, data, view);
         } catch (e) { view.innerHTML = `<div class="card">Connection Error</div>`; }
     }
 
     function renderGenerator(view) {
         const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
         const today = new Date().toLocaleDateString();
-        let custOpts = customers.map(c => `<option value="${c.Name}" data-company="${c.Company || ''}">${c.Name} (${c.Company || 'Individual'})</option>`).join('');
+        let custOpts = customers.map(c => `<option value="${c.Name}" data-company="${c.Company || ''}">${c.Name}</option>`).join('');
 
         view.innerHTML = `
             <div class="card">
-                <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
                     <div><strong>Invoice #:</strong> <span id="invNumDisp">${invNum}</span></div>
                     <div><strong>Date:</strong> <span id="dateDisp">${today}</span></div>
-                    <div><strong>Delegate:</strong> ${currentUser.name}</div>
+                    <div><strong>Employee:</strong> ${currentUser.name}</div>
                 </div>
-
                 <div style="margin-bottom:20px;">
-                    <label>Customer:</label>
+                    <label>Select Customer:</label>
                     <select id="posCustomer">
-                        <option value="" disabled selected>Select Customer...</option>
-                        <option value="Self" data-company="N/A">Self</option>
+                        <option value="" disabled selected>Choose...</option>
+                        <option value="Self" data-company="N/A">Walk-in / Self</option>
                         ${custOpts}
                     </select>
                 </div>
-
                 <table class="pos-table">
                     <thead>
                         <tr>
-                            <th style="width:15%">SKU</th>
-                            <th>Description</th>
-                            <th style="width:10%">Size</th>
-                            <th style="width:10%">Qty</th>
-                            <th style="width:15%">Price</th>
-                            <th style="width:15%">Total</th>
-                            <th style="width:5%" class="btn-no-print"></th>
+                            <th style="width:15%">SKU</th><th>Description</th><th style="width:10%">Size</th><th style="width:10%">Qty</th><th style="width:15%">Price</th><th style="width:15%">Total</th><th class="btn-no-print"></th>
                         </tr>
                     </thead>
                     <tbody id="posBody"></tbody>
                 </table>
-                
-                <button class="btn btn-blue btn-sm btn-no-print" style="margin-top:15px;" onclick="addRow()">+ Add Line Item</button>
-
+                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:15px;">+ Add Item</button>
                 <div class="total-display">
                     Subtotal: <span id="subDisp">$0.00</span><br>
-                    NYC Tax (8.875%): <span id="taxDisp">$0.00</span>
+                    Tax (8.875%): <span id="taxDisp">$0.00</span>
                     <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
                 </div>
-                
                 <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT INVOICE</button>
             </div>`;
         addRow();
@@ -174,7 +159,7 @@
     function addRow() {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><input type="text" onchange="autoFill(this)" placeholder="SKU..."></td>
+            <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
             <td><input type="text" placeholder="Item Name"></td>
             <td><input type="text" placeholder="Size"></td>
             <td><input type="number" value="1" min="1" oninput="calcRow(this)"></td>
@@ -214,10 +199,10 @@
 
     async function saveInvoice() {
         const custSelect = document.getElementById('posCustomer');
-        if (!custSelect.value) return alert("Select a customer");
+        if (!custSelect.value) return alert("Please select a customer");
         
         const btn = document.querySelector('.btn-green');
-        btn.innerText = "Saving..."; btn.disabled = true;
+        btn.innerText = "Processing..."; btn.disabled = true;
 
         const items = [];
         document.querySelectorAll('#posBody tr').forEach(tr => {
@@ -245,43 +230,84 @@
 
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("Invoice Saved!");
+            alert("Success! Invoice Saved.");
             window.print();
             loadTab('Generator');
-        } catch (e) { alert("Save Error"); btn.disabled = false; }
+        } catch (e) { alert("Error saving data."); btn.disabled = false; btn.innerText = "SAVE & PRINT INVOICE"; }
+    }
+
+    // UPDATED LOOKUP UI BASED ON YOUR SCREENSHOT
+    function renderLookupUI(data, view) {
+        view.innerHTML = `
+            <div class="card">
+                <h3>Invoice Lookup</h3>
+                <div class="filter-grid">
+                    <div class="filter-group"><label>Search by Date</label><input type="text" id="fDate" onkeyup="multiFilter()" placeholder="MM/DD/YY"></div>
+                    <div class="filter-group"><label>Search by Year</label><input type="text" id="fYear" onkeyup="multiFilter()" placeholder="2026"></div>
+                    <div class="filter-group"><label>Search by Customer</label><input type="text" id="fCust" onkeyup="multiFilter()" placeholder="Customer name"></div>
+                    <div class="filter-group"><label>Search by Company</label><input type="text" id="fComp" onkeyup="multiFilter()" placeholder="Company name"></div>
+                    <div class="filter-group"><label>Search by Employee</label><select id="fEmp" onchange="multiFilter()"><option value="">All Employees</option><option value="Alessio">Alessio</option></select></div>
+                </div>
+                <button class="btn btn-sm" style="background:var(--gray); margin-bottom:15px;" onclick="clearFilters()">Clear All Filters</button>
+                <table class="pos-table" id="lookupTable">
+                    <thead>
+                        <tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th>Total</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(r => `
+                            <tr>
+                                <td><b>${r["Invoice Number"]}</b></td>
+                                <td>${r["Date"]}</td>
+                                <td>${r["Customer"]}</td>
+                                <td>${r["Company"] || 'N/A'}</td>
+                                <td>${r["Employee"]}</td>
+                                <td><b>${r["Total"]}</b></td>
+                                <td>
+                                    <button class="btn btn-blue btn-sm">Print</button>
+                                    <button class="btn btn-red btn-sm">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
+    function multiFilter() {
+        const d = document.getElementById('fDate').value.toLowerCase();
+        const y = document.getElementById('fYear').value.toLowerCase();
+        const c = document.getElementById('fCust').value.toLowerCase();
+        const co = document.getElementById('fComp').value.toLowerCase();
+        const e = document.getElementById('fEmp').value.toLowerCase();
+        
+        document.querySelectorAll('#lookupTable tbody tr').forEach(row => {
+            const dateMatch = row.cells[1].innerText.toLowerCase().includes(d);
+            const yearMatch = row.cells[1].innerText.toLowerCase().includes(y);
+            const custMatch = row.cells[2].innerText.toLowerCase().includes(c);
+            const compMatch = row.cells[3].innerText.toLowerCase().includes(co);
+            const empMatch = row.cells[4].innerText.toLowerCase().includes(e);
+            row.style.display = (dateMatch && yearMatch && custMatch && compMatch && empMatch) ? "" : "none";
+        });
+    }
+
+    function clearFilters() {
+        ['fDate','fYear','fCust','fComp','fEmp'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+        });
+        multiFilter();
     }
 
     function renderTable(type, data, view) {
-        let h = `<div class="card"><h3>${type}</h3><table id="dataTable"><thead><tr>`;
-        if (type === 'Lookup') {
-            // FIXED: Matches your Sheet header "Total" exactly to remove "undefined"
-            h += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(r => {
-                h += `<tr>
-                    <td><b>${r["Invoice Number"]}</b></td>
-                    <td>${r["Date"]}</td>
-                    <td>${r["Customer"]}</td>
-                    <td>${r["Subtotal"]}</td>
-                    <td>${r["Tax"]}</td>
-                    <td><b>${r["Total"]}</b></td>
-                    <td><button class="btn btn-blue btn-sm">View</button></td>
-                </tr>`;
-            });
-        } else if (type === 'Inventory') {
-            h += `<th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody>`;
+        let h = `<div class="card"><h3>${type}</h3><table class="pos-table"><thead><tr>`;
+        if (type === 'Inventory') {
+            h += `<th>SKU</th><th>Item Name</th><th>Price</th></tr></thead><tbody>`;
             data.forEach(r => h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${r.Price}</td></tr>`);
         } else if (type === 'Customers') {
-            h += `<th>Name</th><th>Company</th><th>Action</th></tr></thead><tbody>`;
-            data.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company}</td><td><button class="btn btn-blue btn-sm" onclick="loadTab('Generator')">Bill</button></td></tr>`);
+            h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
+            data.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company}</td></tr>`);
         }
         view.innerHTML = h + `</tbody></table></div>`;
-    }
-
-    function filterTable() {
-        const q = document.getElementById("mainSearch").value.toLowerCase();
-        const rows = document.getElementById("dataTable")?.getElementsByTagName("tr");
-        if(!rows) return;
-        for (let i = 1; i < rows.length; i++) rows[i].style.display = rows[i].innerText.toLowerCase().includes(q) ? "" : "none";
     }
 </script>
 </body>
