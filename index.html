@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAD | NYC POS SYSTEM - MASTER v5</title>
+    <title>CAD | NYC POS SYSTEM - FINAL MASTER</title>
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; --gold: #ffd700; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: var(--bg-color, var(--light)); background-size: cover; margin: 0; min-height: 100vh; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--light); margin: 0; min-height: 100vh; }
         
         .header-section { background: white; padding: 15px 30px; border-bottom: 4px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
@@ -18,7 +18,7 @@
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
         .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .pos-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; font-size: 0.85rem; text-transform: uppercase; }
+        .pos-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; font-size: 0.85rem; }
         .pos-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
         
         .btn { padding: 10px 18px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
@@ -28,10 +28,9 @@
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; margin: 2px; }
         
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
+        .exempt-label { color: var(--green); font-weight: bold; font-size: 0.7rem; display: block; margin-top: 4px; }
         .total-area { text-align: right; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .grand-total { font-size: 2.2rem; font-weight: bold; color: var(--blue); }
-
-        .exempt-label { color: #28a745; font-weight: bold; font-size: 0.75rem; display: block; margin-top: 4px; }
 
         @media print { 
             .nav-bar, .header-section, .btn-no-print, .action-col, #adminTab { display: none !important; } 
@@ -42,15 +41,18 @@
 <body>
 
 <div class="header-section">
-    <div id="logo-container"><h2 style="margin:0; color: var(--blue);">CRAFTY ART DESIGN</h2></div>
-    <div style="text-align: right;"><strong>User: <span id="displayUser">Alessio</span></strong></div>
+    <div><h2 style="margin:0; color: var(--blue);">CRAFTY ART DESIGN</h2></div>
+    <div style="text-align: right;">
+        <strong>User: <span id="displayUser">Alessio</span></strong><br>
+        <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleRole()" style="background:#666;">Switch Role</button>
+    </div>
 </div>
 
 <nav class="nav-bar">
     <button class="tab active" onclick="loadTab('Generator')">Invoice Generator</button>
     <button class="tab" onclick="loadTab('Lookup')">Invoice Lookup</button>
     <button class="tab" onclick="loadTab('Inventory')">Inventory</button>
-    <button id="adminTab" class="tab" onclick="loadTab('Settings')">⚙️ Admin Settings</button>
+    <button id="adminTab" class="tab" onclick="loadTab('Settings')">Settings</button>
 </nav>
 
 <div class="content" id="mainView"></div>
@@ -60,27 +62,40 @@
     const TAX_RATE = 0.08875;
     let inventory = [], customers = [], invoices = [];
     let currentUser = { name: 'Alessio', role: 'Admin' };
+    let managerPin = "1234";
 
     window.onload = async () => { await refreshData(); loadTab('Generator'); };
 
     async function refreshData() {
         try {
-            const [i, c, inv] = await Promise.all([
+            const [inv_data, cust_data, hist_data] = await Promise.all([
                 fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
                 fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
                 fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
             ]);
-            inventory = i.filter(row => row.SKU);
-            invoices = inv.filter(row => row["Invoice Number"]);
-        } catch(e) { console.log("Sync error."); }
+            inventory = inv_data.filter(row => row.SKU && row.SKU !== "");
+            customers = cust_data.filter(row => row.Name && row.Name !== "");
+            invoices = hist_data.filter(row => row["Invoice Number"]);
+        } catch(e) { console.error("Database Connection Failed"); }
+    }
+
+    function toggleRole() {
+        currentUser.role = (currentUser.role === 'Admin') ? 'Staff' : 'Admin';
+        document.getElementById('displayUser').innerText = (currentUser.role === 'Admin') ? 'Alessio' : 'Staff';
+        document.getElementById('adminTab').style.display = (currentUser.role === 'Admin') ? 'block' : 'none';
+        loadTab('Generator');
     }
 
     function loadTab(name, prefillData = null) {
         const view = document.getElementById('mainView');
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => t.innerText.includes(name));
+        if(activeTab) activeTab.classList.add('active');
+
         if (name === 'Generator') renderGenerator(view, prefillData);
         else if (name === 'Lookup') renderLookup(view);
-        else if (name === 'Inventory') renderInventory(view);
+        else if (name === 'Inventory') renderDataList('Inventory', view);
+        else if (name === 'Settings') renderSettings(view);
     }
 
     function renderGenerator(view, data = null) {
@@ -91,8 +106,12 @@
                     <div><h2 style="margin:0; color:var(--blue);">INVOICE</h2><strong>No: ${invNum}</strong></div>
                     <div style="text-align:right;">Date: ${data ? data.Date : new Date().toLocaleDateString()}</div>
                 </div>
+                <div style="margin: 20px 0;">
+                    <label>Customer:</label>
+                    <select id="posCustomer">${customers.map(c=>`<option ${data && data.Customer === c.Name ? 'selected' : ''}>${c.Name}</option>`).join('')}</select>
+                </div>
                 <table class="pos-table">
-                    <thead><tr><th>SKU</th><th>Item Description</th><th>Qty</th><th>Price</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
+                    <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
                     <tbody id="posBody"></tbody>
                 </table>
                 <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
@@ -101,97 +120,111 @@
                     NYC Sales Tax (8.875%): <span id="taxTotal">$0.00</span>
                     <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
                 </div>
-                <div class="btn-no-print" style="margin-top:20px;">
+                <div class="btn-no-print" style="margin-top:20px; display:flex; gap:10px;">
                     <button class="btn btn-green" onclick="window.print()">PRINT INVOICE</button>
+                    <button class="btn btn-blue" onclick="alert('Saving to Google Sheets...')">SAVE RECORD</button>
                 </div>
             </div>`;
-        addRow();
+        if (data && data.Items) data.Items.forEach(i => addRow(i)); else addRow();
     }
 
-    function addRow() {
+    function addRow(itemData = null) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
-            <td><input type="text" id="desc"></td>
-            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
+            <td><input type="text" onchange="autoFill(this)" value="${itemData ? itemData.SKU : ''}" placeholder="SKU"></td>
+            <td><input type="text" value="${itemData ? itemData.Name : ''}"></td>
+            <td><input type="number" value="${itemData ? itemData.Qty : 1}" min="1" oninput="calcTotal()"></td>
             <td>
-                <input type="number" step="0.01" oninput="calcTotal()">
-                <span class="exempt-badge" style="display:none; color:green; font-weight:bold; font-size:10px;">TAX EXEMPT</span>
+                <input type="number" step="0.01" value="${itemData ? itemData.Price : 0}" oninput="calcTotal()">
+                <span class="exempt-label" style="display:none;">TAX EXEMPT</span>
             </td>
             <td class="row-total">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
+        if(itemData) autoFill(tr.querySelector('input'));
     }
 
     function autoFill(input) {
         const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
         const tr = input.closest('tr');
         if(item) {
-            tr.querySelector('#desc').value = item["Item Name"];
+            tr.cells[1].querySelector('input').value = item["Item Name"];
             tr.cells[3].querySelector('input').value = item.Price;
-            
-            // Logic to check if item is exempt in inventory
-            // Assumes your sheet has a column named "Tax" or "Status"
-            const isExempt = (item.Tax === "Exempt" || item.Status === "Exempt");
+            // Check the "Tax Exempt" column (Column E) from your Inventory Sheet
+            const isExempt = (item["Tax Exempt"] === true || item["Tax Exempt"] === "TRUE");
             tr.setAttribute('data-exempt', isExempt);
-            tr.cells[3].querySelector('.exempt-badge').style.display = isExempt ? 'block' : 'none';
-            calcTotal();
+            tr.cells[3].querySelector('.exempt-label').style.display = isExempt ? 'block' : 'none';
         }
+        calcTotal();
     }
 
     function calcTotal() {
-        let taxable = 0, exempt = 0;
+        let sub = 0, taxableSum = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const q = parseFloat(tr.cells[2].querySelector('input').value) || 0;
             const p = parseFloat(tr.cells[3].querySelector('input').value) || 0;
             const isExempt = tr.getAttribute('data-exempt') === 'true';
-            const rowTotal = q * p;
-            tr.cells[4].innerText = "$" + rowTotal.toFixed(2);
-            if (isExempt) exempt += rowTotal; else taxable += rowTotal;
+            const total = q * p;
+            tr.cells[4].innerText = "$" + total.toFixed(2);
+            sub += total;
+            if(!isExempt) taxableSum += total;
         });
-        const tax = taxable * TAX_RATE;
-        document.getElementById('subTotal').innerText = "$" + (taxable + exempt).toFixed(2);
+        const tax = taxableSum * TAX_RATE;
+        document.getElementById('subTotal').innerText = "$" + sub.toFixed(2);
         document.getElementById('taxTotal').innerText = "$" + tax.toFixed(2);
-        document.getElementById('grandDisp').innerText = "$" + (taxable + exempt + tax).toFixed(2);
+        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
     }
 
     function renderLookup(view) {
+        const isAdmin = currentUser.role === 'Admin';
         view.innerHTML = `
             <div class="card">
                 <h3>Invoice History</h3>
                 <table class="pos-table">
-                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total Price</th><th>Employee</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Actions</th></tr></thead>
                     <tbody>${invoices.map(inv => `
                         <tr>
                             <td>${inv["Invoice Number"]}</td>
                             <td>${inv.Date}</td>
                             <td>${inv.Customer}</td>
-                            <td><strong>$${parseFloat(inv.Total || inv.Subtotal || 0).toFixed(2)}</strong></td>
-                            <td>${inv.Employee || 'Alessio'}</td>
-                            <td><button class="btn btn-blue btn-sm" onclick="window.print()">Print</button></td>
+                            <td><strong>$${parseFloat(inv.Subtotal || 0).toFixed(2)}</strong></td>
+                            <td class="action-col">
+                                <button class="btn btn-blue btn-sm" onclick='loadTab("Generator", ${JSON.stringify(inv)})'>Print</button>
+                                ${isAdmin ? `<button class="btn btn-red btn-sm" onclick="deleteInv('${inv["Invoice Number"]}')">Delete</button>` : ''}
+                            </td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
             </div>`;
     }
 
-    function renderInventory(view) {
+    function renderDataList(type, view) {
+        const isAdmin = currentUser.role === 'Admin';
+        const data = (type === 'Inventory') ? inventory : customers;
         view.innerHTML = `
             <div class="card">
-                <h3>Inventory Database</h3>
+                <h3>${type} Database</h3>
                 <table class="pos-table">
-                    <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Tax Status</th><th>Actions</th></tr></thead>
-                    <tbody>${inventory.map(r => `
+                    <thead><tr><th>Item/Name</th><th>Info</th><th>Price/City</th><th class="action-col">Actions</th></tr></thead>
+                    <tbody>${data.map(r => `
                         <tr>
-                            <td>${r.SKU}</td>
-                            <td>${r["Item Name"]}</td>
-                            <td>$${parseFloat(r.Price).toFixed(2)}</td>
-                            <td><span style="color:${r.Tax === 'Exempt' ? 'green' : 'black'}">${r.Tax || 'Standard'}</span></td>
-                            <td><button class="btn btn-blue btn-sm">Edit</button></td>
+                            <td>${r.SKU || r.Name}</td>
+                            <td>${r["Item Name"] || r["Street Address"] || ''}</td>
+                            <td>${r.Price ? '$'+parseFloat(r.Price).toFixed(2) : (r.City || '')}</td>
+                            <td class="action-col">
+                                ${isAdmin ? `<button class="btn btn-blue btn-sm">Edit</button> <button class="btn btn-red btn-sm">Delete</button>` : 'Locked'}
+                            </td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
             </div>`;
+    }
+
+    function deleteInv(num) {
+        if(prompt("Enter Admin PIN to confirm:") === managerPin) {
+            invoices = invoices.filter(i => i["Invoice Number"] !== num);
+            renderLookup(document.getElementById('mainView'));
+        }
     }
 </script>
 </body>
