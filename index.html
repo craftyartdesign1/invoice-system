@@ -26,19 +26,14 @@
         .btn-blue { background: #2563eb; }
         .btn-red { background: var(--red); }
         .btn-sm { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; }
-        .btn-override { background: #6b7280; font-size: 10px; padding: 4px 6px; margin-left: 5px; }
-
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .badge-exempt { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .badge-taxable { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
-        input:disabled { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; border: 1px solid #e5e7eb; }
 
         .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
         .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
-        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-override { display: none !important; } .card { box-shadow: none; border: none; } }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
+        input:disabled { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; border: 1px solid #e5e7eb; }
+
+        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red { display: none !important; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
@@ -47,7 +42,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div id="mainLogo"><h2>CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
-            <div style="font-weight:bold; color:#666;">Status: <span style="color:var(--green)">Online</span></div>
+            <div style="font-weight:bold; color:#666;">Signed in as: <span id="repNameDisp" style="color:var(--blue)">---</span></div>
         </div>
     </div>
 </div>
@@ -69,17 +64,13 @@
     let inventory = [];
     let customers = [];
     let managerPin = localStorage.getItem('cad_pin') || "1234";
+    let activeRep = localStorage.getItem('cad_active_rep') || "Guest User";
 
     window.onload = async () => {
-        applyBranding();
+        document.getElementById('repNameDisp').innerText = activeRep;
         await refreshData();
         loadTab('Generator');
     };
-
-    function applyBranding() {
-        const logo = localStorage.getItem('cad_logo');
-        if(logo) document.getElementById('mainLogo').innerHTML = `<img src="${logo}" style="max-height:50px">`;
-    }
 
     async function refreshData() {
         try {
@@ -90,6 +81,10 @@
             inventory = await iRes.json();
             customers = await cRes.json();
         } catch(e) { console.error("Sync Error"); }
+    }
+
+    function formatUSD(val) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
     }
 
     async function loadTab(tabName) {
@@ -117,6 +112,7 @@
             <div class="card" id="printArea">
                 <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                     <div><strong>Invoice #:</strong> ${invNum}</div>
+                    <div><strong>Rep:</strong> <span style="color:var(--blue)">${activeRep}</span></div>
                     <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
                 </div>
                 <select id="posCustomer" style="margin-bottom:20px;">
@@ -125,16 +121,16 @@
                     ${custOpts}
                 </select>
                 <table class="pos-table">
-                    <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Exempt</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
+                    <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Exempt</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
                     <tbody id="posBody"></tbody>
                 </table>
-                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()">+ Add Item</button>
+                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
                 <div class="total-display">
                     Subtotal: <span id="subDisp">$0.00</span><br>
                     Tax (8.875%): <span id="taxDisp">$0.00</span>
                     <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
                 </div>
-                <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT</button>
+                <button class="btn btn-green btn-no-print" onclick="window.print()">PRINT INVOICE</button>
             </div>`;
         addRow();
     }
@@ -149,29 +145,18 @@
             <td style="text-align:center;"><input type="checkbox" onchange="calcTotal()" disabled></td>
             <td class="row-total">$0.00</td>
             <td class="btn-no-print">
-                <button class="btn btn-override btn-sm" onclick="unlockRow(this)">Unlock</button>
                 <button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button>
             </td>`;
         document.getElementById('posBody').appendChild(tr);
-    }
-
-    function unlockRow(btn) {
-        const pin = prompt("Enter Manager PIN:");
-        if(pin === managerPin) {
-            const tr = btn.closest('tr');
-            tr.cells[1].children[0].disabled = false;
-            tr.cells[3].children[0].disabled = false;
-            tr.cells[4].children[0].disabled = false;
-            btn.style.display = "none";
-        } else { alert("Wrong PIN"); }
     }
 
     function autoFill(input) {
         const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
         const tr = input.closest('tr');
         if(item) {
-            tr.cells[1].children[0].value = item["Item Name"];
-            tr.cells[3].children[0].value = parseFloat(String(item.Price).replace(/[$,]/g,'') || 0).toFixed(2);
+            tr.cells[1].children[0].value = item["Item Name"] || "";
+            let p = parseFloat(String(item.Price).replace(/[$,]/g,'')) || 0;
+            tr.cells[3].children[0].value = p.toFixed(2);
             tr.cells[4].children[0].checked = (item["Tax Exempt"] === "Exempt");
         }
         calcTotal();
@@ -183,54 +168,59 @@
             const qty = parseFloat(tr.cells[2].children[0].value) || 0;
             const price = parseFloat(tr.cells[3].children[0].value) || 0;
             const rowTotal = qty * price;
-            tr.cells[5].innerText = "$" + rowTotal.toFixed(2);
+            tr.cells[5].innerText = formatUSD(rowTotal);
             sub += rowTotal;
             if(!tr.cells[4].children[0].checked) taxable += rowTotal;
         });
         const tax = taxable * NYC_TAX_RATE;
-        document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
-        document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
-        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
+        document.getElementById('subDisp').innerText = formatUSD(sub);
+        document.getElementById('taxDisp').innerText = formatUSD(tax);
+        document.getElementById('grandDisp').innerText = formatUSD(sub + tax);
     }
 
     function renderAdmin(view) {
         view.innerHTML = `
             <div class="card">
-                <h3>Admin & Branding</h3>
-                <label>Logo URL</label><input type="text" id="logoInp" value="${localStorage.getItem('cad_logo') || ''}">
-                <label>Watermark URL</label><input type="text" id="bgInp" value="${localStorage.getItem('cad_bg') || ''}">
-                <label>Manager PIN</label><input type="text" id="pinInp" value="${managerPin}">
-                <button class="btn btn-blue" style="margin-top:10px;" onclick="saveAdmin()">Save Settings</button>
+                <h3>Signed-In Session</h3>
+                <p>Choose who is currently using the terminal:</p>
+                <select id="repSelect" style="margin-bottom:15px;">
+                    <option value="Alessio" ${activeRep === 'Alessio' ? 'selected' : ''}>Alessio</option>
+                    <option value="Staff 1" ${activeRep === 'Staff 1' ? 'selected' : ''}>Staff 1</option>
+                    <option value="Staff 2" ${activeRep === 'Staff 2' ? 'selected' : ''}>Staff 2</option>
+                </select>
+                <button class="btn btn-blue" onclick="saveRep()">Set Active Rep</button>
+                
+                <hr style="margin:25px 0; border:0; border-top:1px solid #eee;">
+                
+                <h3>Security</h3>
+                <label>Manager Override PIN</label>
+                <input type="text" id="pinInp" value="${managerPin}">
+                <button class="btn btn-blue" style="margin-top:10px;" onclick="savePin()">Update PIN</button>
             </div>`;
     }
 
-    function saveAdmin() {
-        localStorage.setItem('cad_logo', document.getElementById('logoInp').value);
-        localStorage.setItem('cad_bg', document.getElementById('bgInp').value);
-        localStorage.setItem('cad_pin', document.getElementById('pinInp').value);
+    function saveRep() {
+        const name = document.getElementById('repSelect').value;
+        localStorage.setItem('cad_active_rep', name);
+        alert("Rep signed in: " + name);
         location.reload();
     }
 
-    function saveInvoice() {
-        const bg = localStorage.getItem('cad_bg');
-        if(bg) {
-            const area = document.getElementById('printArea');
-            area.style.backgroundImage = `url('${bg}')`;
-            area.style.backgroundSize = "contain";
-            area.style.backgroundRepeat = "no-repeat";
-            area.style.backgroundPosition = "center";
-        }
-        window.print();
+    function savePin() {
+        localStorage.setItem('cad_pin', document.getElementById('pinInp').value);
+        alert("PIN Updated!");
     }
 
     function renderTable(type, data, view) {
         let h = `<div class="card"><h3>${type}</h3><table class="pos-table"><thead><tr>`;
         if(type === 'Inventory') {
-            h += `<th>SKU</th><th>Item</th><th>Price</th><th>Tax</th></tr></thead><tbody>`;
-            data.forEach(r => { if(r.SKU) {
-                const exempt = r["Tax Exempt"] === "Exempt";
-                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>$${r.Price}</td><td><span class="badge ${exempt ? 'badge-exempt' : 'badge-taxable'}">${exempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
-            }});
+            h += `<th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody>`;
+            data.forEach(r => { 
+                if(r.SKU) {
+                    let p = parseFloat(String(r.Price).replace(/[$,]/g,'')) || 0;
+                    h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${formatUSD(p)}</td></tr>`;
+                }
+            });
         } else {
             h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
             data.forEach(r => { if(r.Name) h += `<tr><td>${r.Name}</td><td>${r.Company || '---'}</td></tr>`; });
