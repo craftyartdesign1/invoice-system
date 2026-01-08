@@ -284,7 +284,40 @@
     }
 
     function renderLookupUI(data, view) {
-        view.innerHTML = `<div class="card"><h3>Invoice Lookup</h3><table class="pos-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody>${data.map(r => `<tr><td><b>${r["Invoice Number"]}</b></td><td>${r["Date"]}</td><td>${r["Customer"]}</td><td><b>${formatCurrency(parseFloat(String(r.Total).replace(/[$,]/g, '')))}</b></td><td><button class="btn btn-blue btn-sm">Print</button>${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm">Delete</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+        view.innerHTML = `
+            <div class="card">
+                <h3>Invoice Lookup</h3>
+                <table class="pos-table">
+                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${data.map(r => `
+                            <tr>
+                                <td><b>${r["Invoice Number"]}</b></td>
+                                <td>${r["Date"]}</td>
+                                <td>${r["Customer"]}</td>
+                                <td><b>${formatCurrency(parseFloat(String(r.Total).replace(/[$,]/g, '')))}</b></td>
+                                <td>
+                                    <button class="btn btn-blue btn-sm" onclick="alert('Print functionality triggered')">Print</button>
+                                    ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm" onclick="deleteInvoice('${r["Invoice Number"]}')">Delete</button>` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
+    async function deleteInvoice(invNum) {
+        if (!confirm(`Are you sure you want to delete invoice ${invNum}? This cannot be undone.`)) return;
+        
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=deleteInvoice&invoiceNumber=${invNum}`);
+            const result = await res.text();
+            alert(result);
+            loadTab('Lookup'); // Refresh the list
+        } catch (e) {
+            alert("Error deleting invoice. Please check connection.");
+        }
     }
 
     async function saveInvoice() {
