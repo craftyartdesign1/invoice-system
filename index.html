@@ -7,7 +7,7 @@
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg-color, white); background-size: cover; background-attachment: fixed; margin: 0; }
+        body { background: var(--bg-color, white); background-size: cover; margin: 0; }
         
         .header-section { background: white; padding: 15px 30px; border-bottom: 4px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
         #logo-container img { max-height: 60px; }
@@ -30,15 +30,16 @@
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
         
         .pass-wrapper { position: relative; display: flex; align-items: center; max-width: 300px; }
-        .eye-btn { position: absolute; right: 10px; cursor: pointer; background: none; border: none; font-size: 1.1rem; }
+        .eye-btn { position: absolute; right: 10px; cursor: pointer; background: none; border: none; }
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
-        .grand-total { font-size: 2.2rem; font-weight: bold; color: var(--blue); text-align: right; margin-top: 20px; }
+        .total-area { text-align: right; margin-top: 20px; line-height: 1.6; }
+        .grand-total { font-size: 2.2rem; font-weight: bold; color: var(--blue); }
 
         @media print { 
+            .nav-bar, .header-section, .btn-no-print, .action-col, #adminTab { display: none !important; } 
+            .card { box-shadow: none; border: none; padding: 0; margin: 0; }
             body { background: white !important; }
-            .nav-bar, .header-section, .btn-no-print, .action-col { display: none !important; } 
-            .card { box-shadow: none; border: none; padding: 0; }
         }
     </style>
 </head>
@@ -64,6 +65,7 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNDPBFyPktfE46fGJg8PhZSH9q7_LBDDJDZ-SLyjo5Pd27PQxKyVCoARhZCoyr0MCc/exec";
+    const TAX_RATE = 0.08875;
     let inventory = [], customers = [], invoices = [];
     let managerPin = "1234";
     let currentUser = { name: 'Alessio', role: 'Admin' };
@@ -78,7 +80,9 @@
                 fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
                 fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
             ]);
-            inventory = i; customers = c; invoices = inv;
+            inventory = i.filter(row => row.SKU); // Filter out blank rows
+            customers = c.filter(row => row.Name);
+            invoices = inv.filter(row => row["Invoice Number"]);
         } catch(e) { console.log("Sync Error"); }
     }
 
@@ -96,16 +100,15 @@
 
     function loadTab(name) {
         const view = document.getElementById('mainView');
-        document.querySelectorAll('.tab').forEach(t => {
-            t.classList.remove('active');
-            if(t.innerText.includes(name)) t.classList.add('active');
-        });
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => t.innerText.includes(name));
+        if(activeTab) activeTab.classList.add('active');
 
         if (name === 'Generator') {
             const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
             view.innerHTML = `
-                <div class="card" id="printableInvoice">
-                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px;">
+                <div class="card" id="invoiceArea">
+                    <div style="display:flex; justify-content:space-between;">
                         <div><h2>INVOICE</h2><strong># ${invNum}</strong></div>
                         <div style="text-align:right;">Date: ${new Date().toLocaleDateString()}</div>
                     </div>
@@ -115,10 +118,14 @@
                         <tbody id="posBody"></tbody>
                     </table>
                     <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
-                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
+                    <div class="total-area">
+                        Subtotal: <span id="subTotal">$0.00</span><br>
+                        NYC Tax (8.875%): <span id="taxTotal">$0.00</span>
+                        <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
+                    </div>
                     <div style="display:flex; gap:10px; margin-top:20px;" class="btn-no-print">
                         <button class="btn btn-green" style="flex:1;" onclick="window.print()">PRINT INVOICE</button>
-                        <button class="btn btn-blue" style="flex:1;" onclick="alert('Record Saved')">SAVE RECORD</button>
+                        <button class="btn btn-blue" style="flex:1;" onclick="alert('Saved')">SAVE RECORD</button>
                     </div>
                 </div>`;
             addRow();
@@ -126,16 +133,16 @@
         else if (name === 'Lookup') {
             view.innerHTML = `
                 <div class="card">
-                    <h3>Invoice History</h3>
+                    <h3>Invoice Lookup</h3>
                     <table class="pos-table">
-                        <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Employee</th><th>Total</th><th class="action-col">Actions</th></tr></thead>
+                        <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Company</th><th>Employee</th><th class="action-col">Actions</th></tr></thead>
                         <tbody>${invoices.map(inv => `
                             <tr>
                                 <td>${inv["Invoice Number"]}</td>
                                 <td>${inv.Date}</td>
                                 <td>${inv.Customer}</td>
-                                <td>${inv.Employee || 'Alessio'}</td>
-                                <td>$${parseFloat(inv.Total || 0).toFixed(2)}</td>
+                                <td>${inv.Company || 'N/A'}</td>
+                                <td>${inv.Employee}</td>
                                 <td class="action-col"><button class="btn btn-blue btn-sm" onclick="window.print()">Print</button></td>
                             </tr>`).join('')}
                         </tbody>
@@ -158,11 +165,11 @@
                         <tbody>${data.map(r => `
                             <tr>
                                 <td>${name === 'Inventory' ? r.SKU : r.Name}</td>
-                                <td>${name === 'Inventory' ? r["Item Name"] : (r["Street Address"] || 'N/A')}</td>
-                                <td>${name === 'Inventory' ? '$'+parseFloat(r.Price || 0).toFixed(2) : (r.City || 'N/A')}</td>
+                                <td>${name === 'Inventory' ? r["Item Name"] : (r["Street Address"] || '---')}</td>
+                                <td>${name === 'Inventory' ? '$'+parseFloat(r.Price || 0).toFixed(2) : (r.City || '---')}</td>
                                 <td class="action-col">
-                                    <button class="btn btn-blue btn-sm" ${!isAdmin?'disabled':''}>Edit</button>
-                                    <button class="btn btn-red btn-sm" ${!isAdmin?'disabled':''}>Delete</button>
+                                    <button class="btn btn-blue btn-sm" ${!isAdmin?'style="display:none"':''}>Edit</button>
+                                    <button class="btn btn-red btn-sm" ${!isAdmin?'style="display:none"':''}>Delete</button>
                                 </td>
                             </tr>`).join('')}
                         </tbody>
@@ -172,18 +179,14 @@
         else if (name === 'Settings') {
             view.innerHTML = `
                 <div class="card">
-                    <h3>Branding</h3>
-                    <label>Logo:</label> <input type="file" onchange="updateLogo(this)"><br><br>
-                    <label>Background:</label> <input type="file" onchange="updateBg(this)">
-                    <hr>
-                    <h3>Security</h3>
+                    <h3>Security & Users</h3>
                     <label>Manager PIN:</label>
-                    <div class="pass-wrapper"><input type="password" id="p" value="${managerPin}"><button class="eye-btn" onclick="togglePass('p')">👁️</button></div>
-                    <hr>
-                    <h3>Users</h3>
+                    <div class="pass-wrapper"><input type="password" id="mPin" value="${managerPin}"><button class="eye-btn" onclick="togglePass('mPin')">👁️</button></div>
+                    <hr style="margin:20px 0;">
+                    <h3>Manage Team</h3>
                     <table class="pos-table">
                         ${users.map((u,i)=>`<tr><td>${u.name}</td><td>${u.role}</td>
-                        <td><div class="pass-wrapper"><input type="password" id="u${i}" value="${u.pass}"><button class="eye-btn" onclick="togglePass('u${i}')">👁️</button></div></td></tr>`).join('')}
+                        <td><div class="pass-wrapper"><input type="password" id="uPass${i}" value="${u.pass}"><button class="eye-btn" onclick="togglePass('uPass${i}')">👁️</button></div></td></tr>`).join('')}
                     </table>
                 </div>`;
         }
@@ -195,7 +198,7 @@
         tr.innerHTML = `
             <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
             <td><input type="text" ${!isAdmin?'disabled':''}></td>
-            <td><input type="number" value="1" oninput="calcTotal()"></td>
+            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
             <td><input type="text" ${!isAdmin?'disabled':''}></td>
             <td class="row-total">$0.00</td>
             <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>`;
@@ -213,23 +216,18 @@
     }
 
     function calcTotal() {
-        let t = 0;
+        let sub = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
-            const q = tr.cells[2].children[0].value;
-            const p = tr.cells[3].children[0].value;
-            t += (q * p);
-            tr.cells[4].innerText = "$" + (q * p).toFixed(2);
+            const q = parseFloat(tr.cells[2].children[0].value) || 0;
+            const p = parseFloat(tr.cells[3].children[0].value) || 0;
+            const rowSum = q * p;
+            tr.cells[4].innerText = "$" + rowSum.toFixed(2);
+            sub += rowSum;
         });
-        document.getElementById('grandDisp').innerText = "$" + (t * 1.08875).toFixed(2);
-    }
-    
-    function updateLogo(i) {
-        const r = new FileReader(); r.onload = (e) => document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}">`;
-        r.readAsDataURL(i.files[0]);
-    }
-    function updateBg(i) {
-        const r = new FileReader(); r.onload = (e) => document.body.style.backgroundImage = `url('${e.target.result}')`;
-        r.readAsDataURL(i.files[0]);
+        const tax = sub * TAX_RATE;
+        document.getElementById('subTotal').innerText = "$" + sub.toFixed(2);
+        document.getElementById('taxTotal').innerText = "$" + tax.toFixed(2);
+        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
     }
 </script>
 </body>
