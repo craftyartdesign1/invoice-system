@@ -9,7 +9,7 @@
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--light); margin: 0; padding-bottom: 50px; color: var(--dark); }
 
-        /* Top Navigation */
+        /* Navigation */
         .top-nav { background: white; padding: 12px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 40px; gap: 20px; overflow-x: auto; }
         .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
@@ -28,24 +28,27 @@
 
         /* Tables & UI */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .btn-blue { background: var(--accent); color: white; }
         .btn-red { background: #ef4444; color: white; margin-left: 5px; }
         .btn-green { background: #22c55e; color: white; }
 
+        /* Edit Modal Pop-up */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal-field { margin-bottom: 15px; }
+        .modal-field label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #475569; }
+        .modal-field input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; }
+
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 20px; color: black; }
-            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 10px 0; }
-            .print-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            .print-table th { background: #f0f4f7 !important; border-bottom: 2px solid #004d73; -webkit-print-color-adjust: exact; }
-            .total-section { text-align: right; margin-top: 10px; }
-            .final-total-box { border: 2px solid black; display: inline-block; padding: 5px 20px; font-size: 18px; font-weight: bold; }
+            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 15px 0; }
         }
-        #printArea { display: none; background: white; }
+        #printArea { display: none; }
     </style>
 </head>
 <body>
@@ -68,44 +71,38 @@
 
 <div id="mainView" class="container"></div>
 
-<div id="printArea">
-    <div style="display:flex; justify-content:space-between;">
-        <div><h1>Crafty Art Design</h1><p>Let's stay crafty.</p></div>
-        <div style="text-align:right;"><h1 style="color:#004d73;">Invoice</h1><p>Crafty Art Design</p></div>
-    </div>
-    <div class="bill-to-bar">Bill To:</div>
-    <div style="display:flex; justify-content:space-between;">
-        <p id="p-cust-name" style="font-weight:bold; font-size: 18px;"></p>
-        <div style="text-align:right;">
-            <p>Invoice #: <span id="p-inv-num"></span></p>
-            <p>Date: <span id="p-inv-date"></span></p>
-            <p>Employee: <span id="p-inv-emp"></span></p>
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="margin-top:0;">Edit Entry</h3>
+        <div id="modalFields"></div>
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button class="btn" style="background:#e2e8f0;" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-blue" onclick="saveEdit()">Save Changes</button>
         </div>
-    </div>
-    <table class="print-table">
-        <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-        <tbody id="p-items"></tbody>
-    </table>
-    <div class="total-section">
-        <p>Subtotal: <span id="p-sub"></span></p>
-        <p>Tax: <span id="p-tax"></span></p>
-        <div class="final-total-box">Total: <span id="p-total"></span></div>
     </div>
 </div>
 
+<div id="printArea">
+    <div style="display:flex; justify-content:space-between;">
+        <div><h1>Crafty Art Design</h1><p>Let's stay crafty.</p></div>
+        <div style="text-align:right;"><h1 style="color:#004d73;">Invoice</h1></div>
+    </div>
+    <div class="bill-to-bar">Bill To:</div>
+    <div id="p-content"></div>
+</div>
+
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxib_s7rfqKWzevk-MrR_BmrOmbLX0JXMWlsg10saMl5ZT4EQRmq5y-WtW_kpbn67p1/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfz7P5lhWgZQcsA1s6ZLrQDUKUv1yvOlGvLhbMwwHfKdaD2RU17XVoAkblu7zQCdGb/exec";
     let currentUser = "Staff";
     let inventory = [], customers = [], invoices = [];
-    let currentTab = 'Generator';
+    let activeTab = 'Generator';
+    let currentEditData = null;
 
     window.onload = async () => { await refreshData(); renderGenerator(); };
 
     function toggleRole() {
         currentUser = document.getElementById('roleToggle').checked ? "Alessio" : "Staff";
-        if(currentTab === 'Lookup') renderLookup();
-        if(currentTab === 'Inventory') renderList('Inventory', inventory);
-        if(currentTab === 'Customers') renderList('Customers', customers);
+        refreshCurrentView();
     }
 
     async function refreshData() {
@@ -116,23 +113,21 @@
                 fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
             ]);
             inventory = inv; customers = cust; invoices = hist;
-        } catch(e) { console.error("Sync failed"); }
+        } catch(e) { console.error("Sync Error"); }
     }
 
-    function formatDate(dateStr) {
-        const d = new Date(dateStr);
-        if (isNaN(d)) return dateStr;
-        return (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+    function refreshCurrentView() {
+        if(activeTab === 'Generator') renderGenerator();
+        else if(activeTab === 'Lookup') renderLookup();
+        else if(activeTab === 'Inventory') renderList('Inventory', inventory);
+        else if(activeTab === 'Customers') renderList('Customers', customers);
     }
 
     function loadTab(tab, e) {
-        currentTab = tab;
+        activeTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        e.target.classList.add('active');
-        if(tab === 'Generator') renderGenerator();
-        else if(tab === 'Lookup') renderLookup();
-        else if(tab === 'Inventory') renderList('Inventory', inventory);
-        else if(tab === 'Customers') renderList('Customers', customers);
+        if(e) e.target.classList.add('active');
+        refreshCurrentView();
     }
 
     function renderGenerator() {
@@ -141,48 +136,31 @@
             <h2>New Invoice</h2>
             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                 <div><label>INV #</label><input type="text" id="invNum" value="${invNum}" disabled style="width:100%"></div>
-                <div><label>DATE</label><input type="text" id="invDate" value="${formatDate(new Date())}" disabled style="width:100%"></div>
+                <div><label>DATE</label><input type="text" id="invDate" value="${new Date().toLocaleDateString()}" disabled style="width:100%"></div>
                 <div><label>CUSTOMER</label>
                     <select id="custSelect" style="width:100%"><option value="Walk-in">Walk-in</option>
                     ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
                 </div>
             </div>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1" onkeypress="if(event.key==='Enter') addItem()">
-                <button class="btn btn-blue" onclick="addItem()">Add Item</button>
-            </div>
-            <table>
-                <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th><th>Total</th><th></th></tr></thead>
-                <tbody id="posBody"></tbody>
-            </table>
-            <div style="text-align:right;"><p>Subtotal: <span id="subDisp">$0.00</span></p><p>Tax: <span id="taxDisp">$0.00</span></p><h3>Total: <span id="totalDisp">$0.00</span></h3><button class="btn btn-green" onclick="finalizeSale()">Finalize & Print</button></div>`;
+            <div style="display:flex; gap:10px;"><input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1; padding:10px;" onkeypress="if(event.key==='Enter') addItem()"><button class="btn btn-blue" onclick="addItem()">Add Item</button></div>
+            <table style="margin-top:20px;"><thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody id="posBody"></tbody></table>
+            <div style="text-align:right;"><h3>Total: <span id="totalDisp">$0.00</span></h3><button class="btn btn-green" onclick="finalizeSale()">Finalize & Print</button></div>`;
     }
 
     function addItem() {
         const input = document.getElementById('skuInput');
-        const sku = input.value.trim().toLowerCase();
-        const item = inventory.find(i => String(i.SKU).toLowerCase() === sku);
+        const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.trim().toLowerCase());
         if(!item) return alert("SKU Not Found");
-        const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE" || sku === "sku003";
         const tr = document.createElement('tr');
-        tr.setAttribute('data-exempt', isExempt); 
-        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
+        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td>1</td><td>$${parseFloat(item.Price).toFixed(2)}</td><td class="row-total">$${parseFloat(item.Price).toFixed(2)}</td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); updateGenTotal()">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
-        input.value = ""; calc();
+        input.value = ""; updateGenTotal();
     }
 
-    function calc() {
-        let sub = 0, taxable = 0;
-        document.querySelectorAll('#posBody tr').forEach(tr => {
-            const q = parseFloat(tr.cells[2].querySelector('input').value) || 0;
-            const p = parseFloat(tr.cells[3].innerText.replace('$','')) || 0;
-            tr.cells[5].innerText = "$" + (q * p).toFixed(2);
-            sub += (q * p);
-            if(tr.getAttribute('data-exempt') !== 'true') taxable += (q * p);
-        });
-        document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
-        document.getElementById('taxDisp').innerText = "$" + (taxable * 0.08875).toFixed(2);
-        document.getElementById('totalDisp').innerText = "$" + (sub + (taxable * 0.08875)).toFixed(2);
+    function updateGenTotal() {
+        let t = 0;
+        document.querySelectorAll('.row-total').forEach(td => t += parseFloat(td.innerText.replace('$','')) || 0);
+        document.getElementById('totalDisp').innerText = "$" + t.toFixed(2);
     }
 
     function renderLookup() {
@@ -193,49 +171,58 @@
     function applyFilters() {
         const q = document.getElementById('searchInv').value.toLowerCase();
         const filtered = invoices.filter(i => String(i["Invoice Number"]).toLowerCase().includes(q));
-        document.getElementById('lookupBody').innerHTML = filtered.map(i => `<tr><td>${i["Invoice Number"]}</td><td>${formatDate(i.Date)}</td><td>${i.Customer}</td><td>$${parseFloat(i.Total || 0).toFixed(2)}</td><td><button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteEntry('Invoices', '${i["Invoice Number"]}')">Delete</button>` : ''}</td></tr>`).join('');
+        document.getElementById('lookupBody').innerHTML = filtered.map(i => `<tr><td>${i["Invoice Number"]}</td><td>${new Date(i.Date).toLocaleDateString()}</td><td>${i.Customer}</td><td>$${parseFloat(i.Total).toFixed(2)}</td><td><button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteEntry('Invoices', '${i["Invoice Number"]}')">Delete</button>` : ''}</td></tr>`).join('');
     }
 
     function printExisting(id) {
         const inv = invoices.find(i => String(i["Invoice Number"]) === id);
-        if(!inv) return alert("Invoice data not found");
-        document.getElementById('p-cust-name').innerText = inv.Customer;
-        document.getElementById('p-inv-num').innerText = inv["Invoice Number"];
-        document.getElementById('p-inv-date').innerText = formatDate(inv.Date);
-        document.getElementById('p-inv-emp').innerText = inv.Employee || "Alessio";
-        document.getElementById('p-total').innerText = "$" + parseFloat(inv.Total).toFixed(2);
-        document.getElementById('p-items').innerHTML = `<tr><td>-</td><td>Archived Items</td><td>1</td><td>$${inv.Total}</td><td>$${inv.Total}</td></tr>`;
+        if(!inv) return;
+        document.getElementById('p-content').innerHTML = `<p><b>Customer:</b> ${inv.Customer}</p><p><b>Invoice #:</b> ${inv["Invoice Number"]}</p><p><b>Date:</b> ${new Date(inv.Date).toLocaleDateString()}</p><hr><h3>Total: $${parseFloat(inv.Total).toFixed(2)}</h3>`;
         window.print();
     }
 
     function renderList(sheetName, data) {
+        // Hide empty rows
         const cleanData = data.filter(r => r[Object.keys(r)[0]] && String(r[Object.keys(r)[0]]).trim() !== "");
-        if(!cleanData.length) return document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><p>No records found.</p>`;
+        if(!cleanData.length) return document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><p>Empty</p>`;
         const keys = Object.keys(cleanData[0]);
-        document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')} ${currentUser === "Alessio" ? '<th>Actions</th>' : ''}</tr></thead><tbody>${cleanData.map(r => `<tr>${keys.map(k => `<td>${r[k]}</td>`).join('')} ${currentUser === "Alessio" ? `<td><button class="btn btn-blue" onclick="alert('Edit logic for ${r[keys[0]]}')">Edit</button><button class="btn btn-red" onclick="deleteEntry('${sheetName}', '${r[keys[0]]}')">Delete</button></td>` : ''}</tr>`).join('')}</tbody></table>`;
+        document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')} ${currentUser === "Alessio" ? '<th>Actions</th>' : ''}</tr></thead><tbody>
+            ${cleanData.map(r => `<tr>${keys.map(k => `<td>${r[k]}</td>`).join('')} ${currentUser === "Alessio" ? `<td><button class="btn btn-blue" onclick="openEditModal('${sheetName}', '${r[keys[0]]}')">Edit</button><button class="btn btn-red" onclick="deleteEntry('${sheetName}', '${r[keys[0]]}')">Delete</button></td>` : ''}</tr>`).join('')}</tbody></table>`;
+    }
+
+    function openEditModal(sheetName, id) {
+        const list = sheetName === 'Inventory' ? inventory : customers;
+        const item = list.find(i => String(i[Object.keys(i)[0]]) === id);
+        currentEditData = { sheetName, id, original: item };
+        let html = '';
+        Object.keys(item).forEach((key, index) => {
+            html += `<div class="modal-field"><label>${key}</label><input type="text" id="edit_${key}" value="${item[key]}" ${index === 0 ? 'disabled' : ''}></div>`;
+        });
+        document.getElementById('modalFields').innerHTML = html;
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+    async function saveEdit() {
+        const updates = {};
+        Object.keys(currentEditData.original).forEach(key => updates[key] = document.getElementById(`edit_${key}`).value);
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'editRow', sheetName: currentEditData.sheetName, id: currentEditData.id, updates }) });
+        closeModal(); await refreshData(); refreshCurrentView();
     }
 
     async function deleteEntry(sheetName, id) {
-        if(!confirm(`Delete this entry from ${sheetName}?`)) return;
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', sheetName: sheetName, id: id }) });
-        await refreshData();
-        loadTab(currentTab, { target: document.querySelector('.tab.active') });
+        if(!confirm("Are you sure?")) return;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', sheetName, id }) });
+        await refreshData(); refreshCurrentView();
     }
 
     async function finalizeSale() {
         const d = { num: document.getElementById('invNum').value, date: document.getElementById('invDate').value, cust: document.getElementById('custSelect').value, total: document.getElementById('totalDisp').innerText };
-        document.getElementById('p-cust-name').innerText = d.cust;
-        document.getElementById('p-inv-num').innerText = d.num;
-        document.getElementById('p-inv-date').innerText = d.date;
-        document.getElementById('p-inv-emp').innerText = currentUser;
-        document.getElementById('p-items').innerHTML = document.getElementById('posBody').innerHTML;
-        document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
-        document.getElementById('p-tax').innerText = document.getElementById('taxDisp').innerText;
-        document.getElementById('p-total').innerText = d.total;
+        document.getElementById('p-content').innerHTML = `<p><b>Customer:</b> ${d.cust}</p><p><b>Invoice #:</b> ${d.num}</p><p><b>Date:</b> ${d.date}</p><hr><h3>Total: ${d.total}</h3>`;
         window.print();
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'save', invoiceNumber: d.num, date: d.date, customer: d.cust, employee: currentUser, total: d.total.replace('$','') })});
-        await refreshData();
-        renderGenerator();
+        await refreshData(); renderGenerator();
     }
 </script>
 </body>
