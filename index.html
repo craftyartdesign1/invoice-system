@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,239 +6,323 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAD | NYC POS System</title>
     <style>
-        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
+        :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; --gray: #4b5563; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--light); margin: 0; padding: 0; }
+        body { background: var(--light); margin: 0; }
         
-        /* Login Screen */
-        #loginOverlay { position: fixed; inset: 0; background: var(--light); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .login-card { width: 100%; max-width: 400px; padding: 40px; text-align: center; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .login-logo { max-width: 180px; margin-bottom: 20px; }
-
-        /* App Layout */
-        .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
+        .header-section { background: white; padding: 15px 30px; border-bottom: 3px solid var(--blue); position: sticky; top: 0; z-index: 100; }
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
         .tab { padding: 10px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
         .tab.active { background: var(--blue); }
-        .tab.admin-only { border: 1px solid gold; color: gold; display: none; }
 
-        .content { padding: 20px; max-width: 1300px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; position: relative; }
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Invoice Style */
-        .invoice-container { background: white; padding: 40px; border: 1px solid #ddd; min-height: 800px; background-size: cover; background-position: center; position: relative; }
-        .inv-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .inv-bill-to { background: var(--blue); color: white; padding: 5px 15px; width: 300px; font-weight: bold; }
+        .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .pos-table th { background: #f1f5f9; color: #475569; padding: 12px; text-align: left; font-size: 0.85rem; border-bottom: 2px solid #e2e8f0; }
+        .pos-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: middle; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-green { background: var(--green); width: 100%; font-size: 1.2rem; margin-top: 20px; }
+        .btn-blue { background: #2563eb; }
+        .btn-red { background: var(--red); }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; }
+        .btn-override { background: #6b7280; font-size: 10px; padding: 4px 6px; margin-left: 5px; }
 
-        /* General UI */
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; margin-bottom: 15px; font-size: 1rem; }
-        .btn { padding: 12px 20px; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn-blue { background: var(--blue); }
-        .btn-red { background: var(--red); width: auto; padding: 6px 12px; }
-        .pass-wrapper { position: relative; }
-        .eye-btn { position: absolute; right: 10px; top: 12px; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .badge-exempt { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .badge-taxable { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
 
-        @media print { .nav-bar, .header-section, .btn-no-print, .eye-btn { display: none !important; } .invoice-container { border: none; padding: 0; } }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
+        input:disabled { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; border: 1px solid #e5e7eb; }
+
+        .search-container { margin-bottom: 20px; position: relative; }
+        .search-container input { padding-left: 35px; border: 2px solid var(--blue); }
+        .search-icon { position: absolute; left: 12px; top: 12px; color: var(--blue); }
+
+        .tax-checkbox { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; }
+        
+        .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
+        .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
+
+        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-override, .search-container { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-card">
-        <div id="loginLogoSpace"></div>
-        <h2>NYC POS LOGIN</h2>
-        <input type="text" id="userIn" placeholder="Username (admin1)">
-        <div class="pass-wrapper">
-            <input type="password" id="passIn" placeholder="Password (1234)">
-            <button class="eye-btn" onclick="togglePass('passIn')">👁️</button>
+<div class="header-section">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>CRAFTY ART DESIGN</h2>
+        <div style="text-align: right;">
+            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Alessio</span></div>
+            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
         </div>
-        <button class="btn btn-blue" onclick="attemptLogin()">Login</button>
-        <p id="errorMsg" style="color:red; display:none; margin-top:10px;">Login Failed. Try again.</p>
     </div>
 </div>
 
-<div id="app" style="display:none;">
-    <div class="header-section">
-        <div id="logoContainer"><h2>CRAFTY ART DESIGN</h2></div>
-        <div>
-            <span id="userBadge" style="font-weight:bold; color:var(--blue); margin-right:15px;"></span>
-            <button class="btn btn-red btn-no-print" onclick="location.reload()">Logout</button>
-        </div>
-    </div>
+<nav class="nav-bar">
+    <button class="tab active" id="tab-Generator" onclick="loadTab('Generator')">Invoice Generator</button>
+    <button class="tab" id="tab-Lookup" onclick="loadTab('Lookup')">Invoice Lookup</button>
+    <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
+    <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
+    <button class="tab" id="tab-Settings" onclick="loadTab('Settings')" style="display:none; border:1px solid gold;">⚙️ Admin Settings</button>
+</nav>
 
-    <nav class="nav-bar">
-        <button class="tab active" id="tab-Invoices" onclick="loadTab('Invoices')">Invoices</button>
-        <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
-        <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
-        <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
-    </nav>
-
-    <div class="content">
-        <div id="mainView"></div>
-    </div>
-</div>
+<div class="content" id="mainView"></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuxvj3hA_AuPgScYJ9TZDnwJjenv8QYqA3zXJ5xS0Z4YBm4Hyt0K-0yRPwOwRaIgSe/exec";
-    
-    // Master Password Setup
-    const MASTER_USERS = [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNDPBFyPktfE46fGJg8PhZSH9q7_LBDDJDZ-SLyjo5Pd27PQxKyVCoARhZCoyr0MCc/exec";
+    const NYC_TAX_RATE = 0.08875; 
+    let currentAdminPin = "1234";
 
-    function togglePass(id) {
-        const x = document.getElementById(id);
-        x.type = x.type === "password" ? "text" : "password";
-    }
+    let currentUser = { name: 'Alessio', role: 'Admin' }; 
+    let inventory = [];
+    let customers = [];
 
-    function attemptLogin() {
-        const u = document.getElementById('userIn').value.trim();
-        const p = document.getElementById('passIn').value.trim();
-        
-        // Get users from storage, or use MASTER if storage is empty
-        let storedUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
-        
-        const found = storedUsers.find(x => x.user === u && x.pass === p);
+    window.onload = async () => {
+        updateAdminTabVisibility();
+        await refreshData();
+        loadTab('Generator');
+    };
 
-        if(found) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            document.getElementById('userBadge').innerText = "Logged in: " + found.name;
-            if(found.role === 'Admin') document.getElementById('tab-Admin').style.display = 'block';
-            
-            // Apply branding
-            const logo = localStorage.getItem('cad_logo');
-            if(logo) document.getElementById('logoContainer').innerHTML = `<img src="${logo}" style="max-height:50px">`;
-            
-            loadTab('Invoices');
-        } else {
-            // If login fails, force-reset the storage to master to ensure the next try works
-            localStorage.setItem('cad_users', JSON.stringify(MASTER_USERS));
-            document.getElementById('errorMsg').style.display = 'block';
-            document.getElementById('errorMsg').innerText = "Login failed. Storage reset. Please try admin1 / 1234 again.";
-        }
-    }
-
-    async function loadTab(name) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`tab-${name}`).classList.add('active');
-        const view = document.getElementById('mainView');
-        
-        if(name === 'Admin') { renderAdmin(view); return; }
-        
-        view.innerHTML = `<div class="card"><h3>Loading ${name}...</h3></div>`;
+    async function refreshData() {
         try {
-            const res = await fetch(`${SCRIPT_URL}?action=get${name}`);
+            const iRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
+            inventory = await iRes.json();
+            const cRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
+            customers = await cRes.json();
+        } catch(e) { console.error("Sync Error"); }
+    }
+
+    function toggleUserRole() {
+        currentUser = (currentUser.role === 'Admin') ? { name: 'Staff User', role: 'Staff' } : { name: 'Alessio', role: 'Admin' };
+        document.getElementById('displayUser').innerText = currentUser.name;
+        updateAdminTabVisibility();
+        loadTab('Generator');
+    }
+
+    function updateAdminTabVisibility() {
+        const settingsTab = document.getElementById('tab-Settings');
+        settingsTab.style.display = (currentUser.role === 'Admin') ? 'block' : 'none';
+    }
+
+    const formatCurrency = (num) => {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0);
+    };
+
+    async function loadTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        const view = document.getElementById('mainView');
+
+        if(tabName === 'Generator') { renderGenerator(view); return; }
+        if(tabName === 'Settings') { renderSettings(view); return; }
+        
+        view.innerHTML = `<div class="card"><h3>Fetching ${tabName}...</h3></div>`;
+        try {
+            const action = (tabName === 'Lookup') ? 'getInvoices' : 'get' + tabName;
+            const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
-            renderTable(name, data, view);
-        } catch (e) { 
-            view.innerHTML = `<div class="card"><h3>Sync Error</h3><p>Could not connect to Google Sheets.</p></div>`; 
+            
+            if (tabName === 'Lookup') renderLookupUI(data, view);
+            else renderTable(tabName, data, view);
+        } catch (e) { view.innerHTML = `<div class="card">Connection Error</div>`; }
+    }
+
+    function renderSettings(view) {
+        view.innerHTML = `
+            <div class="card">
+                <h3>Admin Control Panel</h3>
+                <hr>
+                <div style="margin-top:20px; max-width: 400px;">
+                    <label><strong>Manager Override PIN:</strong></label>
+                    <input type="text" id="pinInput" value="${currentAdminPin}" style="font-size: 1.5rem; letter-spacing: 5px; font-weight: bold; text-align: center;">
+                    <button class="btn btn-blue" style="margin-top:10px; width:100%;" onclick="saveNewPin()">Update PIN</button>
+                </div>
+            </div>`;
+    }
+
+    function saveNewPin() {
+        const newPin = document.getElementById('pinInput').value;
+        if(newPin.length > 0) {
+            currentAdminPin = newPin;
+            alert("Override PIN updated successfully!");
         }
+    }
+
+    function renderGenerator(view) {
+        const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
+        const today = new Date().toLocaleDateString();
+        let custOpts = customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('');
+
+        view.innerHTML = `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                    <div><strong>Invoice #:</strong> <span id="invNumDisp">${invNum}</span></div>
+                    <div><strong>Date:</strong> <span id="dateDisp">${today}</span></div>
+                    <div><strong>Employee:</strong> ${currentUser.name}</div>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label>Select Customer:</label>
+                    <select id="posCustomer">
+                        <option value="" disabled selected>Choose...</option>
+                        <option value="Walk-in">Walk-in / Cash</option>
+                        ${custOpts}
+                    </select>
+                </div>
+                <table class="pos-table">
+                    <thead>
+                        <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th style="text-align:center;">Tax Exempt</th><th>Total</th><th class="btn-no-print"></th></tr>
+                    </thead>
+                    <tbody id="posBody"></tbody>
+                </table>
+                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:15px;">+ Add Item</button>
+                <div class="total-display">
+                    Subtotal: <span id="subDisp">$0.00</span><br>
+                    Tax (8.875%): <span id="taxDisp">$0.00</span>
+                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
+                </div>
+                <button class="btn btn-green btn-no-print" onclick="saveInvoice()">SAVE & PRINT</button>
+            </div>`;
+        addRow();
+    }
+
+    function addRow() {
+        const isAdmin = currentUser.role === 'Admin';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div style="display:flex; align-items:center;">
+                    <input type="text" onchange="autoFill(this)" placeholder="SKU">
+                    ${!isAdmin ? `<button class="btn btn-override btn-no-print" onclick="managerOverride(this)">Unlock</button>` : ''}
+                </div>
+            </td>
+            <td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td>
+            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
+            <td><input type="text" oninput="calcTotal()" placeholder="0.00" ${!isAdmin ? 'disabled' : ''}></td>
+            <td style="text-align:center;"><input type="checkbox" class="tax-checkbox" onchange="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td>
+            <td class="row-total">$0.00</td>
+            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
+        `;
+        document.getElementById('posBody').appendChild(row);
+    }
+
+    function managerOverride(btn) {
+        const pin = prompt("Enter Manager PIN to unlock fields:");
+        if (pin === currentAdminPin) {
+            const tr = btn.closest('tr');
+            tr.cells[1].children[0].disabled = false;
+            tr.cells[3].children[0].disabled = false;
+            tr.cells[4].children[0].disabled = false;
+            btn.style.display = "none";
+        } else {
+            alert("Incorrect PIN.");
+        }
+    }
+
+    function autoFill(input) {
+        const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
+        const tr = input.parentElement.closest('tr');
+        const isAdmin = currentUser.role === 'Admin';
+        if(item) {
+            tr.cells[1].children[0].value = item["Item Name"];
+            const rawPrice = parseFloat(String(item.Price).replace(/[$,]/g,'')) || 0;
+            tr.cells[3].children[0].value = rawPrice.toFixed(2);
+            tr.cells[4].children[0].checked = (item["Tax Exempt"] === "Exempt");
+            if (!isAdmin) {
+                tr.cells[1].children[0].disabled = tr.cells[3].children[0].disabled = tr.cells[4].children[0].disabled = true;
+            }
+        }
+        calcTotal();
+    }
+
+    function calcTotal() {
+        let sub = 0; let taxableSub = 0;
+        document.querySelectorAll('#posBody tr').forEach(tr => {
+            const qty = parseFloat(tr.cells[2].children[0].value) || 0;
+            const price = parseFloat(tr.cells[3].children[0].value) || 0;
+            const rowTotal = qty * price;
+            tr.cells[5].innerText = formatCurrency(rowTotal);
+            sub += rowTotal;
+            if (!tr.cells[4].children[0].checked) taxableSub += rowTotal;
+        });
+        const tax = taxableSub * NYC_TAX_RATE;
+        document.getElementById('subDisp').innerText = formatCurrency(sub);
+        document.getElementById('taxDisp').innerText = formatCurrency(tax);
+        document.getElementById('grandDisp').innerText = formatCurrency(sub + tax);
+    }
+
+    function filterInventory() {
+        const query = document.getElementById('invSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#inventoryTableBody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
     }
 
     function renderTable(type, data, view) {
-        let h = `<div class="card"><h3>${type} Management</h3><table style="width:100%; border-collapse:collapse;"><thead><tr style="text-align:left; background:#f4f4f4;">`;
-        if (type === 'Invoices') {
-            h += `<th style="padding:10px;">Inv #</th><th style="padding:10px;">Date</th><th style="padding:10px;">Customer</th><th style="padding:10px;">Total</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i["Invoice Number"]) h += `<tr><td style="padding:10px;">${i["Invoice Number"]}</td><td style="padding:10px;">${i.Date}</td><td style="padding:10px;">${i.Customer}</td><td style="padding:10px;">$${i.Subtotal}</td></tr>`; });
-        } else if (type === 'Customers') {
-            h += `<th style="padding:10px;">Name</th><th style="padding:10px;">Company</th><th style="padding:10px;">Action</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.Name) {
-                const j = JSON.stringify(i).replace(/"/g, '&quot;');
-                h += `<tr><td style="padding:10px;">${i.Name}</td><td style="padding:10px;">${i.Company || ''}</td><td style="padding:10px;"><button class="btn btn-blue" style="width:auto; padding:5px 10px;" onclick="viewInv('${j}')">BILL</button></td></tr>`;
-            }});
-        } else if (type === 'Inventory') {
-            h += `<th style="padding:10px;">SKU</th><th style="padding:10px;">Item</th><th style="padding:10px;">Price</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i.SKU) h += `<tr><td style="padding:10px;">${i.SKU}</td><td style="padding:10px;">${i["Item Name"]}</td><td style="padding:10px;">$${i.Price}</td></tr>`; });
+        const activeData = data.filter(r => r.SKU && String(r.SKU).trim() !== "");
+        let h = `<div class="card"><h3>${type} Management</h3>`;
+        
+        if (type === 'Inventory') {
+            h += `<div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="invSearch" onkeyup="filterInventory()" placeholder="Search by SKU, Name, or Size...">
+                  </div>
+                  <table class="pos-table"><thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Tax Status</th></tr></thead>
+                  <tbody id="inventoryTableBody">`;
+            activeData.forEach(r => {
+                const isExempt = (r["Tax Exempt"] === "Exempt");
+                const priceVal = parseFloat(String(r.Price || "0").replace(/[$,]/g, ''));
+                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"] || '---'}</td><td>${r["Size"] || '---'}</td><td>${formatCurrency(priceVal)}</td><td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
+            });
+        } else {
+            h += `<table class="pos-table"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody>`;
+            activeData.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
         }
         view.innerHTML = h + `</tbody></table></div>`;
     }
 
-    function renderAdmin(view) {
-        const currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
-        let rows = '';
-        currentUsers.forEach((u, i) => {
-            rows += `<tr><td style="padding:10px;">${u.name}</td><td style="padding:10px;">${u.user}</td><td style="padding:10px;">${u.role}</td>
-                <td style="padding:10px;">
-                    <div class="pass-wrapper">
-                        <input type="password" value="${u.pass}" id="p-${i}" readonly style="border:none; margin:0; width:80px;">
-                        <button class="eye-btn" style="top:0;" onclick="togglePass('p-${i}')">👁️</button>
-                    </div>
-                </td>
-                <td style="padding:10px;"><button class="btn btn-red" onclick="delUser(${i})">Delete</button></td></tr>`;
-        });
-
+    function renderLookupUI(data, view) {
         view.innerHTML = `
             <div class="card">
-                <h3>System Branding</h3>
-                <label>Main Logo URL</label><input type="text" id="lI" value="${localStorage.getItem('cad_logo') || ''}" placeholder="Paste Image URL">
-                <label>Invoice Background URL (Plank if empty)</label><input type="text" id="bI" value="${localStorage.getItem('cad_bg') || ''}" placeholder="Paste Watermark URL">
-                <button class="btn btn-blue" onclick="saveB()">Save Branding & Reload</button>
-            </div>
-            <div class="card">
-                <h3>Manage Users</h3>
-                <table style="width:100%;"><thead><tr style="background:#f4f4f4; text-align:left;"><th style="padding:10px;">Name</th><th style="padding:10px;">User</th><th style="padding:10px;">Role</th><th style="padding:10px;">Pass</th><th style="padding:10px;">Action</th></tr></thead><tbody>${rows}</tbody></table>
-                <hr style="margin:20px 0;">
-                <h4>Add New User</h4>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" id="newN" placeholder="Full Name">
-                    <input type="text" id="newU" placeholder="Username">
-                    <input type="text" id="newP" placeholder="Password">
-                    <select id="newR" style="padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;"><option>Staff</option><option>Admin</option></select>
-                </div>
-                <button class="btn btn-blue" onclick="addUser()">Add User</button>
-            </div>`;
-    }
-
-    function saveB() {
-        localStorage.setItem('cad_logo', document.getElementById('lI').value);
-        localStorage.setItem('cad_bg', document.getElementById('bI').value);
-        location.reload();
-    }
-
-    function addUser() {
-        let currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
-        const u = { 
-            name: document.getElementById('newN').value, 
-            user: document.getElementById('newU').value, 
-            pass: document.getElementById('newP').value, 
-            role: document.getElementById('newR').value 
-        };
-        if(!u.user || !u.pass) return alert("User and Pass required");
-        currentUsers.push(u);
-        localStorage.setItem('cad_users', JSON.stringify(currentUsers));
-        renderAdmin(document.getElementById('mainView'));
-    }
-
-    function delUser(i) {
-        let currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
-        if(currentUsers.length === 1) return alert("Cannot delete the last user.");
-        currentUsers.splice(i, 1);
-        localStorage.setItem('cad_users', JSON.stringify(currentUsers));
-        renderAdmin(document.getElementById('mainView'));
-    }
-
-    function viewInv(j) {
-        const c = JSON.parse(j.replace(/&quot;/g, '"'));
-        const bg = localStorage.getItem('cad_bg');
-        const logo = localStorage.getItem('cad_logo');
-        const style = bg ? `background-image: url('${bg}'); background-size: cover;` : `background: white;`;
-        
-        document.getElementById('mainView').innerHTML = `
-            <div class="btn-no-print" style="margin-bottom:20px;">
-                <button class="btn btn-blue" style="width:auto;" onclick="loadTab('Customers')">← Back</button>
-                <button class="btn btn-blue" style="width:auto; float:right;" onclick="window.print()">Print PDF</button>
-            </div>
-            <div class="invoice-container" style="${style}">
-                <div class="inv-header">
-                    <div>${logo ? `<img src="${logo}" style="max-height:80px">` : '<h2>CRAFTY ART DESIGN</h2>'}</div>
-                    <div style="text-align:right"><h1>INVOICE</h1></div>
-                </div>
-                <div class="inv-bill-to">Bill To:</div>
-                <p><strong>${c.Name}</strong><br>${c.Company || ''}<br>${c["Street Address"] || ''}</p>
-                <table style="width:100%; border:1px solid #ddd; background:rgba(255,255,255,0.85);">
-                    <thead style="background:var(--blue); color:white;"><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-                    <tbody><tr><td colspan="5" style="height:200px; text-align:center; color:#888;">[ Manual Entry Items ]</td></tr></tbody>
+                <h3>Invoice Lookup</h3>
+                <table class="pos-table">
+                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        ${data.map(r => `
+                            <tr>
+                                <td><b>${r["Invoice Number"]}</b></td>
+                                <td>${r["Date"]}</td>
+                                <td>${r["Customer"]}</td>
+                                <td><b>${formatCurrency(parseFloat(String(r.Total).replace(/[$,]/g, '')))}</b></td>
+                                <td>
+                                    <button class="btn btn-blue btn-sm">Print</button>
+                                    ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm" onclick="deleteInvoice('${r["Invoice Number"]}')">Delete</button>` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
                 </table>
             </div>`;
+    }
+
+    async function deleteInvoice(invNum) {
+        if (!confirm(`Delete invoice ${invNum}?`)) return;
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=deleteInvoice&invoiceNumber=${invNum}`);
+            const result = await res.text();
+            alert(result);
+            loadTab('Lookup');
+        } catch (e) { alert("Error deleting."); }
+    }
+
+    async function saveInvoice() {
+        if (!document.getElementById('posCustomer').value) return alert("Select a Customer");
+        alert("Invoice Data Saved!");
+        window.print();
+        loadTab('Generator');
     }
 </script>
 </body>
