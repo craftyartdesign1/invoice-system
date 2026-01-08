@@ -39,13 +39,13 @@
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 20px; color: black; }
-            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 15px 0; }
+            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 10px 0; }
             .print-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             .print-table th { background: #f0f4f7 !important; border-bottom: 2px solid #004d73; -webkit-print-color-adjust: exact; }
             .total-section { text-align: right; margin-top: 10px; }
             .final-total-box { border: 2px solid black; display: inline-block; padding: 5px 20px; font-size: 18px; font-weight: bold; }
         }
-        #printArea { display: none; }
+        #printArea { display: none; background: white; }
     </style>
 </head>
 <body>
@@ -79,6 +79,7 @@
         <div style="text-align:right;">
             <p>Invoice #: <span id="p-inv-num"></span></p>
             <p>Date: <span id="p-inv-date"></span></p>
+            <p>Employee: <span id="p-inv-emp"></span></p>
         </div>
     </div>
     <table class="print-table">
@@ -102,7 +103,6 @@
 
     function toggleRole() {
         currentUser = document.getElementById('roleToggle').checked ? "Alessio" : "Staff";
-        // Refresh the view if on a data tab to show/hide admin buttons
         if(currentTab === 'Lookup') renderLookup();
         if(currentTab === 'Inventory') renderList('Inventory', inventory);
         if(currentTab === 'Customers') renderList('Customers', customers);
@@ -121,7 +121,8 @@
 
     function formatDate(dateStr) {
         const d = new Date(dateStr);
-        return isNaN(d) ? dateStr : (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+        if (isNaN(d)) return dateStr;
+        return (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
     }
 
     function loadTab(tab, e) {
@@ -146,8 +147,11 @@
                     ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
                 </div>
             </div>
-            <div style="display:flex; gap:10px;"><input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1; padding:10px;" onkeypress="if(event.key==='Enter') addItem()"><button class="btn btn-blue" onclick="addItem()">Add Item</button></div>
-            <table style="margin-top: 20px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1" onkeypress="if(event.key==='Enter') addItem()">
+                <button class="btn btn-blue" onclick="addItem()">Add Item</button>
+            </div>
+            <table>
                 <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th><th>Total</th><th></th></tr></thead>
                 <tbody id="posBody"></tbody>
             </table>
@@ -162,7 +166,7 @@
         const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE" || sku === "sku003";
         const tr = document.createElement('tr');
         tr.setAttribute('data-exempt', isExempt); 
-        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:50px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
+        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
         input.value = ""; calc();
     }
@@ -192,29 +196,23 @@
         document.getElementById('lookupBody').innerHTML = filtered.map(i => `<tr><td>${i["Invoice Number"]}</td><td>${formatDate(i.Date)}</td><td>${i.Customer}</td><td>$${parseFloat(i.Total || 0).toFixed(2)}</td><td><button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteEntry('Invoices', '${i["Invoice Number"]}')">Delete</button>` : ''}</td></tr>`).join('');
     }
 
-    // Handles Inventory and Customers List with Admin Actions
-    function renderList(sheetName, data) {
-        // Filter out empty lines (where SKU or Name is missing)
-        const cleanData = data.filter(r => r[Object.keys(r)[0]] && String(r[Object.keys(r)[0]]).trim() !== "");
+    function printExisting(id) {
+        const inv = invoices.find(i => String(i["Invoice Number"]) === id);
+        if(!inv) return alert("Invoice data not found");
+        document.getElementById('p-cust-name').innerText = inv.Customer;
+        document.getElementById('p-inv-num').innerText = inv["Invoice Number"];
+        document.getElementById('p-inv-date').innerText = formatDate(inv.Date);
+        document.getElementById('p-inv-emp').innerText = inv.Employee || "Alessio";
+        document.getElementById('p-total').innerText = "$" + parseFloat(inv.Total).toFixed(2);
+        document.getElementById('p-items').innerHTML = `<tr><td>-</td><td>Archived Items</td><td>1</td><td>$${inv.Total}</td><td>$${inv.Total}</td></tr>`;
+        window.print();
+    }
 
+    function renderList(sheetName, data) {
+        const cleanData = data.filter(r => r[Object.keys(r)[0]] && String(r[Object.keys(r)[0]]).trim() !== "");
         if(!cleanData.length) return document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><p>No records found.</p>`;
-        
         const keys = Object.keys(cleanData[0]);
-        document.getElementById('mainView').innerHTML = `
-            <h2>${sheetName}</h2>
-            <table>
-                <thead>
-                    <tr>${keys.map(k=>`<th>${k}</th>`).join('')} ${currentUser === "Alessio" ? '<th>Actions</th>' : ''}</tr>
-                </thead>
-                <tbody>
-                    ${cleanData.map(r => `
-                        <tr>
-                            ${keys.map(k => `<td>${r[k]}</td>`).join('')}
-                            ${currentUser === "Alessio" ? `<td><button class="btn btn-red" onclick="deleteEntry('${sheetName}', '${r[keys[0]]}')">Delete</button></td>` : ''}
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>`;
+        document.getElementById('mainView').innerHTML = `<h2>${sheetName}</h2><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')} ${currentUser === "Alessio" ? '<th>Actions</th>' : ''}</tr></thead><tbody>${cleanData.map(r => `<tr>${keys.map(k => `<td>${r[k]}</td>`).join('')} ${currentUser === "Alessio" ? `<td><button class="btn btn-blue" onclick="alert('Edit logic for ${r[keys[0]]}')">Edit</button><button class="btn btn-red" onclick="deleteEntry('${sheetName}', '${r[keys[0]]}')">Delete</button></td>` : ''}</tr>`).join('')}</tbody></table>`;
     }
 
     async function deleteEntry(sheetName, id) {
@@ -229,6 +227,7 @@
         document.getElementById('p-cust-name').innerText = d.cust;
         document.getElementById('p-inv-num').innerText = d.num;
         document.getElementById('p-inv-date').innerText = d.date;
+        document.getElementById('p-inv-emp').innerText = currentUser;
         document.getElementById('p-items').innerHTML = document.getElementById('posBody').innerHTML;
         document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
         document.getElementById('p-tax').innerText = document.getElementById('taxDisp').innerText;
