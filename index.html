@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,26 +35,19 @@
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
         input:disabled { background-color: #f9fafb; color: #6b7280; cursor: not-allowed; border: 1px solid #e5e7eb; }
 
-        .search-container { margin-bottom: 20px; position: relative; }
-        .search-container input { padding-left: 35px; border: 2px solid var(--blue); }
-        .search-icon { position: absolute; left: 12px; top: 12px; color: var(--blue); }
-
-        .tax-checkbox { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; }
-        
         .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
         .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
-        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-override, .search-container { display: none !important; } }
+        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-override { display: none !important; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
 
 <div class="header-section">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>CRAFTY ART DESIGN</h2>
+        <div id="mainLogo"><h2>CRAFTY ART DESIGN</h2></div>
         <div style="text-align: right;">
-            <div style="font-weight:bold; color:#666;">User: <span id="displayUser">Alessio</span></div>
-            <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleUserRole()" style="background:#888; margin-top:5px;">🛠️ Switch Role</button>
+            <div style="font-weight:bold; color:#666;">Status: <span style="color:var(--green)">Online</span></div>
         </div>
     </div>
 </div>
@@ -65,7 +57,7 @@
     <button class="tab" id="tab-Lookup" onclick="loadTab('Lookup')">Invoice Lookup</button>
     <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
     <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
-    <button class="tab" id="tab-Settings" onclick="loadTab('Settings')" style="display:none; border:1px solid gold;">⚙️ Admin Settings</button>
+    <button class="tab" id="tab-Admin" onclick="loadTab('Admin')" style="border:1px solid gold;">⚙️ Admin Settings</button>
 </nav>
 
 <div class="content" id="mainView"></div>
@@ -73,42 +65,32 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNDPBFyPktfE46fGJg8PhZSH9q7_LBDDJDZ-SLyjo5Pd27PQxKyVCoARhZCoyr0MCc/exec";
     const NYC_TAX_RATE = 0.08875; 
-    let currentAdminPin = "1234";
-
-    let currentUser = { name: 'Alessio', role: 'Admin' }; 
+    
     let inventory = [];
     let customers = [];
+    let managerPin = localStorage.getItem('cad_pin') || "1234";
 
     window.onload = async () => {
-        updateAdminTabVisibility();
+        applyBranding();
         await refreshData();
         loadTab('Generator');
     };
 
+    function applyBranding() {
+        const logo = localStorage.getItem('cad_logo');
+        if(logo) document.getElementById('mainLogo').innerHTML = `<img src="${logo}" style="max-height:50px">`;
+    }
+
     async function refreshData() {
         try {
-            const iRes = await fetch(`${SCRIPT_URL}?action=getInventory`);
+            const [iRes, cRes] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=getInventory`),
+                fetch(`${SCRIPT_URL}?action=getCustomers`)
+            ]);
             inventory = await iRes.json();
-            const cRes = await fetch(`${SCRIPT_URL}?action=getCustomers`);
             customers = await cRes.json();
         } catch(e) { console.error("Sync Error"); }
     }
-
-    function toggleUserRole() {
-        currentUser = (currentUser.role === 'Admin') ? { name: 'Staff User', role: 'Staff' } : { name: 'Alessio', role: 'Admin' };
-        document.getElementById('displayUser').innerText = currentUser.name;
-        updateAdminTabVisibility();
-        loadTab('Generator');
-    }
-
-    function updateAdminTabVisibility() {
-        const settingsTab = document.getElementById('tab-Settings');
-        settingsTab.style.display = (currentUser.role === 'Admin') ? 'block' : 'none';
-    }
-
-    const formatCurrency = (num) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num || 0);
-    };
 
     async function loadTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -116,67 +98,37 @@
         const view = document.getElementById('mainView');
 
         if(tabName === 'Generator') { renderGenerator(view); return; }
-        if(tabName === 'Settings') { renderSettings(view); return; }
+        if(tabName === 'Admin') { renderAdmin(view); return; }
         
         view.innerHTML = `<div class="card"><h3>Fetching ${tabName}...</h3></div>`;
         try {
             const action = (tabName === 'Lookup') ? 'getInvoices' : 'get' + tabName;
             const res = await fetch(`${SCRIPT_URL}?action=${action}`);
             const data = await res.json();
-            
-            if (tabName === 'Lookup') renderLookupUI(data, view);
-            else renderTable(tabName, data, view);
+            renderTable(tabName, data, view);
         } catch (e) { view.innerHTML = `<div class="card">Connection Error</div>`; }
-    }
-
-    function renderSettings(view) {
-        view.innerHTML = `
-            <div class="card">
-                <h3>Admin Control Panel</h3>
-                <hr>
-                <div style="margin-top:20px; max-width: 400px;">
-                    <label><strong>Manager Override PIN:</strong></label>
-                    <input type="text" id="pinInput" value="${currentAdminPin}" style="font-size: 1.5rem; letter-spacing: 5px; font-weight: bold; text-align: center;">
-                    <button class="btn btn-blue" style="margin-top:10px; width:100%;" onclick="saveNewPin()">Update PIN</button>
-                </div>
-            </div>`;
-    }
-
-    function saveNewPin() {
-        const newPin = document.getElementById('pinInput').value;
-        if(newPin.length > 0) {
-            currentAdminPin = newPin;
-            alert("Override PIN updated successfully!");
-        }
     }
 
     function renderGenerator(view) {
         const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
-        const today = new Date().toLocaleDateString();
         let custOpts = customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('');
 
         view.innerHTML = `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
-                    <div><strong>Invoice #:</strong> <span id="invNumDisp">${invNum}</span></div>
-                    <div><strong>Date:</strong> <span id="dateDisp">${today}</span></div>
-                    <div><strong>Employee:</strong> ${currentUser.name}</div>
+            <div class="card" id="printArea">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <div><strong>Invoice #:</strong> ${invNum}</div>
+                    <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
                 </div>
-                <div style="margin-bottom:20px;">
-                    <label>Select Customer:</label>
-                    <select id="posCustomer">
-                        <option value="" disabled selected>Choose...</option>
-                        <option value="Walk-in">Walk-in / Cash</option>
-                        ${custOpts}
-                    </select>
-                </div>
+                <select id="posCustomer" style="margin-bottom:20px;">
+                    <option value="">Select Customer...</option>
+                    <option value="Walk-in">Walk-in / Cash</option>
+                    ${custOpts}
+                </select>
                 <table class="pos-table">
-                    <thead>
-                        <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th style="text-align:center;">Tax Exempt</th><th>Total</th><th class="btn-no-print"></th></tr>
-                    </thead>
+                    <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Exempt</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
                     <tbody id="posBody"></tbody>
                 </table>
-                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:15px;">+ Add Item</button>
+                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()">+ Add Item</button>
                 <div class="total-display">
                     Subtotal: <span id="subDisp">$0.00</span><br>
                     Tax (8.875%): <span id="taxDisp">$0.00</span>
@@ -188,141 +140,102 @@
     }
 
     function addRow() {
-        const isAdmin = currentUser.role === 'Admin';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <div style="display:flex; align-items:center;">
-                    <input type="text" onchange="autoFill(this)" placeholder="SKU">
-                    ${!isAdmin ? `<button class="btn btn-override btn-no-print" onclick="managerOverride(this)">Unlock</button>` : ''}
-                </div>
-            </td>
-            <td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
+            <td><input type="text" placeholder="Item Name" disabled></td>
             <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
-            <td><input type="text" oninput="calcTotal()" placeholder="0.00" ${!isAdmin ? 'disabled' : ''}></td>
-            <td style="text-align:center;"><input type="checkbox" class="tax-checkbox" onchange="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td>
+            <td><input type="text" placeholder="0.00" disabled oninput="calcTotal()"></td>
+            <td style="text-align:center;"><input type="checkbox" onchange="calcTotal()" disabled></td>
             <td class="row-total">$0.00</td>
-            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>
-        `;
-        document.getElementById('posBody').appendChild(row);
+            <td class="btn-no-print">
+                <button class="btn btn-override btn-sm" onclick="unlockRow(this)">Unlock</button>
+                <button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button>
+            </td>`;
+        document.getElementById('posBody').appendChild(tr);
     }
 
-    function managerOverride(btn) {
-        const pin = prompt("Enter Manager PIN to unlock fields:");
-        if (pin === currentAdminPin) {
+    function unlockRow(btn) {
+        const pin = prompt("Enter Manager PIN:");
+        if(pin === managerPin) {
             const tr = btn.closest('tr');
             tr.cells[1].children[0].disabled = false;
             tr.cells[3].children[0].disabled = false;
             tr.cells[4].children[0].disabled = false;
             btn.style.display = "none";
-        } else {
-            alert("Incorrect PIN.");
-        }
+        } else { alert("Wrong PIN"); }
     }
 
     function autoFill(input) {
         const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.toLowerCase());
-        const tr = input.parentElement.closest('tr');
-        const isAdmin = currentUser.role === 'Admin';
+        const tr = input.closest('tr');
         if(item) {
             tr.cells[1].children[0].value = item["Item Name"];
-            const rawPrice = parseFloat(String(item.Price).replace(/[$,]/g,'')) || 0;
-            tr.cells[3].children[0].value = rawPrice.toFixed(2);
+            tr.cells[3].children[0].value = parseFloat(String(item.Price).replace(/[$,]/g,'') || 0).toFixed(2);
             tr.cells[4].children[0].checked = (item["Tax Exempt"] === "Exempt");
-            if (!isAdmin) {
-                tr.cells[1].children[0].disabled = tr.cells[3].children[0].disabled = tr.cells[4].children[0].disabled = true;
-            }
         }
         calcTotal();
     }
 
     function calcTotal() {
-        let sub = 0; let taxableSub = 0;
+        let sub = 0; let taxable = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const qty = parseFloat(tr.cells[2].children[0].value) || 0;
             const price = parseFloat(tr.cells[3].children[0].value) || 0;
             const rowTotal = qty * price;
-            tr.cells[5].innerText = formatCurrency(rowTotal);
+            tr.cells[5].innerText = "$" + rowTotal.toFixed(2);
             sub += rowTotal;
-            if (!tr.cells[4].children[0].checked) taxableSub += rowTotal;
+            if(!tr.cells[4].children[0].checked) taxable += rowTotal;
         });
-        const tax = taxableSub * NYC_TAX_RATE;
-        document.getElementById('subDisp').innerText = formatCurrency(sub);
-        document.getElementById('taxDisp').innerText = formatCurrency(tax);
-        document.getElementById('grandDisp').innerText = formatCurrency(sub + tax);
+        const tax = taxable * NYC_TAX_RATE;
+        document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
+        document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
+        document.getElementById('grandDisp').innerText = "$" + (sub + tax).toFixed(2);
     }
 
-    function filterInventory() {
-        const query = document.getElementById('invSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#inventoryTableBody tr');
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
-        });
-    }
-
-    function renderTable(type, data, view) {
-        const activeData = data.filter(r => r.SKU && String(r.SKU).trim() !== "");
-        let h = `<div class="card"><h3>${type} Management</h3>`;
-        
-        if (type === 'Inventory') {
-            h += `<div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="invSearch" onkeyup="filterInventory()" placeholder="Search by SKU, Name, or Size...">
-                  </div>
-                  <table class="pos-table"><thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Tax Status</th></tr></thead>
-                  <tbody id="inventoryTableBody">`;
-            activeData.forEach(r => {
-                const isExempt = (r["Tax Exempt"] === "Exempt");
-                const priceVal = parseFloat(String(r.Price || "0").replace(/[$,]/g, ''));
-                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"] || '---'}</td><td>${r["Size"] || '---'}</td><td>${formatCurrency(priceVal)}</td><td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
-            });
-        } else {
-            h += `<table class="pos-table"><thead><tr><th>Name</th><th>Company</th></tr></thead><tbody>`;
-            activeData.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
-        }
-        view.innerHTML = h + `</tbody></table></div>`;
-    }
-
-    function renderLookupUI(data, view) {
+    function renderAdmin(view) {
         view.innerHTML = `
             <div class="card">
-                <h3>Invoice Lookup</h3>
-                <table class="pos-table">
-                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        ${data.map(r => `
-                            <tr>
-                                <td><b>${r["Invoice Number"]}</b></td>
-                                <td>${r["Date"]}</td>
-                                <td>${r["Customer"]}</td>
-                                <td><b>${formatCurrency(parseFloat(String(r.Total).replace(/[$,]/g, '')))}</b></td>
-                                <td>
-                                    <button class="btn btn-blue btn-sm">Print</button>
-                                    ${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm" onclick="deleteInvoice('${r["Invoice Number"]}')">Delete</button>` : ''}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                <h3>Admin & Branding</h3>
+                <label>Logo URL</label><input type="text" id="logoInp" value="${localStorage.getItem('cad_logo') || ''}">
+                <label>Watermark URL</label><input type="text" id="bgInp" value="${localStorage.getItem('cad_bg') || ''}">
+                <label>Manager PIN</label><input type="text" id="pinInp" value="${managerPin}">
+                <button class="btn btn-blue" style="margin-top:10px;" onclick="saveAdmin()">Save Settings</button>
             </div>`;
     }
 
-    async function deleteInvoice(invNum) {
-        if (!confirm(`Delete invoice ${invNum}?`)) return;
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=deleteInvoice&invoiceNumber=${invNum}`);
-            const result = await res.text();
-            alert(result);
-            loadTab('Lookup');
-        } catch (e) { alert("Error deleting."); }
+    function saveAdmin() {
+        localStorage.setItem('cad_logo', document.getElementById('logoInp').value);
+        localStorage.setItem('cad_bg', document.getElementById('bgInp').value);
+        localStorage.setItem('cad_pin', document.getElementById('pinInp').value);
+        location.reload();
     }
 
-    async function saveInvoice() {
-        if (!document.getElementById('posCustomer').value) return alert("Select a Customer");
-        alert("Invoice Data Saved!");
+    function saveInvoice() {
+        const bg = localStorage.getItem('cad_bg');
+        if(bg) {
+            const area = document.getElementById('printArea');
+            area.style.backgroundImage = `url('${bg}')`;
+            area.style.backgroundSize = "contain";
+            area.style.backgroundRepeat = "no-repeat";
+            area.style.backgroundPosition = "center";
+        }
         window.print();
-        loadTab('Generator');
+    }
+
+    function renderTable(type, data, view) {
+        let h = `<div class="card"><h3>${type}</h3><table class="pos-table"><thead><tr>`;
+        if(type === 'Inventory') {
+            h += `<th>SKU</th><th>Item</th><th>Price</th><th>Tax</th></tr></thead><tbody>`;
+            data.forEach(r => { if(r.SKU) {
+                const exempt = r["Tax Exempt"] === "Exempt";
+                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>$${r.Price}</td><td><span class="badge ${exempt ? 'badge-exempt' : 'badge-taxable'}">${exempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
+            }});
+        } else {
+            h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
+            data.forEach(r => { if(r.Name) h += `<tr><td>${r.Name}</td><td>${r.Company || '---'}</td></tr>`; });
+        }
+        view.innerHTML = h + `</tbody></table></div>`;
     }
 </script>
 </body>
