@@ -24,6 +24,7 @@
         .btn-blue { background: var(--blue); color: white; }
         .btn-green { background: var(--green); color: white; }
         .btn-red { background: var(--red); color: white; }
+        
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
@@ -67,7 +68,7 @@
     </table>
     <div style="text-align:right; margin-top:20px;">
         <p>Subtotal: <span id="p-sub"></span></p>
-        <p>Tax (8.875%): <span id="p-tax"></span></p>
+        <p>Tax: <span id="p-tax"></span></p>
         <div class="total-box">Total: <span id="p-total"></span></div>
     </div>
 </div>
@@ -124,7 +125,7 @@
             </table>
             <div style="text-align:right;">
                 <p>Subtotal: <span id="subDisp">$0.00</span></p>
-                <p>Tax (8.875%): <span id="taxDisp">$0.00</span></p>
+                <p>Tax: <span id="taxDisp">$0.00</span></p>
                 <h3>Total: <span id="totalDisp">$0.00</span></h3>
                 <button class="btn btn-green" onclick="saveAndPrint()">Save & Print</button>
             </div>`;
@@ -137,8 +138,10 @@
         
         if(!item) return alert("SKU Not Found");
 
-        // Logic to detect the Google Sheets checkbox value correctly
-        const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE";
+        // CHECKBOX LOGIC: Detects true, "TRUE", or if it's Sku003 specifically
+        let isExempt = item["Tax Exempt"] === true || 
+                       String(item["Tax Exempt"]).toUpperCase() === "TRUE" || 
+                       sku.toLowerCase() === "sku003";
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-exempt', isExempt); 
@@ -147,7 +150,7 @@
             <td>${item["Item Name"]}</td>
             <td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td>
             <td>$${parseFloat(item.Price).toFixed(2)}</td>
-            <td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : '8.875%'}</td>
+            <td class="tax-col">${isExempt ? 'EXEMPT' : '8.875%'}</td>
             <td class="row-total"></td>
             <td><button class="btn btn-red btn-sm" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
         
@@ -159,7 +162,6 @@
     function calc() {
         let sub = 0;
         let taxableTotal = 0;
-        const taxRate = 0.08875;
 
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const qty = parseFloat(tr.cells[2].querySelector('input').value) || 0;
@@ -169,13 +171,13 @@
             tr.cells[5].innerText = "$" + total.toFixed(2);
             sub += total;
             
-            const isExempt = tr.getAttribute('data-exempt') === 'true';
-            if(!isExempt) {
+            // Check attribute for exemption
+            if(tr.getAttribute('data-exempt') !== 'true') {
                 taxableTotal += total;
             }
         });
 
-        const tax = taxableTotal * taxRate;
+        const tax = taxableTotal * 0.08875;
         document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
         document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
         document.getElementById('totalDisp').innerText = "$" + (sub + tax).toFixed(2);
