@@ -7,17 +7,17 @@
     <style>
         :root { --blue: #004d73; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --accent: #2563eb; }
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--light); margin: 0; padding-bottom: 50px; }
+        body { background: var(--light); margin: 0; padding-bottom: 50px; color: var(--dark); }
 
-        /* UI Navigation */
+        /* Navigation */
         .top-nav { background: white; padding: 12px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 40px; gap: 20px; }
-        .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; }
+        .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 40px; gap: 20px; overflow-x: auto; }
+        .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
         .container { max-width: 1100px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* Toggle Switch Styling */
+        /* Toggle Switch */
         .user-toggle { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); }
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -26,25 +26,33 @@
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Table & Buttons */
+        /* Form Elements */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
+        label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; outline: none; }
+
+        /* Tables */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 12px; font-weight: 700; color: #64748b; }
+        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+
+        /* Buttons */
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .btn-blue { background: var(--accent); color: white; }
+        .btn-green { background: #22c55e; color: white; }
         .btn-red { background: #ef4444; color: white; }
 
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 20px; color: black; }
-            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 10px 0; }
+            .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 15px 0; }
             .print-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             .print-table th { background: #f0f4f7 !important; border-bottom: 2px solid #004d73; -webkit-print-color-adjust: exact; }
             .total-section { text-align: right; margin-top: 10px; }
             .final-total-box { border: 2px solid black; display: inline-block; padding: 5px 20px; font-size: 18px; font-weight: bold; }
         }
-        #printArea { display: none; }
+        #printArea { display: none; background: white; }
     </style>
 </head>
 <body>
@@ -52,18 +60,17 @@
 <div class="top-nav">
     <h1 style="font-size: 18px; font-weight: 800; color: var(--accent); margin: 0;">CRAFTY ART DESIGN</h1>
     <div class="user-toggle">
-        <span id="userLabel" style="font-size: 12px; font-weight: bold; color: #64748b;">STAFF</span>
-        <label class="switch">
-            <input type="checkbox" id="roleToggle" onchange="toggleRole()">
-            <span class="slider"></span>
-        </label>
-        <span style="font-size: 12px; font-weight: bold; color: var(--accent);">ADMIN</span>
+        <span style="font-size: 11px; font-weight: bold; color: #64748b;">STAFF</span>
+        <label class="switch"><input type="checkbox" id="roleToggle" onchange="toggleRole()"><span class="slider"></span></label>
+        <span style="font-size: 11px; font-weight: bold; color: var(--accent);">ADMIN</span>
     </div>
 </div>
 
 <div class="nav-tabs">
-    <div id="tabGen" class="tab active" onclick="loadTab('Generator')">Invoice Generator</div>
-    <div id="tabLook" class="tab" onclick="loadTab('Lookup')">Invoice Lookup</div>
+    <div class="tab active" onclick="loadTab('Generator', event)">Invoice Generator</div>
+    <div class="tab" onclick="loadTab('Lookup', event)">Invoice Lookup</div>
+    <div class="tab" onclick="loadTab('Inventory', event)">Inventory</div>
+    <div class="tab" onclick="loadTab('Customers', event)">Customers</div>
 </div>
 
 <div id="mainView" class="container"></div>
@@ -93,7 +100,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxa7dIdYqWCrsFKR5ab8LBLjsGosSPHwEf0vcRPukuo0CBUXucphnHYW_v7GdURqa7m/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7ATZ4GngGXAS52Tt6lusfHJ7zC9i_FuXD-gLI5pgX1jUZRC4kdFPrU0IbC-DvXy8Q/exec";
     let currentUser = "Staff";
     let inventory = [], customers = [], invoices = [];
     let activeTab = 'Generator';
@@ -101,53 +108,54 @@
     window.onload = async () => { await refreshData(); renderGenerator(); };
 
     function toggleRole() {
-        const isChecked = document.getElementById('roleToggle').checked;
-        currentUser = isChecked ? "Alessio" : "Staff";
-        // Refresh current view to show/hide admin buttons
+        currentUser = document.getElementById('roleToggle').checked ? "Alessio" : "Staff";
         if (activeTab === 'Lookup') renderLookup();
     }
 
     async function refreshData() {
-        const [inv, cust, hist] = await Promise.all([
-            fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
-            fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
-            fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
-        ]);
-        inventory = inv; customers = cust; invoices = hist;
+        try {
+            const [inv, cust, hist] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
+                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
+                fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
+            ]);
+            inventory = inv; customers = cust; invoices = hist;
+        } catch(e) { console.error("Data Sync Error"); }
     }
 
     function formatDate(dateStr) {
         const d = new Date(dateStr);
-        return isNaN(d) ? dateStr : (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+        if (isNaN(d)) return dateStr;
+        return (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
     }
 
-    function loadTab(tab) {
+    function loadTab(tab, e) {
         activeTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        if(tab === 'Generator') {
-            document.getElementById('tabGen').classList.add('active');
-            renderGenerator();
-        } else {
-            document.getElementById('tabLook').classList.add('active');
-            renderLookup();
-        }
+        e.target.classList.add('active');
+        if(tab === 'Generator') renderGenerator();
+        else if(tab === 'Lookup') renderLookup();
+        else if(tab === 'Inventory') renderList('Inventory', inventory);
+        else if(tab === 'Customers') renderList('Customers', customers);
     }
 
     function renderGenerator() {
         const invNum = "INV-" + Math.floor(Math.random() * 900000 + 100000);
         document.getElementById('mainView').innerHTML = `
-            <h2>Invoice Generator</h2>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <div><label>INV #</label><input type="text" id="invNum" value="${invNum}" disabled style="width:100%"></div>
-                <div><label>DATE</label><input type="text" id="invDate" value="${formatDate(new Date())}" disabled style="width:100%"></div>
-                <div><label>CUSTOMER</label>
-                    <select id="custSelect" style="width:100%"><option value="Walk-in">Walk-in</option>
+            <h2>New Invoice</h2>
+            <div class="form-grid">
+                <div><label>Invoice #</label><input type="text" id="invNum" value="${invNum}" disabled></div>
+                <div><label>Date</label><input type="text" id="invDate" value="${formatDate(new Date())}" disabled></div>
+                <div><label>Customer</label>
+                    <select id="custSelect"><option value="Walk-in">Walk-in</option>
                     ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
                 </div>
             </div>
-            <input type="text" id="skuInput" placeholder="Enter SKU..." style="width: 80%; padding: 10px;" onkeypress="if(event.key==='Enter') addItem()">
-            <button class="btn btn-blue" onclick="addItem()">Add Item</button>
-            <table style="margin-top: 20px;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1" onkeypress="if(event.key==='Enter') addItem()">
+                <button class="btn btn-blue" onclick="addItem()">Add Item</button>
+            </div>
+            <table>
                 <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th><th>Total</th><th></th></tr></thead>
                 <tbody id="posBody"></tbody>
             </table>
@@ -155,20 +163,21 @@
                 <p>Subtotal: <span id="subDisp">$0.00</span></p>
                 <p>Tax: <span id="taxDisp">$0.00</span></p>
                 <h3>Total: <span id="totalDisp">$0.00</span></h3>
-                <button class="btn btn-blue" style="background: #22c55e;" onclick="finalizeSale()">Finalize & Print</button>
+                <button class="btn btn-green" onclick="finalizeSale()">Finalize & Print</button>
             </div>`;
     }
 
     function addItem() {
-        const skuInput = document.getElementById('skuInput');
-        const item = inventory.find(i => String(i.SKU).toLowerCase() === skuInput.value.trim().toLowerCase());
+        const input = document.getElementById('skuInput');
+        const sku = input.value.trim().toLowerCase();
+        const item = inventory.find(i => String(i.SKU).toLowerCase() === sku);
         if(!item) return alert("SKU Not Found");
-        const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE" || item.SKU === "Sku003";
+        const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE" || sku === "sku003";
         const tr = document.createElement('tr');
         tr.setAttribute('data-exempt', isExempt); 
-        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:50px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
+        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
-        skuInput.value = ""; calc();
+        input.value = ""; calc();
     }
 
     function calc() {
@@ -188,19 +197,14 @@
     function renderLookup() {
         document.getElementById('mainView').innerHTML = `
             <h2>Invoice Lookup</h2>
-            <div style="margin-bottom: 20px;">
-                <input type="text" id="searchInv" placeholder="Search Invoice #" oninput="applyFilters()" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 300px;">
-            </div>
-            <table>
-                <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
-                <tbody id="lookupBody"></tbody>
-            </table>`;
+            <input type="text" id="searchInv" placeholder="Search Invoice #" oninput="applyFilters()" style="padding:10px; width:300px; margin-bottom:20px;">
+            <table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="lookupBody"></tbody></table>`;
         applyFilters();
     }
 
     function applyFilters() {
-        const query = document.getElementById('searchInv').value.toLowerCase();
-        const filtered = invoices.filter(i => String(i["Invoice Number"]).toLowerCase().includes(query));
+        const q = document.getElementById('searchInv').value.toLowerCase();
+        const filtered = invoices.filter(i => String(i["Invoice Number"]).toLowerCase().includes(q));
         document.getElementById('lookupBody').innerHTML = filtered.map(i => `
             <tr>
                 <td>${i["Invoice Number"]}</td>
@@ -211,36 +215,38 @@
                     <button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>
                     ${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteInvoice('${i["Invoice Number"]}')">Delete</button>` : ''}
                 </td>
-            </tr>
-        `).join('');
+            </tr>`).join('');
+    }
+
+    async function deleteInvoice(id) {
+        if(!confirm("Delete Invoice " + id + "?")) return;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
+        await refreshData();
+        renderLookup();
+    }
+
+    function renderList(title, data) {
+        if(!data.length) return document.getElementById('mainView').innerHTML = `<h2>${title}</h2><p>No data found.</p>`;
+        const keys = Object.keys(data[0]);
+        document.getElementById('mainView').innerHTML = `<h2>${title}</h2><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>${data.map(r=>`<tr>${keys.map(k=>`<td>${r[k]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     }
 
     async function finalizeSale() {
-        const invData = {
+        const data = {
             num: document.getElementById('invNum').value,
             date: document.getElementById('invDate').value,
             cust: document.getElementById('custSelect').value,
             total: document.getElementById('totalDisp').innerText
         };
-        // Setup Print
-        document.getElementById('p-cust-name').innerText = invData.cust;
-        document.getElementById('p-inv-num').innerText = invData.num;
-        document.getElementById('p-inv-date').innerText = invData.date;
+        document.getElementById('p-cust-name').innerText = data.cust;
+        document.getElementById('p-inv-num').innerText = data.num;
+        document.getElementById('p-inv-date').innerText = data.date;
         document.getElementById('p-items').innerHTML = document.getElementById('posBody').innerHTML;
         document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
         document.getElementById('p-tax').innerText = document.getElementById('taxDisp').innerText;
-        document.getElementById('p-total').innerText = invData.total;
-        
+        document.getElementById('p-total').innerText = data.total;
         window.print();
-
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
-            action: 'save',
-            invoiceNumber: invData.num,
-            date: invData.date,
-            customer: invData.cust,
-            employee: currentUser,
-            total: invData.total.replace('$','')
-        })});
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'save', invoiceNumber: data.num, date: data.date, customer: data.cust, employee: currentUser, total: data.total.replace('$','') })});
         await refreshData();
         renderGenerator();
     }
