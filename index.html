@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRAFTY ART DESIGN | POS SYSTEM</title>
     <style>
-        :root { --blue: #2563eb; --dark: #1e293b; --light: #f8fafc; --red: #ef4444; --green: #22c55e; --border: #e2e8f0; --navy: #004d73; }
-        * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+        :root { --blue: #2563eb; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --navy: #004d73; --green: #22c55e; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
         body { background: var(--light); margin: 0; padding-bottom: 50px; color: var(--dark); }
 
@@ -16,14 +16,14 @@
         .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
 
-        /* Dashboard Container */
+        /* Container */
         .container { max-width: 1100px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* Form Grid */
+        /* Dashboard Forms */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 5px; }
-        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
         
         /* Table Styles */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
@@ -35,19 +35,20 @@
         .btn-green { background: var(--green); color: white; }
         .btn-red { background: var(--red); color: white; }
 
-        /* PRINT STYLES - Matches your screenshot */
+        /* PRINT STYLES - Matches your reference screenshot */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
             .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-            .blue-bar { background: var(--navy) !important; color: white !important; padding: 10px; font-weight: bold; -webkit-print-color-adjust: exact; }
-            .print-meta-table { width: 300px; border: 1px solid #ccc; }
-            .print-meta-table td { border: 1px solid #ccc; padding: 5px; font-size: 12px; }
-            .total-box { border: 2px solid black; padding: 10px; font-weight: bold; font-size: 18px; display: inline-block; }
+            .blue-bar { background: var(--navy) !important; color: white !important; padding: 10px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 15px 0; }
+            .print-meta-table { width: 300px; border: 1px solid #ccc; border-collapse: collapse; }
+            .print-meta-table td { border: 1px solid #ccc; padding: 6px; font-size: 12px; }
+            .total-box { border: 2px solid black; padding: 10px; font-weight: bold; font-size: 18px; display: inline-block; margin-top: 10px; }
+            .no-print { display: none !important; }
         }
 
-        #printArea { display: none; padding: 40px; }
+        #printArea { display: none; padding: 40px; background: white; }
     </style>
 </head>
 <body>
@@ -72,16 +73,19 @@
         <div style="text-align:right;"><h1 style="color:var(--blue); margin:0;">Invoice</h1><p><strong>Crafty Art Design</strong></p></div>
     </div>
     <div class="blue-bar">Bill To:</div>
-    <div style="display:flex; justify-content:space-between; margin: 20px 0;">
-        <div><p id="p-cust" style="font-weight:bold; margin:0;"></p></div>
+    <div style="display:flex; justify-content:space-between; margin-bottom: 30px;">
+        <div id="p-cust-info">
+            <p id="p-cust-name" style="font-weight:bold; margin:0; font-size: 16px;"></p>
+            <p id="p-cust-details" style="margin:0; color: #666;"></p>
+        </div>
         <table class="print-meta-table">
             <tr><td>Invoice #:</td><td id="p-num"></td></tr>
             <tr><td>Date:</td><td id="p-date"></td></tr>
             <tr><td>Employee:</td><td id="p-emp"></td></tr>
         </table>
     </div>
-    <table style="width:100%; border-bottom: 2px solid black;">
-        <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+    <table style="width:100%; border-bottom: 2px solid #000;">
+        <thead><tr style="border-bottom: 2px solid #333;"><th>SKU</th><th>Description</th><th style="text-align:center;">Qty</th><th>Price</th><th>Total</th></tr></thead>
         <tbody id="p-items"></tbody>
     </table>
     <div style="text-align:right; margin-top:20px;">
@@ -96,7 +100,7 @@
     let inventory = [], customers = [], invoices = [];
 
     window.onload = async () => { 
-        document.getElementById('mainView').innerHTML = "Loading data...";
+        document.getElementById('mainView').innerHTML = "<h3>Initializing System...</h3>";
         await refreshData(); 
         renderGenerator(); 
     };
@@ -109,7 +113,7 @@
                 fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
             ]);
             inventory = inv; customers = cust; invoices = hist;
-        } catch(e) { console.error("Connection Failed"); }
+        } catch(e) { alert("Error connecting to database. Please refresh."); }
     }
 
     function loadTab(tab, e) {
@@ -117,11 +121,10 @@
         e.target.classList.add('active');
         if (tab === 'Generator') renderGenerator();
         if (tab === 'Lookup') renderLookup();
-        if (tab === 'Inventory') renderList('Inventory', inventory);
-        if (tab === 'Customers') renderList('Customers', customers);
+        if (tab === 'Inventory') renderDataTable('Inventory', inventory);
+        if (tab === 'Customers') renderDataTable('Customers', customers);
     }
 
-    // Helper: Formats Date to MM/DD/YYYY
     function cleanDate(d) {
         if(!d) return "";
         const date = new Date(d);
@@ -129,30 +132,30 @@
     }
 
     function renderGenerator() {
-        const invNum = "INV-" + Math.floor(Math.random()*900000+100000);
+        const invNum = "INV-" + Date.now().toString().slice(-6);
         document.getElementById('mainView').innerHTML = `
-            <h2>Create New Invoice</h2>
+            <h2>New Sale</h2>
             <div class="form-grid">
                 <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" value="${invNum}" disabled></div>
                 <div class="form-group"><label>Date</label><input type="text" id="invDate" value="${cleanDate(new Date())}" disabled></div>
                 <div class="form-group"><label>Customer</label>
-                    <select id="custSelect"><option value="">Select Customer</option>
-                    ${customers.map(c => `<option>${c.Name}</option>`).join('')}</select>
+                    <select id="custSelect" onchange="updateCustomerDetails()"><option value="">Walk-in Customer</option>
+                    ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="skuInput" placeholder="Enter SKU..." style="flex:1" onkeypress="if(event.key==='Enter') addItem()">
-                <button class="btn btn-blue" onclick="addItem()">Add Item</button>
+                <input type="text" id="skuInput" placeholder="Scan or Enter SKU..." style="flex:1" onkeypress="if(event.key==='Enter') addItem()">
+                <button class="btn btn-blue" onclick="addItem()">Add to Cart</button>
             </div>
-            <table id="posTable">
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead>
+            <table>
+                <thead><tr><th>SKU</th><th>Item Description</th><th style="width:80px;">Qty</th><th>Price</th><th>Total</th><th></th></tr></thead>
                 <tbody id="posBody"></tbody>
             </table>
-            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                <button class="btn btn-green" onclick="saveAndPrint()">Save & Print</button>
-                <div style="text-align:right; font-size:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top: 1px solid #eee; padding-top:20px;">
+                <button class="btn btn-green" onclick="saveAndPrint()">Finalize & Print</button>
+                <div style="text-align:right;">
                     Subtotal: <span id="subDisp">$0.00</span><br>
-                    Tax: <span id="taxDisp">$0.00</span><br>
+                    Tax (8.875%): <span id="taxDisp">$0.00</span><br>
                     <strong style="font-size:24px; color:var(--blue);">Total: <span id="totalDisp">$0.00</span></strong>
                 </div>
             </div>`;
@@ -164,11 +167,12 @@
         if(!item) return alert("SKU Not Found");
 
         const tr = document.createElement('tr');
-        tr.setAttribute('data-exempt', item["Tax Exempt"] === true || item["Tax Exempt"] === "TRUE");
+        const isExempt = item["Tax Exempt"] === true || item["Tax Exempt"] === "TRUE";
+        tr.setAttribute('data-exempt', isExempt);
         tr.innerHTML = `
             <td>${item.SKU}</td>
-            <td>${item["Item Name"]}</td>
-            <td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td>
+            <td>${item["Item Name"]} ${isExempt ? '<small style="color:green;">(Exempt)</small>':''}</td>
+            <td><input type="number" value="1" min="1" oninput="calc()" style="width:60px; padding:5px;"></td>
             <td>$${parseFloat(item.Price).toFixed(2)}</td>
             <td class="row-total"></td>
             <td><button class="btn btn-red btn-sm" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
@@ -180,12 +184,12 @@
     function calc() {
         let sub = 0, taxable = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
-            const qty = tr.cells[2].querySelector('input').value;
-            const price = tr.cells[3].innerText.replace('$','');
-            const total = qty * price;
-            tr.cells[4].innerText = "$" + total.toFixed(2);
-            sub += total;
-            if(tr.getAttribute('data-exempt') !== 'true') taxable += total;
+            const qty = parseFloat(tr.cells[2].querySelector('input').value) || 0;
+            const price = parseFloat(tr.cells[3].innerText.replace('$','')) || 0;
+            const rowTotal = qty * price;
+            tr.cells[4].innerText = "$" + rowTotal.toFixed(2);
+            sub += rowTotal;
+            if(tr.getAttribute('data-exempt') !== 'true') taxable += rowTotal;
         });
         const tax = taxable * 0.08875;
         document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
@@ -196,34 +200,45 @@
     async function saveAndPrint() {
         const items = [];
         document.querySelectorAll('#posBody tr').forEach(tr => {
-            items.push({ sku: tr.cells[0].innerText, name: tr.cells[1].innerText, qty: tr.cells[2].querySelector('input').value, price: tr.cells[3].innerText, total: tr.cells[4].innerText });
+            items.push({ 
+                sku: tr.cells[0].innerText, 
+                name: tr.cells[1].innerText, 
+                qty: tr.cells[2].querySelector('input').value, 
+                price: tr.cells[3].innerText, 
+                total: tr.cells[4].innerText 
+            });
         });
 
-        // Fill Print Template
+        if(items.length === 0) return alert("Cart is empty!");
+
+        // Update Print Template
         document.getElementById('p-num').innerText = document.getElementById('invNum').value;
         document.getElementById('p-date').innerText = document.getElementById('invDate').value;
-        document.getElementById('p-cust').innerText = document.getElementById('custSelect').value;
+        document.getElementById('p-cust-name').innerText = document.getElementById('custSelect').value || "Walk-in Customer";
         document.getElementById('p-emp').innerText = "Alessio";
         document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
         document.getElementById('p-tax').innerText = document.getElementById('taxDisp').innerText;
         document.getElementById('p-total').innerText = document.getElementById('totalDisp').innerText;
         
-        let pItems = "";
-        items.forEach(i => pItems += `<tr><td>${i.sku}</td><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`);
-        document.getElementById('p-items').innerHTML = pItems;
+        let pItemsHtml = "";
+        items.forEach(i => pItemsHtml += `<tr><td>${i.sku}</td><td>${i.name}</td><td style="text-align:center;">${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`);
+        document.getElementById('p-items').innerHTML = pItemsHtml;
 
         const data = {
             action: 'save',
             invoiceNumber: document.getElementById('invNum').value,
             date: document.getElementById('invDate').value,
-            customer: document.getElementById('custSelect').value,
+            customer: document.getElementById('custSelect').value || "Walk-in Customer",
             employee: "Alessio",
+            subtotal: document.getElementById('subDisp').innerText.replace('$',''),
+            tax: document.getElementById('taxDisp').innerText.replace('$',''),
             total: document.getElementById('totalDisp').innerText.replace('$',''),
             items: JSON.stringify(items)
         };
 
-        window.print();
+        window.print(); // Open Print Dialog
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        alert("Transaction Recorded Successfully");
         refreshData();
     }
 
@@ -231,24 +246,27 @@
         document.getElementById('mainView').innerHTML = `
             <h2>Invoice History</h2>
             <table>
-                <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Action</th></tr></thead>
+                <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
                 <tbody>
                     ${invoices.map(inv => `<tr>
                         <td>${inv["Invoice Number"]}</td>
                         <td>${cleanDate(inv.Date)}</td>
                         <td>${inv.Customer}</td>
                         <td><strong>$${parseFloat(inv.Total || 0).toFixed(2)}</strong></td>
-                        <td><button class="btn btn-blue btn-sm" onclick="window.print()">Print</button></td>
+                        <td><button class="btn btn-blue btn-sm" onclick="alert('Reprinting feature linked to save system...')">Reprint</button></td>
                     </tr>`).join('')}
                 </tbody>
             </table>`;
     }
 
-    function renderList(title, data) {
+    function renderDataTable(title, data) {
+        if(data.length === 0) { document.getElementById('mainView').innerHTML = `<h2>${title}</h2><p>No data found.</p>`; return; }
+        const headers = Object.keys(data[0]);
         document.getElementById('mainView').innerHTML = `<h2>${title}</h2>
-            <table><thead><tr>${Object.keys(data[0] || {}).map(k=>`<th>${k}</th>`).join('')}</tr></thead>
-            <tbody>${data.map(row=>`<tr>${Object.values(row).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
-            </table>`;
+            <div style="overflow-x:auto;">
+            <table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${data.map(row=>`<tr>${headers.map(h=>`<td>${row[h]}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table></div>`;
     }
 </script>
 </body>
