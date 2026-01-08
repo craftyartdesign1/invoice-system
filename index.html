@@ -9,22 +9,18 @@
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--light); margin: 0; padding-bottom: 50px; color: var(--dark); }
 
-        /* Navigation */
         .top-nav { background: white; padding: 12px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 40px; gap: 20px; overflow-x: auto; }
         .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
 
-        /* Container */
         .container { max-width: 1100px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* Form Layout (Original Look) */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 5px; }
         input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
         
-        /* Filter Grid (Lookup) */
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
 
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
@@ -107,7 +103,6 @@
         } catch(e) { console.error("Sync Error"); }
     }
 
-    // Forces 00/00/0000 format
     function formatDate(dateStr) {
         const d = new Date(dateStr);
         if (isNaN(d)) return dateStr;
@@ -133,8 +128,8 @@
                 <div class="form-group"><label>Inv #</label><input type="text" id="invNum" value="${invNum}" disabled></div>
                 <div class="form-group"><label>Date</label><input type="text" id="invDate" value="${formatDate(new Date())}" disabled></div>
                 <div class="form-group"><label>Customer</label>
-                    <select id="custSelect"><option value="">Walk-in</option>
-                    ${customers.map(c => `<option>${c.Name}</option>`).join('')}</select>
+                    <select id="custSelect"><option value="Walk-in">Walk-in</option>
+                    ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -163,7 +158,7 @@
 
         const tr = document.createElement('tr');
         tr.setAttribute('data-exempt', isExempt); 
-        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : '8.875%'}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
+        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td><input type="number" value="1" min="1" oninput="calc()" style="width:60px"></td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${isExempt ? '<span style="color:green;font-weight:bold">EXEMPT</span>' : ''}</td><td class="row-total"></td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); calc()">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
         skuInput.value = "";
         calc();
@@ -252,7 +247,7 @@
     }
 
     async function saveAndPrint() {
-        document.getElementById('p-cust-name').innerText = document.getElementById('custSelect').value || "Walk-in";
+        document.getElementById('p-cust-name').innerText = document.getElementById('custSelect').value;
         document.getElementById('p-inv-num').innerText = "Invoice #: " + document.getElementById('invNum').value;
         document.getElementById('p-inv-date').innerText = "Date: " + document.getElementById('invDate').value;
         document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
@@ -271,7 +266,7 @@
             action: 'save',
             invoiceNumber: document.getElementById('invNum').value,
             date: document.getElementById('invDate').value,
-            customer: document.getElementById('custSelect').value || "Walk-in",
+            customer: document.getElementById('custSelect').value,
             employee: CURRENT_USER,
             total: document.getElementById('totalDisp').innerText.replace('$',''),
             items: "[]"
