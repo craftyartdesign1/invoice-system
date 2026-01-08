@@ -7,46 +7,45 @@
     <style>
         :root { --blue: #004080; --dark: #333; --light: #f4f7f6; --red: #e74c3c; --green: #28a745; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg-color, var(--light)); background-size: cover; background-attachment: fixed; margin: 0; min-height: 100vh; }
+        body { background: var(--bg-color, white); background-size: cover; background-attachment: fixed; margin: 0; }
         
-        /* Header & Branding */
-        .header-section { background: rgba(255,255,255,0.9); padding: 15px 30px; border-bottom: 4px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
+        .header-section { background: white; padding: 15px 30px; border-bottom: 4px solid var(--blue); display: flex; justify-content: space-between; align-items: center; }
         #logo-container img { max-height: 60px; }
         
         .nav-bar { display: flex; background: var(--dark); padding: 10px; gap: 10px; overflow-x: auto; }
-        .tab { padding: 12px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
-        .tab.active { background: var(--blue); border-bottom: 3px solid gold; }
+        .tab { padding: 12px 20px; color: white; border: none; background: #555; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .tab.active { background: var(--blue); border-bottom: 3px solid #ffd700; }
 
-        .content { padding: 20px; max-width: 1400px; margin: auto; }
-        .card { background: rgba(255,255,255,0.98); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); margin-bottom: 20px; }
+        .content { padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-        /* Tables */
         .pos-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .pos-table th { background: #f1f5f9; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; }
-        .pos-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .pos-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; font-size: 0.9rem; }
+        .pos-table td { padding: 12px; border-bottom: 1px solid #eee; }
         
-        /* Buttons & Password Toggle */
         .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; }
         .btn-green { background: var(--green); }
         .btn-blue { background: #2563eb; }
         .btn-red { background: var(--red); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-        .pass-wrapper { position: relative; display: flex; align-items: center; }
-        .eye-btn { position: absolute; right: 10px; cursor: pointer; background: none; border: none; font-size: 1.2rem; color: #666; }
+        
+        .pass-wrapper { position: relative; display: flex; align-items: center; max-width: 300px; }
+        .eye-btn { position: absolute; right: 10px; cursor: pointer; background: none; border: none; font-size: 1.1rem; }
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
-        input:disabled { background-color: #f4f4f4; color: #777; }
+        .grand-total { font-size: 2.2rem; font-weight: bold; color: var(--blue); text-align: right; margin-top: 20px; }
 
-        .total-display { text-align: right; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
-        .grand-total { font-size: 2rem; font-weight: bold; color: var(--blue); }
-
-        @media print { .nav-bar, .header-section, .btn-no-print, .action-col { display: none !important; } }
+        @media print { 
+            body { background: white !important; }
+            .nav-bar, .header-section, .btn-no-print, .action-col { display: none !important; } 
+            .card { box-shadow: none; border: none; padding: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div class="header-section">
-    <div id="logo-container"><h2 id="text-logo" style="margin:0;">CRAFTY ART DESIGN</h2></div>
+    <div id="logo-container"><h2 style="margin:0;">CRAFTY ART DESIGN</h2></div>
     <div style="text-align: right;">
         <strong>User: <span id="displayUser">Alessio</span></strong><br>
         <button class="btn btn-blue btn-sm btn-no-print" onclick="toggleRole()" style="margin-top:5px; background:#666;">🛠️ Switch Role</button>
@@ -65,29 +64,22 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNDPBFyPktfE46fGJg8PhZSH9q7_LBDDJDZ-SLyjo5Pd27PQxKyVCoARhZCoyr0MCc/exec";
-    let inventory = [];
-    let customers = [];
-    let invoices = [];
+    let inventory = [], customers = [], invoices = [];
     let managerPin = "1234";
     let currentUser = { name: 'Alessio', role: 'Admin' };
-    let users = [{name: "Alessio", role: "Admin", pass: "admin123"}, {name: "Staff User", role: "Staff", pass: "staff456"}];
+    let users = [{name: "Alessio", role: "Admin", pass: "admin123"}, {name: "Staff", role: "Staff", pass: "staff456"}];
 
-    window.onload = async () => {
-        await refreshData();
-        loadTab('Generator');
-    };
+    window.onload = async () => { await refreshData(); loadTab('Generator'); };
 
     async function refreshData() {
         try {
-            const [iRes, cRes, invRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getCustomers`),
-                fetch(`${SCRIPT_URL}?action=getInvoices`)
+            const [i, c, inv] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
+                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
+                fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
             ]);
-            inventory = await iRes.json();
-            customers = await cRes.json();
-            invoices = await invRes.json();
-        } catch(e) { console.error("Data Sync Error"); }
+            inventory = i; customers = c; invoices = inv;
+        } catch(e) { console.log("Sync Error"); }
     }
 
     function toggleRole() {
@@ -97,145 +89,116 @@
         loadTab('Generator');
     }
 
-    function loadTab(tabName) {
-        const view = document.getElementById('mainView');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        
-        if (tabName === 'Generator') { renderGenerator(view); }
-        else if (tabName === 'Inventory' || tabName === 'Customers') { renderDataList(tabName, view); }
-        else if (tabName === 'Settings') { renderAdminSettings(view); }
-        else if (tabName === 'Lookup') { renderLookup(view); }
-    }
-
     function togglePass(id) {
         const x = document.getElementById(id);
         x.type = (x.type === "password") ? "text" : "password";
     }
 
-    function renderAdminSettings(view) {
-        view.innerHTML = `
-            <div class="card">
-                <h3>Branding & Graphics</h3>
-                <label>Update Logo:</label> <input type="file" accept="image/*" onchange="updateLogo(this)" style="margin-bottom:15px;">
-                <label>Custom Background:</label> <input type="file" accept="image/*" onchange="updateBg(this)">
-                <button class="btn btn-sm btn-red" onclick="document.body.style.backgroundImage='';">Reset White</button>
+    function loadTab(name) {
+        const view = document.getElementById('mainView');
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+            if(t.innerText.includes(name)) t.classList.add('active');
+        });
 
-                <hr style="margin:30px 0;">
-
-                <h3>Security & Manager Override</h3>
-                <label>Set Manager PIN:</label>
-                <div class="pass-wrapper" style="max-width:300px;">
-                    <input type="password" id="pinInput" value="${managerPin}">
-                    <button class="eye-btn" onclick="togglePass('pinInput')">👁️</button>
-                </div>
-                <button class="btn btn-blue btn-sm" style="margin-top:10px;" onclick="managerPin = document.getElementById('pinInput').value; alert('PIN Updated')">Save PIN</button>
-
-                <hr style="margin:30px 0;">
-
-                <h3>User Management</h3>
-                <table class="pos-table">
-                    <thead><tr><th>Name</th><th>Role</th><th>Password</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        ${users.map((u, i) => `
-                            <tr>
-                                <td><input type="text" value="${u.name}"></td>
-                                <td><select><option ${u.role==='Admin'?'selected':''}>Admin</option><option ${u.role==='Staff'?'selected':''}>Staff</option></select></td>
-                                <td>
-                                    <div class="pass-wrapper">
-                                        <input type="password" id="upass${i}" value="${u.pass}">
-                                        <button class="eye-btn" onclick="togglePass('upass${i}')">👁️</button>
-                                    </div>
-                                </td>
-                                <td><button class="btn btn-red btn-sm">Delete</button></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <button class="btn btn-blue btn-sm" style="margin-top:10px;">+ Add New User</button>
-            </div>`;
-    }
-
-    function renderDataList(type, view) {
-        const isAdmin = currentUser.role === 'Admin';
-        let data = (type === 'Inventory' ? inventory : customers);
-        
-        let rows = data.map(r => `
-            <tr>
-                <td>${type === 'Inventory' ? r.SKU : r.Name}</td>
-                <td>${type === 'Inventory' ? r["Item Name"] : r["Street Address"]}</td>
-                <td>${type === 'Inventory' ? '$'+parseFloat(r.Price).toFixed(2) : (r.City || '---')}</td>
-                <td class="action-col">
-                    ${isAdmin ? `
-                        <button class="btn btn-blue btn-sm" onclick="alert('Editing row')">Edit</button>
-                        <button class="btn btn-red btn-sm" onclick="alert('Deleting row')">Delete</button>
-                    ` : `<span style="color:#999;">Locked</span>`}
-                </td>
-            </tr>
-        `).join('');
-
-        view.innerHTML = `
-            <div class="card">
-                <h3>${type} Management</h3>
-                <table class="pos-table">
-                    <thead><tr><th>Key</th><th>Details</th><th>Info</th><th class="action-col">Actions</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>`;
-    }
-
-    function renderLookup(view) {
-        view.innerHTML = `
-            <div class="card">
-                <h3>Invoice History</h3>
-                <table class="pos-table">
-                    <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        ${invoices.length > 0 ? invoices.map(inv => `
+        if (name === 'Generator') {
+            const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
+            view.innerHTML = `
+                <div class="card" id="printableInvoice">
+                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:10px;">
+                        <div><h2>INVOICE</h2><strong># ${invNum}</strong></div>
+                        <div style="text-align:right;">Date: ${new Date().toLocaleDateString()}</div>
+                    </div>
+                    <select id="posCustomer" style="margin:20px 0;"><option value="">Select Customer...</option>${customers.map(c=>`<option>${c.Name}</option>`).join('')}</select>
+                    <table class="pos-table">
+                        <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
+                        <tbody id="posBody"></tbody>
+                    </table>
+                    <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
+                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
+                    <div style="display:flex; gap:10px; margin-top:20px;" class="btn-no-print">
+                        <button class="btn btn-green" style="flex:1;" onclick="window.print()">PRINT INVOICE</button>
+                        <button class="btn btn-blue" style="flex:1;" onclick="alert('Record Saved')">SAVE RECORD</button>
+                    </div>
+                </div>`;
+            addRow();
+        } 
+        else if (name === 'Lookup') {
+            view.innerHTML = `
+                <div class="card">
+                    <h3>Invoice History</h3>
+                    <table class="pos-table">
+                        <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Employee</th><th>Total</th><th class="action-col">Actions</th></tr></thead>
+                        <tbody>${invoices.map(inv => `
                             <tr>
                                 <td>${inv["Invoice Number"]}</td>
                                 <td>${inv.Date}</td>
                                 <td>${inv.Customer}</td>
-                                <td>$${parseFloat(inv.Total).toFixed(2)}</td>
-                                <td><button class="btn btn-blue btn-sm" onclick="window.print()">Print Copy</button></td>
-                            </tr>
-                        `).join('') : '<tr><td colspan="5">No invoices found in records.</td></tr>'}
-                    </tbody>
-                </table>
-            </div>`;
-    }
-
-    // Generator logic remains same for functionality
-    function renderGenerator(view) {
-        view.innerHTML = `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between;">
-                    <h3>New Invoice</h3>
-                    <div>Date: ${new Date().toLocaleDateString()}</div>
-                </div>
-                <select id="posCustomer" style="margin-bottom:15px;"><option value="">Select Customer...</option>${customers.map(c=>`<option>${c.Name}</option>`).join('')}</select>
-                <table class="pos-table"><tbody id="posBody"></tbody></table>
-                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()">+ Add Item</button>
-                <div class="total-display">
-                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
-                </div>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button class="btn btn-green btn-no-print" style="flex:1;" onclick="window.print()">PRINT</button>
-                    <button class="btn btn-blue btn-no-print" style="flex:1;" onclick="alert('Saved to Sheet')">SAVE</button>
-                </div>
-            </div>`;
-        addRow();
+                                <td>${inv.Employee || 'Alessio'}</td>
+                                <td>$${parseFloat(inv.Total || 0).toFixed(2)}</td>
+                                <td class="action-col"><button class="btn btn-blue btn-sm" onclick="window.print()">Print</button></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+        else if (name === 'Inventory' || name === 'Customers') {
+            const isAdmin = currentUser.role === 'Admin';
+            let data = (name === 'Inventory' ? inventory : customers);
+            view.innerHTML = `
+                <div class="card">
+                    <h3>${name} Database</h3>
+                    <table class="pos-table">
+                        <thead><tr>
+                            <th>${name === 'Inventory' ? 'SKU' : 'Name'}</th>
+                            <th>${name === 'Inventory' ? 'Item Name' : 'Street Address'}</th>
+                            <th>${name === 'Inventory' ? 'Price' : 'City'}</th>
+                            <th class="action-col">Actions</th>
+                        </tr></thead>
+                        <tbody>${data.map(r => `
+                            <tr>
+                                <td>${name === 'Inventory' ? r.SKU : r.Name}</td>
+                                <td>${name === 'Inventory' ? r["Item Name"] : (r["Street Address"] || 'N/A')}</td>
+                                <td>${name === 'Inventory' ? '$'+parseFloat(r.Price || 0).toFixed(2) : (r.City || 'N/A')}</td>
+                                <td class="action-col">
+                                    <button class="btn btn-blue btn-sm" ${!isAdmin?'disabled':''}>Edit</button>
+                                    <button class="btn btn-red btn-sm" ${!isAdmin?'disabled':''}>Delete</button>
+                                </td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+        else if (name === 'Settings') {
+            view.innerHTML = `
+                <div class="card">
+                    <h3>Branding</h3>
+                    <label>Logo:</label> <input type="file" onchange="updateLogo(this)"><br><br>
+                    <label>Background:</label> <input type="file" onchange="updateBg(this)">
+                    <hr>
+                    <h3>Security</h3>
+                    <label>Manager PIN:</label>
+                    <div class="pass-wrapper"><input type="password" id="p" value="${managerPin}"><button class="eye-btn" onclick="togglePass('p')">👁️</button></div>
+                    <hr>
+                    <h3>Users</h3>
+                    <table class="pos-table">
+                        ${users.map((u,i)=>`<tr><td>${u.name}</td><td>${u.role}</td>
+                        <td><div class="pass-wrapper"><input type="password" id="u${i}" value="${u.pass}"><button class="eye-btn" onclick="togglePass('u${i}')">👁️</button></div></td></tr>`).join('')}
+                    </table>
+                </div>`;
+        }
     }
 
     function addRow() {
         const isAdmin = currentUser.role === 'Admin';
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" placeholder="SKU" onchange="autoFill(this)"></td>
-            <td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td>
+            <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
+            <td><input type="text" ${!isAdmin?'disabled':''}></td>
             <td><input type="number" value="1" oninput="calcTotal()"></td>
-            <td><input type="text" placeholder="0.00" oninput="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td>
+            <td><input type="text" ${!isAdmin?'disabled':''}></td>
             <td class="row-total">$0.00</td>
-            <td><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>`;
+            <td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
     }
 
@@ -250,27 +213,23 @@
     }
 
     function calcTotal() {
-        let total = 0;
+        let t = 0;
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const q = tr.cells[2].children[0].value;
             const p = tr.cells[3].children[0].value;
-            const row = q * p;
-            tr.cells[4].innerText = "$" + row.toFixed(2);
-            total += row;
+            t += (q * p);
+            tr.cells[4].innerText = "$" + (q * p).toFixed(2);
         });
-        document.getElementById('grandDisp').innerText = "$" + (total * 1.08875).toFixed(2);
+        document.getElementById('grandDisp').innerText = "$" + (t * 1.08875).toFixed(2);
     }
-
-    function updateLogo(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}">`;
-        reader.readAsDataURL(input.files[0]);
+    
+    function updateLogo(i) {
+        const r = new FileReader(); r.onload = (e) => document.getElementById('logo-container').innerHTML = `<img src="${e.target.result}">`;
+        r.readAsDataURL(i.files[0]);
     }
-
-    function updateBg(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => document.body.style.backgroundImage = `url('${e.target.result}')`;
-        reader.readAsDataURL(input.files[0]);
+    function updateBg(i) {
+        const r = new FileReader(); r.onload = (e) => document.body.style.backgroundImage = `url('${e.target.result}')`;
+        r.readAsDataURL(i.files[0]);
     }
 </script>
 </body>
