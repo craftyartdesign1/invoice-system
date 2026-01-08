@@ -26,15 +26,14 @@
         .btn-blue { background: #2563eb; }
         .btn-red { background: var(--red); }
         .btn-sm { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; }
-        .btn-override { background: #6b7280; font-size: 10px; padding: 4px 6px; margin-left: 5px; }
+        .btn-info { background: #6366f1; color: white; font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 
         .total-display { text-align: right; margin-top: 20px; line-height: 1.8; }
         .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--blue); }
 
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.9rem; }
-        input:disabled { background-color: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; }
-
-        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-override { display: none !important; } .card { box-shadow: none; border: none; } }
+        
+        @media print { .nav-bar, .header-section, .btn-no-print, .btn-sm, .btn-red, .btn-info { display: none !important; } .card { box-shadow: none; border: none; } }
     </style>
 </head>
 <body>
@@ -93,7 +92,6 @@
                 fetch(`${SCRIPT_URL}?action=getCustomers`)
             ]);
             inventory = await iRes.json();
-            // Data Fix: Filter out empty rows from your sheet layout
             customers = (await cRes.json()).filter(c => c.Name); 
         } catch(e) { console.error("Sync Error"); }
     }
@@ -122,59 +120,29 @@
     function renderGenerator(view) {
         const invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
         let custOpts = customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('');
-
-        view.innerHTML = `
-            <div class="card" id="printArea">
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                    <div><strong>Invoice #:</strong> ${invNum}</div>
-                    <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
-                </div>
-                <select id="posCustomer" style="margin-bottom:20px;">
-                    <option value="">Select Customer...</option>
-                    <option value="Walk-in">Walk-in / Cash</option>
-                    ${custOpts}
-                </select>
-                <table class="pos-table">
-                    <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Exempt</th><th>Total</th><th class="btn-no-print"></th></tr></thead>
-                    <tbody id="posBody"></tbody>
-                </table>
-                <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
-                <div class="total-display">
-                    Subtotal: <span id="subDisp">$0.00</span><br>
-                    Tax (8.875%): <span id="taxDisp">$0.00</span>
-                    <div class="grand-total">Total: <span id="grandDisp">$0.00</span></div>
-                </div>
-                <button class="btn btn-green btn-no-print" onclick="window.print()">PRINT INVOICE</button>
-            </div>`;
+        view.innerHTML = `<div class="card" id="printArea">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div><strong>Invoice #:</strong> ${invNum}</div>
+                <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+            </div>
+            <select id="posCustomer" style="margin-bottom:20px;">
+                <option value="">Select Customer...</option>
+                <option value="Walk-in">Walk-in / Cash</option>
+                ${custOpts}
+            </select>
+            <table class="pos-table"><thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Exempt</th><th>Total</th><th class="btn-no-print"></th></tr></thead><tbody id="posBody"></tbody></table>
+            <button class="btn btn-blue btn-sm btn-no-print" onclick="addRow()" style="margin-top:10px;">+ Add Item</button>
+            <div class="total-display">Subtotal: <span id="subDisp">$0.00</span><br>Tax (8.875%): <span id="taxDisp">$0.00</span><div class="grand-total">Total: <span id="grandDisp">$0.00</span></div></div>
+            <button class="btn btn-green btn-no-print" onclick="window.print()">PRINT INVOICE</button>
+        </div>`;
         addRow();
     }
 
     function addRow() {
         const isAdmin = currentUser.role === 'Admin';
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td>
-            <td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td>
-            <td><input type="number" value="1" min="1" oninput="calcTotal()"></td>
-            <td><input type="text" placeholder="0.00" ${!isAdmin ? 'disabled' : ''} oninput="calcTotal()"></td>
-            <td style="text-align:center;"><input type="checkbox" onchange="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td>
-            <td class="row-total">$0.00</td>
-            <td class="btn-no-print">
-                ${!isAdmin ? `<button class="btn btn-override btn-sm" onclick="unlockRow(this)">Unlock</button>` : ''}
-                <button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button>
-            </td>`;
+        tr.innerHTML = `<td><input type="text" onchange="autoFill(this)" placeholder="SKU"></td><td><input type="text" placeholder="Item Name" ${!isAdmin ? 'disabled' : ''}></td><td><input type="number" value="1" min="1" oninput="calcTotal()"></td><td><input type="text" placeholder="0.00" ${!isAdmin ? 'disabled' : ''} oninput="calcTotal()"></td><td style="text-align:center;"><input type="checkbox" onchange="calcTotal()" ${!isAdmin ? 'disabled' : ''}></td><td class="row-total">$0.00</td><td class="btn-no-print"><button class="btn btn-red btn-sm" onclick="this.parentElement.parentElement.remove(); calcTotal();">X</button></td>`;
         document.getElementById('posBody').appendChild(tr);
-    }
-
-    function unlockRow(btn) {
-        const pin = prompt("Enter Manager PIN:");
-        if(pin === managerPin) {
-            const tr = btn.closest('tr');
-            tr.cells[1].children[0].disabled = false;
-            tr.cells[3].children[0].disabled = false;
-            tr.cells[4].children[0].disabled = false;
-            btn.style.display = "none";
-        } else { alert("Wrong PIN"); }
     }
 
     function autoFill(input) {
@@ -204,26 +172,23 @@
         document.getElementById('grandDisp').innerText = formatUSD(sub + tax);
     }
 
-    function renderSettings(view) {
-        view.innerHTML = `
-            <div class="card">
-                <h3>Admin Control Panel</h3>
-                <label>Manager Override PIN:</label>
-                <input type="text" id="pinInput" value="${managerPin}" style="font-size: 1.5rem; text-align: center;">
-                <button class="btn btn-blue" style="margin-top:10px; width:100%;" onclick="managerPin = document.getElementById('pinInput').value; alert('PIN Saved');">Update PIN</button>
-            </div>`;
-    }
-
     function renderTable(type, data, view) {
         let h = `<div class="card"><h3>${type}</h3><table class="pos-table"><thead><tr>`;
         if(type === 'Inventory') {
             h += `<th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody>`;
             data.forEach(r => { if(r.SKU) h += `<tr><td>${r.SKU}</td><td>${r["Item Name"]}</td><td>${formatUSD(parseFloat(String(r.Price).replace(/[$,]/g,'')))}</td></tr>`; });
-        } else {
-            h += `<th>Name</th><th>Email</th><th>Phone</th></tr></thead><tbody>`;
-            data.forEach(r => { if(r.Name) h += `<tr><td>${r.Name}</td><td>${r.Email || '---'}</td><td>${r.Phone || '---'}</td></tr>`; });
+        } else if(type === 'Customers') {
+            h += `<th>Name</th><th>Phone</th><th>Street Address</th><th></th></tr></thead><tbody>`;
+            data.forEach(r => { if(r.Name) h += `<tr><td>${r.Name}</td><td>${r.Phone || '---'}</td><td>${r["Street Address"] || '---'}</td><td><span class="btn-info" onclick="alert('Location: ${r.City || ''}, ${r.State || ''} ${r.Zip || ''}')">Info</span></td></tr>`; });
+        } else if(type === 'Lookup') {
+            h += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead><tbody>`;
+            data.forEach(r => { if(r["Invoice Number"]) h += `<tr><td>${r["Invoice Number"]}</td><td>${r.Date}</td><td>${r.Customer}</td><td>${formatUSD(parseFloat(String(r.Total).replace(/[$,]/g,'')))}</td></tr>`; });
         }
         view.innerHTML = h + `</tbody></table></div>`;
+    }
+
+    function renderSettings(view) {
+        view.innerHTML = `<div class="card"><h3>Admin Control</h3><label>PIN:</label><input type="text" id="pinInput" value="${managerPin}"><button class="btn btn-blue" style="margin-top:10px; width:100%;" onclick="managerPin = document.getElementById('pinInput').value; alert('Saved');">Update PIN</button></div>`;
     }
 </script>
 </body>
