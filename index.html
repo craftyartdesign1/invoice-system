@@ -17,29 +17,32 @@
 
         .container { max-width: 1100px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        /* Table Styles */
+        /* Toggle Switch Styling */
+        .user-toggle { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Table & Buttons */
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 12px; font-weight: 700; color: #64748b; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-
-        /* Buttons */
         .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .btn-blue { background: var(--accent); color: white; }
         .btn-red { background: #ef4444; color: white; }
-        .btn-gray { background: #64748b; color: white; margin-bottom: 10px; }
 
-        /* PRINT STYLES - Matches your Screenshot */
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
             #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 20px; color: black; }
-            .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
             .bill-to-bar { background: #004d73 !important; color: white !important; padding: 8px 12px; font-weight: bold; -webkit-print-color-adjust: exact; margin: 10px 0; }
             .print-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             .print-table th { background: #f0f4f7 !important; border-bottom: 2px solid #004d73; -webkit-print-color-adjust: exact; }
-            .print-footer { text-align: center; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 10px; font-weight: bold; }
             .total-section { text-align: right; margin-top: 10px; }
-            .final-total-box { border: 2px solid black; display: inline-block; padding: 5px 20px; font-size: 18px; font-weight: bold; margin-top: 5px; }
+            .final-total-box { border: 2px solid black; display: inline-block; padding: 5px 20px; font-size: 18px; font-weight: bold; }
         }
         #printArea { display: none; }
     </style>
@@ -48,67 +51,61 @@
 
 <div class="top-nav">
     <h1 style="font-size: 18px; font-weight: 800; color: var(--accent); margin: 0;">CRAFTY ART DESIGN</h1>
-    <div><strong>User: Alessio</strong></div>
+    <div class="user-toggle">
+        <span id="userLabel" style="font-size: 12px; font-weight: bold; color: #64748b;">STAFF</span>
+        <label class="switch">
+            <input type="checkbox" id="roleToggle" onchange="toggleRole()">
+            <span class="slider"></span>
+        </label>
+        <span style="font-size: 12px; font-weight: bold; color: var(--accent);">ADMIN</span>
+    </div>
 </div>
 
 <div class="nav-tabs">
-    <div class="tab active" onclick="loadTab('Generator', event)">Invoice Generator</div>
-    <div class="tab" onclick="loadTab('Lookup', event)">Invoice Lookup</div>
+    <div id="tabGen" class="tab active" onclick="loadTab('Generator')">Invoice Generator</div>
+    <div id="tabLook" class="tab" onclick="loadTab('Lookup')">Invoice Lookup</div>
 </div>
 
 <div id="mainView" class="container"></div>
 
 <div id="printArea">
-    <div class="print-header">
-        <div>
-            <h1 style="margin:0; font-size: 28px; color: #333;">Crafty Art Design</h1>
-            <p style="margin:0; font-style: italic;">Let's stay crafty.</p>
-        </div>
-        <div style="text-align:right;">
-            <h1 style="margin:0; color: #004d73; font-size: 32px;">Invoice</h1>
-            <p style="margin:0; font-weight: bold;">Crafty Art Design</p>
-        </div>
+    <div style="display:flex; justify-content:space-between;">
+        <div><h1>Crafty Art Design</h1><p>Let's stay crafty.</p></div>
+        <div style="text-align:right;"><h1 style="color:#004d73;">Invoice</h1><p>Crafty Art Design</p></div>
     </div>
-
     <div class="bill-to-bar">Bill To:</div>
-    <div style="display: flex; justify-content: space-between;">
-        <div>
-            <p id="p-cust-name" style="font-weight:bold; font-size: 18px; margin:0;"></p>
-            <p id="p-cust-company" style="margin:0;"></p>
-        </div>
-        <div style="text-align: right;">
-            <table style="border: none; width: auto; margin-left: auto;">
-                <tr><td style="border:none; padding: 2px;">Invoice #:</td><td style="border:none; padding: 2px; font-weight: bold;" id="p-inv-num"></td></tr>
-                <tr><td style="border:none; padding: 2px;">Date:</td><td style="border:none; padding: 2px;" id="p-inv-date"></td></tr>
-                <tr><td style="border:none; padding: 2px;">Employee:</td><td style="border:none; padding: 2px;" id="p-inv-emp"></td></tr>
-            </table>
+    <div style="display:flex; justify-content:space-between;">
+        <p id="p-cust-name" style="font-weight:bold; font-size: 18px;"></p>
+        <div style="text-align:right;">
+            <p>Invoice #: <span id="p-inv-num"></span></p>
+            <p>Date: <span id="p-inv-date"></span></p>
         </div>
     </div>
-
     <table class="print-table">
-        <thead>
-            <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-        </thead>
+        <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
         <tbody id="p-items"></tbody>
     </table>
-
     <div class="total-section">
         <p>Subtotal: <span id="p-sub"></span></p>
         <p>Tax: <span id="p-tax"></span></p>
         <div class="final-total-box">Total: <span id="p-total"></span></div>
     </div>
-
-    <div class="print-footer">
-        Thank you for your business!<br>
-        <span style="font-weight: normal; font-size: 12px;">Contact us at (555) 123-4567</span>
-    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxa7dIdYqWCrsFKR5ab8LBLjsGosSPHwEf0vcRPukuo0CBUXucphnHYW_v7GdURqa7m/exec";
+    let currentUser = "Staff";
     let inventory = [], customers = [], invoices = [];
+    let activeTab = 'Generator';
 
     window.onload = async () => { await refreshData(); renderGenerator(); };
+
+    function toggleRole() {
+        const isChecked = document.getElementById('roleToggle').checked;
+        currentUser = isChecked ? "Alessio" : "Staff";
+        // Refresh current view to show/hide admin buttons
+        if (activeTab === 'Lookup') renderLookup();
+    }
 
     async function refreshData() {
         const [inv, cust, hist] = await Promise.all([
@@ -124,10 +121,16 @@
         return isNaN(d) ? dateStr : (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
     }
 
-    function loadTab(tab, e) {
+    function loadTab(tab) {
+        activeTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        e.target.classList.add('active');
-        tab === 'Generator' ? renderGenerator() : renderLookup();
+        if(tab === 'Generator') {
+            document.getElementById('tabGen').classList.add('active');
+            renderGenerator();
+        } else {
+            document.getElementById('tabLook').classList.add('active');
+            renderLookup();
+        }
     }
 
     function renderGenerator() {
@@ -160,7 +163,6 @@
         const skuInput = document.getElementById('skuInput');
         const item = inventory.find(i => String(i.SKU).toLowerCase() === skuInput.value.trim().toLowerCase());
         if(!item) return alert("SKU Not Found");
-
         const isExempt = item["Tax Exempt"] === true || String(item["Tax Exempt"]).toUpperCase() === "TRUE" || item.SKU === "Sku003";
         const tr = document.createElement('tr');
         tr.setAttribute('data-exempt', isExempt); 
@@ -186,8 +188,8 @@
     function renderLookup() {
         document.getElementById('mainView').innerHTML = `
             <h2>Invoice Lookup</h2>
-            <div style="display:flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="searchInv" placeholder="Search Invoice #" oninput="applyFilters()" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="searchInv" placeholder="Search Invoice #" oninput="applyFilters()" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 300px;">
             </div>
             <table>
                 <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
@@ -207,61 +209,38 @@
                 <td>$${parseFloat(i.Total || 0).toFixed(2)}</td>
                 <td>
                     <button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>
-                    <button class="btn btn-red" onclick="deleteInvoice('${i["Invoice Number"]}')">Delete</button>
+                    ${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteInvoice('${i["Invoice Number"]}')">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('');
     }
 
-    // THIS FUNCTION NOW WORKS AND MATCHES THE STYLE
-    function printExisting(id) {
-        const inv = invoices.find(i => String(i["Invoice Number"]) === id);
-        if(!inv) return;
-
-        document.getElementById('p-cust-name').innerText = inv.Customer;
-        document.getElementById('p-inv-num').innerText = inv["Invoice Number"];
-        document.getElementById('p-inv-date').innerText = formatDate(inv.Date);
-        document.getElementById('p-inv-emp').innerText = inv.Employee || "Alessio";
-        document.getElementById('p-total').innerText = "$" + parseFloat(inv.Total).toFixed(2);
-        
-        // Mock subtotal/tax if not saved in sheet (calc from total)
-        const totalNum = parseFloat(inv.Total);
-        document.getElementById('p-sub').innerText = "$" + (totalNum / 1.08875).toFixed(2);
-        document.getElementById('p-tax').innerText = "$" + (totalNum - (totalNum / 1.08875)).toFixed(2);
-
-        // Simple row for print (since items aren't nested in spreadsheet usually)
-        document.getElementById('p-items').innerHTML = `<tr><td>-</td><td>Items Summary</td><td>1</td><td>$${inv.Total}</td><td>$${inv.Total}</td></tr>`;
-
-        window.print();
-    }
-
     async function finalizeSale() {
-        // Populates print area from generator then saves
-        document.getElementById('p-cust-name').innerText = document.getElementById('custSelect').value;
-        document.getElementById('p-inv-num').innerText = document.getElementById('invNum').value;
-        document.getElementById('p-inv-date').innerText = document.getElementById('invDate').value;
-        document.getElementById('p-inv-emp').innerText = "Alessio";
-        
-        let rows = "";
-        document.querySelectorAll('#posBody tr').forEach(tr => {
-            rows += `<tr><td>${tr.cells[0].innerText}</td><td>${tr.cells[1].innerText}</td><td>${tr.cells[2].querySelector('input').value}</td><td>${tr.cells[3].innerText}</td><td>${tr.cells[5].innerText}</td></tr>`;
-        });
-        document.getElementById('p-items').innerHTML = rows;
+        const invData = {
+            num: document.getElementById('invNum').value,
+            date: document.getElementById('invDate').value,
+            cust: document.getElementById('custSelect').value,
+            total: document.getElementById('totalDisp').innerText
+        };
+        // Setup Print
+        document.getElementById('p-cust-name').innerText = invData.cust;
+        document.getElementById('p-inv-num').innerText = invData.num;
+        document.getElementById('p-inv-date').innerText = invData.date;
+        document.getElementById('p-items').innerHTML = document.getElementById('posBody').innerHTML;
         document.getElementById('p-sub').innerText = document.getElementById('subDisp').innerText;
         document.getElementById('p-tax').innerText = document.getElementById('taxDisp').innerText;
-        document.getElementById('p-total').innerText = document.getElementById('totalDisp').innerText;
-
+        document.getElementById('p-total').innerText = invData.total;
+        
         window.print();
 
-        const data = {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
             action: 'save',
-            invoiceNumber: document.getElementById('invNum').value,
-            date: document.getElementById('invDate').value,
-            customer: document.getElementById('custSelect').value,
-            employee: "Alessio",
-            total: document.getElementById('totalDisp').innerText.replace('$','')
-        };
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+            invoiceNumber: invData.num,
+            date: invData.date,
+            customer: invData.cust,
+            employee: currentUser,
+            total: invData.total.replace('$','')
+        })});
         await refreshData();
         renderGenerator();
     }
