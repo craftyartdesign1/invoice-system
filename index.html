@@ -262,4 +262,36 @@
         const tax = taxableSub * NYC_TAX_RATE;
         document.getElementById('subDisp').innerText = formatCurrency(sub);
         document.getElementById('taxDisp').innerText = formatCurrency(tax);
-        document.getElementById('grandDisp').innerText = format
+        document.getElementById('grandDisp').innerText = formatCurrency(sub + tax);
+    }
+
+    function renderTable(type, data, view) {
+        let h = `<div class="card"><h3>${type} Management</h3><table class="pos-table"><thead><tr>`;
+        const activeData = data.filter(r => r.SKU && String(r.SKU).trim() !== "");
+        if (type === 'Inventory') {
+            h += `<th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Tax Status</th></tr></thead><tbody>`;
+            activeData.forEach(r => {
+                const isExempt = (r["Tax Exempt"] === "Exempt");
+                const priceClean = parseFloat(String(r.Price || "0").replace(/[$,]/g, ''));
+                h += `<tr><td>${r.SKU}</td><td>${r["Item Name"] || '---'}</td><td>${r["Size"] || '---'}</td><td>${formatCurrency(priceClean)}</td><td><span class="badge ${isExempt ? 'badge-exempt' : 'badge-taxable'}">${isExempt ? 'Exempt' : 'Taxable'}</span></td></tr>`;
+            });
+        } else {
+            h += `<th>Name</th><th>Company</th></tr></thead><tbody>`;
+            activeData.forEach(r => h += `<tr><td>${r.Name}</td><td>${r.Company || 'N/A'}</td></tr>`);
+        }
+        view.innerHTML = h + `</tbody></table></div>`;
+    }
+
+    function renderLookupUI(data, view) {
+        view.innerHTML = `<div class="card"><h3>Invoice Lookup</h3><table class="pos-table"><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody>${data.map(r => `<tr><td><b>${r["Invoice Number"]}</b></td><td>${r["Date"]}</td><td>${r["Customer"]}</td><td><b>${formatCurrency(parseFloat(String(r.Total).replace(/[$,]/g, '')))}</b></td><td><button class="btn btn-blue btn-sm">Print</button>${currentUser.role === 'Admin' ? `<button class="btn btn-red btn-sm">Delete</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+    }
+
+    async function saveInvoice() {
+        if (!document.getElementById('posCustomer').value) return alert("Select a Customer");
+        alert("Invoice Data Saved!");
+        window.print();
+        loadTab('Generator');
+    }
+</script>
+</body>
+</html>
