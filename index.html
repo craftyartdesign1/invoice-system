@@ -34,7 +34,6 @@
         .btn-blue { background: var(--blue); color: white; }
         .btn-green { background: var(--green); color: white; }
         .btn-red { background: var(--red); color: white; }
-        .btn-sm { padding: 5px 10px; font-size: 11px; }
 
         /* Professional Print Layout */
         @media print {
@@ -143,7 +142,6 @@
             </div>`;
     }
 
-    // FIXED TAX EXEMPT CHECK FOR SKU003
     function addItem() {
         const skuInput = document.getElementById('skuInput');
         const sku = skuInput.value.trim();
@@ -151,11 +149,11 @@
         
         if(!item) return alert("SKU Not Found");
 
-        // Logic specifically for Tax Exempt status
+        // Fixed check: Ensures text "TRUE" or boolean true works
         const isExempt = String(item["Tax Exempt"]).toUpperCase() === "TRUE" || item["Tax Exempt"] === true;
 
         const tr = document.createElement('tr');
-        tr.setAttribute('data-exempt', isExempt);
+        tr.setAttribute('data-exempt', isExempt); // Tag the row
         tr.innerHTML = `
             <td>${item.SKU}</td>
             <td>${item["Item Name"]}</td>
@@ -171,24 +169,30 @@
     }
 
     function calc() {
-        let sub = 0, taxableTotal = 0;
+        let sub = 0;
+        let taxableTotal = 0;
+        const taxRate = 0.08875;
+
         document.querySelectorAll('#posBody tr').forEach(tr => {
             const qty = parseFloat(tr.cells[2].querySelector('input').value) || 0;
             const price = parseFloat(tr.cells[3].innerText.replace('$','')) || 0;
             const total = qty * price;
             tr.cells[5].innerText = "$" + total.toFixed(2);
             sub += total;
-            // Only add to taxable total if NOT exempt
-            if(tr.getAttribute('data-exempt') !== 'true') taxableTotal += total;
+            
+            // Fixed logic: Only add to tax calculation if the row is NOT exempt
+            if(tr.getAttribute('data-exempt') !== 'true') {
+                taxableTotal += total;
+            }
         });
-        const tax = taxableTotal * 0.08875;
+
+        const tax = taxableTotal * taxRate;
         document.getElementById('subDisp').innerText = "$" + sub.toFixed(2);
         document.getElementById('taxDisp').innerText = "$" + tax.toFixed(2);
         document.getElementById('totalDisp').innerText = "$" + (sub + tax).toFixed(2);
     }
 
     async function saveAndPrint() {
-        // Map UI to Print Template
         document.getElementById('p-cust-name').innerText = document.getElementById('custSelect').value || "Walk-in";
         document.getElementById('p-inv-num').innerText = "Invoice #: " + document.getElementById('invNum').value;
         document.getElementById('p-inv-date').innerText = "Date: " + document.getElementById('invDate').value;
@@ -204,7 +208,6 @@
 
         window.print();
         
-        // Save to Sheet logic
         const data = {
             action: 'save',
             invoiceNumber: document.getElementById('invNum').value,
