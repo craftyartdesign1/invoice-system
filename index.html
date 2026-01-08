@@ -29,19 +29,13 @@
         .inv-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .inv-bill-to { background: var(--blue); color: white; padding: 5px 15px; width: 300px; font-weight: bold; }
 
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; font-size: 0.85rem; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-green { background: var(--green); }
+        /* General UI */
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; margin-bottom: 15px; font-size: 1rem; }
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; width: 100%; }
         .btn-blue { background: var(--blue); }
-        .btn-red { background: var(--red); }
-
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; margin-bottom: 10px; }
-        .pass-wrapper { position: relative; display: flex; align-items: center; }
-        .eye-btn { position: absolute; right: 10px; cursor: pointer; background: none; border: none; font-size: 1.1rem; top: 8px; }
+        .btn-red { background: var(--red); width: auto; padding: 6px 12px; }
+        .pass-wrapper { position: relative; }
+        .eye-btn { position: absolute; right: 10px; top: 12px; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
 
         @media print { .nav-bar, .header-section, .btn-no-print, .eye-btn { display: none !important; } .invoice-container { border: none; padding: 0; } }
     </style>
@@ -51,13 +45,14 @@
 <div id="loginOverlay">
     <div class="login-card">
         <div id="loginLogoSpace"></div>
-        <h2 id="loginTitle">NYC POS LOGIN</h2>
-        <input type="text" id="userIn" placeholder="Username">
+        <h2>NYC POS LOGIN</h2>
+        <input type="text" id="userIn" placeholder="Username (admin1)">
         <div class="pass-wrapper">
-            <input type="password" id="passIn" placeholder="Password">
+            <input type="password" id="passIn" placeholder="Password (1234)">
             <button class="eye-btn" onclick="togglePass('passIn')">👁️</button>
         </div>
-        <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="attemptLogin()">Login</button>
+        <button class="btn btn-blue" onclick="attemptLogin()">Login</button>
+        <p id="errorMsg" style="color:red; display:none; margin-top:10px;">Login Failed. Try again.</p>
     </div>
 </div>
 
@@ -65,31 +60,28 @@
     <div class="header-section">
         <div id="logoContainer"><h2>CRAFTY ART DESIGN</h2></div>
         <div>
-            <span id="userBadge" style="font-weight:bold; color:var(--blue); margin-right:10px;"></span>
-            <button class="btn btn-red btn-no-print" onclick="location.reload()" style="padding:4px 8px;">Logout</button>
+            <span id="userBadge" style="font-weight:bold; color:var(--blue); margin-right:15px;"></span>
+            <button class="btn btn-red btn-no-print" onclick="location.reload()">Logout</button>
         </div>
     </div>
+
     <nav class="nav-bar">
         <button class="tab active" id="tab-Invoices" onclick="loadTab('Invoices')">Invoices</button>
         <button class="tab" id="tab-Inventory" onclick="loadTab('Inventory')">Inventory</button>
         <button class="tab" id="tab-Customers" onclick="loadTab('Customers')">Customers</button>
         <button class="tab admin-only" id="tab-Admin" onclick="loadTab('Admin')">⚙️ Admin Settings</button>
     </nav>
-    <div class="content"><div id="mainView"></div></div>
+
+    <div class="content">
+        <div id="mainView"></div>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuxvj3hA_AuPgScYJ9TZDnwJjenv8QYqA3zXJ5xS0Z4YBm4Hyt0K-0yRPwOwRaIgSe/exec";
     
-    // Auto-Repair User Storage
-    if (!localStorage.getItem('cad_users')) {
-        const defaultUser = [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
-        localStorage.setItem('cad_users', JSON.stringify(defaultUser));
-    }
-
-    let users = JSON.parse(localStorage.getItem('cad_users'));
-    let logoData = localStorage.getItem('cad_logo') || '';
-    let bgData = localStorage.getItem('cad_bg') || '';
+    // Master Password Setup
+    const MASTER_USERS = [{name: 'Alessio', user: 'admin1', pass: '1234', role: 'Admin'}];
 
     function togglePass(id) {
         const x = document.getElementById(id);
@@ -97,18 +89,30 @@
     }
 
     function attemptLogin() {
-        const u = document.getElementById('userIn').value;
-        const p = document.getElementById('passIn').value;
-        const found = users.find(x => x.user === u && x.pass === p);
+        const u = document.getElementById('userIn').value.trim();
+        const p = document.getElementById('passIn').value.trim();
+        
+        // Get users from storage, or use MASTER if storage is empty
+        let storedUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
+        
+        const found = storedUsers.find(x => x.user === u && x.pass === p);
 
         if(found) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            document.getElementById('userBadge').innerText = found.name;
+            document.getElementById('userBadge').innerText = "Logged in: " + found.name;
             if(found.role === 'Admin') document.getElementById('tab-Admin').style.display = 'block';
+            
+            // Apply branding
+            const logo = localStorage.getItem('cad_logo');
+            if(logo) document.getElementById('logoContainer').innerHTML = `<img src="${logo}" style="max-height:50px">`;
+            
             loadTab('Invoices');
         } else {
-            alert("Login failed! Use admin1 and 1234");
+            // If login fails, force-reset the storage to master to ensure the next try works
+            localStorage.setItem('cad_users', JSON.stringify(MASTER_USERS));
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('errorMsg').innerText = "Login failed. Storage reset. Please try admin1 / 1234 again.";
         }
     }
 
@@ -119,46 +123,67 @@
         
         if(name === 'Admin') { renderAdmin(view); return; }
         
-        view.innerHTML = `<div class="card">Loading...</div>`;
+        view.innerHTML = `<div class="card"><h3>Loading ${name}...</h3></div>`;
         try {
             const res = await fetch(`${SCRIPT_URL}?action=get${name}`);
             const data = await res.json();
             renderTable(name, data, view);
-        } catch (e) { view.innerHTML = `<div class="card">Error connecting to Sheet.</div>`; }
+        } catch (e) { 
+            view.innerHTML = `<div class="card"><h3>Sync Error</h3><p>Could not connect to Google Sheets.</p></div>`; 
+        }
     }
 
     function renderTable(type, data, view) {
-        let h = `<div class="card"><h3>${type}</h3><table><thead><tr>`;
+        let h = `<div class="card"><h3>${type} Management</h3><table style="width:100%; border-collapse:collapse;"><thead><tr style="text-align:left; background:#f4f4f4;">`;
         if (type === 'Invoices') {
-            h += `<th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th></tr></thead><tbody>`;
-            data.forEach(i => { if(i["Invoice Number"]) h += `<tr><td>${i["Invoice Number"]}</td><td>${i.Date}</td><td>${i.Customer}</td><td>$${i.Subtotal}</td></tr>`; });
+            h += `<th style="padding:10px;">Inv #</th><th style="padding:10px;">Date</th><th style="padding:10px;">Customer</th><th style="padding:10px;">Total</th></tr></thead><tbody>`;
+            data.forEach(i => { if(i["Invoice Number"]) h += `<tr><td style="padding:10px;">${i["Invoice Number"]}</td><td style="padding:10px;">${i.Date}</td><td style="padding:10px;">${i.Customer}</td><td style="padding:10px;">$${i.Subtotal}</td></tr>`; });
         } else if (type === 'Customers') {
-            h += `<th>Name</th><th>Company</th><th>Action</th></tr></thead><tbody>`;
+            h += `<th style="padding:10px;">Name</th><th style="padding:10px;">Company</th><th style="padding:10px;">Action</th></tr></thead><tbody>`;
             data.forEach(i => { if(i.Name) {
                 const j = JSON.stringify(i).replace(/"/g, '&quot;');
-                h += `<tr><td>${i.Name}</td><td>${i.Company || ''}</td><td><button class="btn btn-green btn-sm" onclick="viewInv('${j}')">BILL</button></td></tr>`;
+                h += `<tr><td style="padding:10px;">${i.Name}</td><td style="padding:10px;">${i.Company || ''}</td><td style="padding:10px;"><button class="btn btn-blue" style="width:auto; padding:5px 10px;" onclick="viewInv('${j}')">BILL</button></td></tr>`;
             }});
+        } else if (type === 'Inventory') {
+            h += `<th style="padding:10px;">SKU</th><th style="padding:10px;">Item</th><th style="padding:10px;">Price</th></tr></thead><tbody>`;
+            data.forEach(i => { if(i.SKU) h += `<tr><td style="padding:10px;">${i.SKU}</td><td style="padding:10px;">${i["Item Name"]}</td><td style="padding:10px;">$${i.Price}</td></tr>`; });
         }
         view.innerHTML = h + `</tbody></table></div>`;
     }
 
     function renderAdmin(view) {
+        const currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
         let rows = '';
-        users.forEach((u, i) => {
-            rows += `<tr><td>${u.name}</td><td>${u.user}</td><td>${u.role}</td>
-                <td><input type="password" value="${u.pass}" id="p-${i}" readonly style="border:none; width:60px;"> <button onclick="togglePass('p-${i}')">👁️</button></td>
-                <td><button onclick="delUser(${i})">Del</button></td></tr>`;
+        currentUsers.forEach((u, i) => {
+            rows += `<tr><td style="padding:10px;">${u.name}</td><td style="padding:10px;">${u.user}</td><td style="padding:10px;">${u.role}</td>
+                <td style="padding:10px;">
+                    <div class="pass-wrapper">
+                        <input type="password" value="${u.pass}" id="p-${i}" readonly style="border:none; margin:0; width:80px;">
+                        <button class="eye-btn" style="top:0;" onclick="togglePass('p-${i}')">👁️</button>
+                    </div>
+                </td>
+                <td style="padding:10px;"><button class="btn btn-red" onclick="delUser(${i})">Delete</button></td></tr>`;
         });
+
         view.innerHTML = `
             <div class="card">
-                <h3>Branding</h3>
-                <input type="text" id="lI" placeholder="Logo URL" value="${logoData}">
-                <input type="text" id="bI" placeholder="Watermark URL" value="${bgData}">
-                <button class="btn btn-blue" onclick="saveB()">Save Images</button>
+                <h3>System Branding</h3>
+                <label>Main Logo URL</label><input type="text" id="lI" value="${localStorage.getItem('cad_logo') || ''}" placeholder="Paste Image URL">
+                <label>Invoice Background URL (Plank if empty)</label><input type="text" id="bI" value="${localStorage.getItem('cad_bg') || ''}" placeholder="Paste Watermark URL">
+                <button class="btn btn-blue" onclick="saveB()">Save Branding & Reload</button>
             </div>
             <div class="card">
-                <h3>Users</h3>
-                <table><thead><tr><th>Name</th><th>User</th><th>Role</th><th>Pass</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>
+                <h3>Manage Users</h3>
+                <table style="width:100%;"><thead><tr style="background:#f4f4f4; text-align:left;"><th style="padding:10px;">Name</th><th style="padding:10px;">User</th><th style="padding:10px;">Role</th><th style="padding:10px;">Pass</th><th style="padding:10px;">Action</th></tr></thead><tbody>${rows}</tbody></table>
+                <hr style="margin:20px 0;">
+                <h4>Add New User</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" id="newN" placeholder="Full Name">
+                    <input type="text" id="newU" placeholder="Username">
+                    <input type="text" id="newP" placeholder="Password">
+                    <select id="newR" style="padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;"><option>Staff</option><option>Admin</option></select>
+                </div>
+                <button class="btn btn-blue" onclick="addUser()">Add User</button>
             </div>`;
     }
 
@@ -168,15 +193,50 @@
         location.reload();
     }
 
+    function addUser() {
+        let currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
+        const u = { 
+            name: document.getElementById('newN').value, 
+            user: document.getElementById('newU').value, 
+            pass: document.getElementById('newP').value, 
+            role: document.getElementById('newR').value 
+        };
+        if(!u.user || !u.pass) return alert("User and Pass required");
+        currentUsers.push(u);
+        localStorage.setItem('cad_users', JSON.stringify(currentUsers));
+        renderAdmin(document.getElementById('mainView'));
+    }
+
+    function delUser(i) {
+        let currentUsers = JSON.parse(localStorage.getItem('cad_users')) || MASTER_USERS;
+        if(currentUsers.length === 1) return alert("Cannot delete the last user.");
+        currentUsers.splice(i, 1);
+        localStorage.setItem('cad_users', JSON.stringify(currentUsers));
+        renderAdmin(document.getElementById('mainView'));
+    }
+
     function viewInv(j) {
         const c = JSON.parse(j.replace(/&quot;/g, '"'));
-        const style = bgData ? `background-image: url('${bgData}'); background-size: cover;` : `background: white;`;
+        const bg = localStorage.getItem('cad_bg');
+        const logo = localStorage.getItem('cad_logo');
+        const style = bg ? `background-image: url('${bg}'); background-size: cover;` : `background: white;`;
+        
         document.getElementById('mainView').innerHTML = `
-            <button class="btn btn-blue btn-no-print" onclick="loadTab('Customers')">Back</button>
+            <div class="btn-no-print" style="margin-bottom:20px;">
+                <button class="btn btn-blue" style="width:auto;" onclick="loadTab('Customers')">← Back</button>
+                <button class="btn btn-blue" style="width:auto; float:right;" onclick="window.print()">Print PDF</button>
+            </div>
             <div class="invoice-container" style="${style}">
-                <div class="inv-header"><h2>INVOICE</h2></div>
-                <div class="inv-bill-to">Bill To: ${c.Name}</div>
-                <p>${c.Company || ''}<br>${c["Street Address"] || ''}</p>
+                <div class="inv-header">
+                    <div>${logo ? `<img src="${logo}" style="max-height:80px">` : '<h2>CRAFTY ART DESIGN</h2>'}</div>
+                    <div style="text-align:right"><h1>INVOICE</h1></div>
+                </div>
+                <div class="inv-bill-to">Bill To:</div>
+                <p><strong>${c.Name}</strong><br>${c.Company || ''}<br>${c["Street Address"] || ''}</p>
+                <table style="width:100%; border:1px solid #ddd; background:rgba(255,255,255,0.85);">
+                    <thead style="background:var(--blue); color:white;"><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                    <tbody><tr><td colspan="5" style="height:200px; text-align:center; color:#888;">[ Manual Entry Items ]</td></tr></tbody>
+                </table>
             </div>`;
     }
 </script>
