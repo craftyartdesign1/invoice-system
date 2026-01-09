@@ -16,7 +16,7 @@
 
         .test-controls { background: #ffd700; color: black; padding: 8px 15px; border-radius: 4px; font-size: 11px; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; margin-left: 15px; }
 
-        /* LAYOUT */
+        /* CONTAINERS */
         .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
@@ -57,30 +57,45 @@
 </div>
 
 <div class="container">
-    <div id="viewGen" class="card">
-        <h3>New Sale Search</h3>
-        <input type="text" placeholder="Search SKU or Name...">
-        <p style="color: var(--gray); font-size: 0.8rem; margin-top: 10px;">Manager PIN may be required for item removals in Staff view.</p>
-    </div>
-
+    <div id="viewGen" class="card"><h3>New Sale Section</h3><p>Syncing data...</p></div>
     <div id="viewInv" class="hidden"><div class="card"><h2>Inventory List</h2></div></div>
     <div id="viewCust" class="hidden"><div class="card"><h2>Customer Database</h2></div></div>
     <div id="viewLook" class="hidden"><div class="card"><h2>Invoice Lookup</h2></div></div>
 
     <div id="viewAdm" class="hidden">
+        
         <div class="card">
-            <h3 style="margin-top:0;">User Management</h3>
+            <h3 style="color:var(--red); margin-top:0;">Store Branding & Identity</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <label>Store Logo (Upload File)</label>
+                    <input type="file" accept="image/*">
+                </div>
+                <div>
+                    <label>Invoice Background Image (Upload File)</label>
+                    <input type="file" accept="image/*">
+                </div>
+            </div>
+            <button class="btn btn-small" style="margin-top:20px;">Save Branding Assets</button>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">User & Security Management</h3>
             <table>
                 <thead>
-                    <tr><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr>
+                    <tr><th>Name</th><th>Username</th><th>Password</th><th>Override PIN</th><th>Role</th><th>Actions</th></tr>
                 </thead>
                 <tbody id="userTableBody">
                     <tr>
                         <td>Alessio</td>
-                        <td>craftyartdesign1</td>
+                        <td>craftyart1</td>
                         <td class="pass-wrapper">
-                            <input type="password" value="Crafty1Art" id="pass0" readonly style="border:none; background:transparent; padding:0; width:100px;">
-                            <span class="toggle-pass" onclick="togglePassView('pass0')">👁️</span>
+                            <input type="password" value="Pass123" id="p0" readonly style="border:none; width:80px;">
+                            <span class="toggle-pass" onclick="togglePass('p0')">👁️</span>
+                        </td>
+                        <td class="pass-wrapper">
+                            <input type="password" value="8888" id="pin0" readonly style="border:none; width:60px;">
+                            <span class="toggle-pass" onclick="togglePass('pin0')">👁️</span>
                         </td>
                         <td>Admin</td>
                         <td><button class="btn btn-small">Edit</button></td>
@@ -88,43 +103,37 @@
                 </tbody>
             </table>
 
-            <h4 style="margin-bottom:10px; margin-top:30px;">Add New User</h4>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
-                <input type="text" id="newName" placeholder="Display Name">
+            <h4 style="margin-top:30px; margin-bottom:10px;">Create New User Account</h4>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+                <input type="text" id="newName" placeholder="Full Name">
                 <input type="text" id="newUsername" placeholder="Username">
+                <select id="newRole" onchange="togglePinInput()"><option>Staff</option><option>Admin</option></select>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
                 <div class="pass-wrapper">
-                    <input type="password" id="newPass" placeholder="Password">
-                    <span class="toggle-pass" onclick="togglePassView('newPass')">👁️</span>
+                    <input type="password" id="newPass" placeholder="Set Password">
+                    <span class="toggle-pass" onclick="togglePass('newPass')">👁️</span>
                 </div>
-                <select id="newRole"><option>Staff</option><option>Admin</option></select>
-            </div>
-            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);">+ Create Account</button>
-        </div>
-
-        <div class="card">
-            <h3>Security & Overrides</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div>
-                    <label>Manager Override PIN</label>
-                    <div class="pass-wrapper">
-                        <input type="password" value="1234" id="managerPin">
-                        <span class="toggle-pass" onclick="togglePassView('managerPin')">👁️</span>
-                    </div>
-                </div>
-                <div>
-                    <label>Store Branding (Logo Upload)</label>
-                    <input type="file" accept="image/*">
+                <div class="pass-wrapper" id="pinInputWrap" style="display:none;">
+                    <input type="password" id="newOverridePin" placeholder="Set 4-Digit Override PIN">
+                    <span class="toggle-pass" onclick="togglePass('newOverridePin')">👁️</span>
                 </div>
             </div>
-            <button class="btn btn-small" style="margin-top:20px;">Save System Settings</button>
+            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);">+ Register User</button>
         </div>
     </div>
 </div>
 
 <script>
-    function togglePassView(id) {
-        const input = document.getElementById(id);
-        input.type = input.type === 'password' ? 'text' : 'password';
+    function togglePass(id) {
+        const x = document.getElementById(id);
+        x.type = x.type === "password" ? "text" : "password";
+    }
+
+    // Only show PIN input when "Admin" role is selected for a new user
+    function togglePinInput() {
+        const role = document.getElementById('newRole').value;
+        document.getElementById('pinInputWrap').style.display = (role === 'Admin') ? 'block' : 'none';
     }
 
     function toggleRole() {
@@ -135,17 +144,14 @@
         label.innerText = isAdmin ? 'Staff Mode' : 'Admin Mode';
         switcher.innerText = isAdmin ? 'Switch to Admin View' : 'Switch to Staff View';
         
-        // Tab visibility
         const restricted = ['tabCust', 'tabLook', 'tabAdm'];
         restricted.forEach(tab => document.getElementById(tab).classList.toggle('hidden'));
-        
         if (isAdmin) switchTab('Gen');
     }
 
     function switchTab(t) {
         document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab' + t).classList.add('active-tab');
-        
         const views = ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'];
         views.forEach(v => document.getElementById(v).classList.add('hidden'));
         document.getElementById('view' + t).classList.remove('hidden');
