@@ -3,272 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | POS SYSTEM</title>
+    <title>CRAFTY ART DESIGN | Management System</title>
     <style>
-        :root { --blue: #004d73; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --accent: #2563eb; }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--light); margin: 0; padding-bottom: 50px; color: var(--dark); }
-
-        .top-nav { background: white; padding: 12px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 40px; gap: 20px; overflow-x: auto; }
-        .tab { padding: 16px 10px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-        .container { max-width: 1100px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        :root { --blue: #004d73; --accent: #2563eb; --bg: #f1f5f9; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
         
-        .user-toggle { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        /* LOGIN OVERLAY */
+        #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .btn-blue { background: var(--accent); color: white; }
-        .btn-red { background: #ef4444; color: white; margin-left: 5px; }
-        .btn-green { background: #22c55e; color: white; }
+        /* NAVIGATION */
+        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links div { cursor: pointer; opacity: 0.8; font-weight: bold; }
+        .nav-links div:hover { opacity: 1; }
+        .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
 
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .modal-field { margin-bottom: 15px; }
-        .modal-field label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #475569; }
-        .modal-field input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; }
+        /* CONTAINERS */
+        .container { max-width: 1100px; margin: 30px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .hidden { display: none; }
+        .card { border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
 
-        .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        /* UI ELEMENTS */
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-blue:hover { background: #003652; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; box-sizing: border-box; margin-top: 5px; }
 
-        @media print {
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 20px; color: black; }
-        }
-        #printArea { display: none; }
+        /* PIN MODAL */
+        #pinModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:11000; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
 
-<div class="top-nav">
-    <h1 style="font-size: 18px; font-weight: 800; color: var(--accent); margin: 0;">CRAFTY ART DESIGN</h1>
-    <div class="user-toggle">
-        <span style="font-size: 11px; font-weight: bold; color: #64748b;">STAFF</span>
-        <label class="switch"><input type="checkbox" id="roleToggle" onchange="toggleRole()"><span class="slider"></span></label>
-        <span style="font-size: 11px; font-weight: bold; color: var(--accent);">ADMIN</span>
+<div id="loginOverlay">
+    <img id="loginLogoDisplay" src="" style="max-width:200px; margin-bottom: 20px; display:none;">
+    <h2 id="loginTitle">CRAFTY ART DESIGN</h2>
+    <div class="login-box">
+        <input type="text" id="userIn" placeholder="Username">
+        <input type="password" id="passIn" placeholder="Password" style="margin-top:10px;">
+        <button class="btn btn-blue" style="width:100%; margin-top:20px;" onclick="attemptLogin()">Login</button>
     </div>
 </div>
 
-<div class="nav-tabs">
-    <div class="tab active" onclick="loadTab('Generator', event)">Invoice Generator</div>
-    <div class="tab" onclick="loadTab('Lookup', event)">Invoice Lookup</div>
-    <div class="tab" onclick="loadTab('Inventory', event)">Inventory</div>
-    <div class="tab" onclick="loadTab('Customers', event)">Customers</div>
+<div class="navbar">
+    <div style="font-weight:bold; font-size:1.2rem;">CRAFTY ART DESIGN</div>
+    <div class="nav-links">
+        <div id="tabGen" class="active-tab" onclick="switchTab('Generator')">Invoice</div>
+        <div id="tabInv" onclick="switchTab('Inventory')">Inventory</div>
+        <div id="tabAdm" class="hidden" onclick="switchTab('Admin')">Admin Settings</div>
+    </div>
+    <div id="userDisplay" style="font-size:0.9rem;"></div>
 </div>
 
-<div id="mainView" class="container"></div>
+<div id="mainView" class="container">
+    
+    <div id="viewGenerator">
+        <h2>New Invoice</h2>
+        <div class="card">
+            <p>Invoice Generator interface is active. Use the buttons below to test protected actions.</p>
+            <button class="btn btn-blue" onclick="checkPermission('editInv', () => alert('Access Granted: You may edit inventory items.'))">Edit Item (Requires PIN if Staff)</button>
+        </div>
+    </div>
 
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <h3 id="modalTitle" style="margin-top:0;">Edit Entry</h3>
-        <div id="modalFields"></div>
-        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-            <button class="btn" style="background:#e2e8f0;" onclick="closeModal()">Cancel</button>
-            <button id="saveBtn" class="btn btn-blue">Save Changes</button>
+    <div id="viewInventory" class="hidden">
+        <h2>Inventory Management</h2>
+        <div class="card">
+            <p>Your inventory list will load here based on your Excel sheet.</p>
+        </div>
+    </div>
+
+    <div id="viewAdmin" class="hidden">
+        <h2>Admin Dashboard</h2>
+        
+        <div class="card">
+            <h3>Upload Branding (.JPG)</h3>
+            <p>Upload your logo to appear on login and invoices. This saves directly to your Settings tab.</p>
+            <label>Logo File:</label>
+            <input type="file" id="logoFile" accept="image/jpeg">
+            <button class="btn btn-blue" style="margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Upload Logo</button>
+            
+            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+            
+            <label>Invoice Background:</label>
+            <input type="file" id="bgFile" accept="image/jpeg">
+            <button class="btn btn-blue" style="margin-top:10px;" onclick="uploadFile('InvoiceBackground', 'bgFile')">Upload Background</button>
+        </div>
+
+        <div class="card">
+            <h3>Tax Settings</h3>
+            <p>Current Rate in Excel: <span id="currentTaxDisplay" style="font-weight:bold;">Loading...</span></p>
+            <input type="number" id="newTaxRate" step="0.0001" placeholder="Enter decimal, e.g. 0.08875">
+            <button class="btn btn-blue" style="margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
         </div>
     </div>
 </div>
 
-<div id="printArea">
-    <div id="p-content"></div>
+<div id="pinModal">
+    <div style="background:white; padding:30px; border-radius:12px; text-align:center; width: 300px;">
+        <h3 style="margin-top:0; color: var(--blue);">Manager PIN Required</h3>
+        <p style="font-size:13px; color:#666;">Staff accounts require a manager override to perform this action.</p>
+        <input type="password" id="managerPinInput" maxlength="4" style="font-size:32px; width:140px; text-align:center; letter-spacing:10px; margin: 15px 0; border: 2px solid var(--blue);">
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn btn-blue" style="flex:1;" onclick="verifyManagerPin()">Authorize</button>
+            <button class="btn" style="flex:1; background:#eee;" onclick="closePinModal()">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfavHW32i9OcPupmShdRsLdjoHa22SePK2bY2PJI5n3iSlVwgCO-6sO3-c0JZXyr-3/exec";
-    let currentUser = "Staff";
-    let inventory = [], customers = [], invoices = [];
-    let activeTab = 'Generator';
+    // --- CONFIGURATION ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyN28D6n0-R7-UfV72X-86LpEInP7zF40VqfJ1O9-vI7R6L7L7L/exec"; 
+    
+    let currentUser = null;
+    let globalSettings = {};
+    let pendingAction = null;
 
-    window.onload = async () => { await refreshData(); renderGenerator(); };
-
-    function toggleRole() {
-        currentUser = document.getElementById('roleToggle').checked ? "Alessio" : "Staff";
-        refreshCurrentView();
-    }
-
-    async function refreshData() {
+    // --- INITIAL LOAD ---
+    window.onload = async () => {
         try {
-            const [inv, cust, hist] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
-                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
-                fetch(`${SCRIPT_URL}?action=getInvoices`).then(r => r.json())
-            ]);
-            inventory = inv; customers = cust; invoices = hist;
-        } catch(e) { console.error("Sync Error"); }
-    }
+            const res = await fetch(SCRIPT_URL + "?action=getSettings");
+            const data = await res.json();
+            data.forEach(s => {
+                if(s.SettingKey) globalSettings[s.SettingKey] = s.SettingValue;
+            });
+            
+            // Apply Login Logo if it exists in Excel
+            if(globalSettings.LoginLogo) {
+                document.getElementById('loginLogoDisplay').src = globalSettings.LoginLogo;
+                document.getElementById('loginLogoDisplay').style.display = 'block';
+                document.getElementById('loginTitle').style.display = 'none';
+            }
+            
+            // Display Tax Rate
+            if(globalSettings.TaxRate) {
+                document.getElementById('currentTaxDisplay').innerText = (parseFloat(globalSettings.TaxRate) * 100).toFixed(3) + "%";
+            }
+        } catch (e) { console.log("Init failed: ", e); }
+    };
 
-    function refreshCurrentView() {
-        if(activeTab === 'Generator') renderGenerator();
-        else if(activeTab === 'Lookup') renderLookup();
-        else if(activeTab === 'Inventory') renderList('Inventory', inventory);
-        else if(activeTab === 'Customers') renderList('Customers', customers);
-    }
-
-    function formatCurrency(val) {
-        let num = parseFloat(String(val).replace(/[$,]/g, ''));
-        return isNaN(num) ? "$0.00" : "$" + num.toFixed(2);
-    }
-
-    function loadTab(tab, e) {
-        activeTab = tab;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        if(e) e.target.classList.add('active');
-        refreshCurrentView();
-    }
-
-    /* --- List Views (Inventory/Customers) --- */
-    function renderList(sheetName, data) {
-        const cleanData = data.filter(r => r[Object.keys(r)[0]] && String(r[Object.keys(r)[0]]).trim() !== "");
-        const keys = Object.keys(cleanData[0] || {});
+    // --- LOGIN SYSTEM ---
+    async function attemptLogin() {
+        const u = document.getElementById('userIn').value;
+        const p = document.getElementById('passIn').value;
         
-        let addBtnHtml = "";
-        if (sheetName === 'Customers') {
-            addBtnHtml = `<button class="btn btn-green" onclick="openAddModal('Customers')">+ Add Customer</button>`;
-        } else if (sheetName === 'Inventory' && currentUser === 'Alessio') {
-            addBtnHtml = `<button class="btn btn-green" onclick="openAddModal('Inventory')">+ Add Item</button>`;
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'login', username: u, password: p })
+        });
+        const data = await res.json();
+
+        if(data.success) {
+            currentUser = data;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('userDisplay').innerText = "User: " + data.displayName + " (" + data.role + ")";
+            
+            // Only show Admin Tab if Role is Admin
+            if(data.role === "Admin") {
+                document.getElementById('tabAdm').classList.remove('hidden');
+            }
+            switchTab('Generator');
+        } else {
+            alert("Invalid Login Credentials. Please check your Excel Admin tab.");
         }
-
-        document.getElementById('mainView').innerHTML = `
-            <div class="view-header">
-                <h2>${sheetName}</h2>
-                ${addBtnHtml}
-            </div>
-            <table>
-                <thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')} ${currentUser === "Alessio" ? '<th>Actions</th>' : ''}</tr></thead>
-                <tbody>
-                ${cleanData.map(r => `
-                    <tr>
-                        ${keys.map(k => `<td>${k.toLowerCase().includes('price') || k.toLowerCase().includes('total') ? formatCurrency(r[k]) : r[k]}</td>`).join('')}
-                        ${currentUser === "Alessio" ? `<td>
-                            <button class="btn btn-blue" onclick="openEditModal('${sheetName}', '${r[keys[0]]}')">Edit</button>
-                            <button class="btn btn-red" onclick="deleteEntry('${sheetName}', '${r[keys[0]]}')">Delete</button>
-                        </td>` : ''}
-                    </tr>`).join('')}
-                </tbody>
-            </table>`;
     }
 
-    /* --- Add/Edit Logic --- */
-    function openAddModal(sheetName) {
-        const fields = sheetName === 'Inventory' ? ["SKU", "Item Name", "Price"] : ["Name", "Company", "Email", "Phone"];
-        document.getElementById('modalTitle').innerText = `Add New ${sheetName.slice(0,-1)}`;
-        let html = '';
-        fields.forEach(f => {
-            html += `<div class="modal-field"><label>${f}</label><input type="text" id="add_${f}" placeholder="${f === 'Price' ? '0.00' : ''}"></div>`;
-        });
-        document.getElementById('modalFields').innerHTML = html;
-        document.getElementById('saveBtn').onclick = () => saveNew(sheetName);
-        document.getElementById('editModal').style.display = 'flex';
-    }
-
-    async function saveNew(sheetName) {
-        const inputs = document.querySelectorAll('[id^="add_"]');
-        const newData = {};
-        inputs.forEach(i => newData[i.id.split('_')[1]] = i.value);
+    // --- NAVIGATION ---
+    function switchTab(tab) {
+        document.getElementById('viewGenerator').classList.add('hidden');
+        document.getElementById('viewInventory').classList.add('hidden');
+        document.getElementById('viewAdmin').classList.add('hidden');
         
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'add', sheetName, data: newData }) });
-        closeModal(); await refreshData(); refreshCurrentView();
+        document.getElementById('tabGen').classList.remove('active-tab');
+        document.getElementById('tabInv').classList.remove('active-tab');
+        document.getElementById('tabAdm').classList.remove('active-tab');
+
+        document.getElementById('view' + tab).classList.remove('hidden');
+        
+        let tabId = tab === 'Generator' ? 'tabGen' : tab === 'Inventory' ? 'tabInv' : 'tabAdm';
+        document.getElementById(tabId).classList.add('active-tab');
     }
 
-    function openEditModal(sheetName, id) {
-        const list = sheetName === 'Inventory' ? inventory : customers;
-        const item = list.find(i => String(i[Object.keys(i)[0]]) === id);
-        document.getElementById('modalTitle').innerText = `Edit ${sheetName.slice(0,-1)}`;
-        let html = '';
-        Object.keys(item).forEach((key, index) => {
-            let val = item[key];
-            if (key.toLowerCase().includes('price')) val = formatCurrency(val).replace('$', '');
-            html += `<div class="modal-field"><label>${key}</label><input type="text" id="edit_${key}" value="${val}" ${index === 0 ? 'disabled' : ''}></div>`;
-        });
-        document.getElementById('modalFields').innerHTML = html;
-        document.getElementById('saveBtn').onclick = () => saveEdit(sheetName, id, item);
-        document.getElementById('editModal').style.display = 'flex';
-    }
+    // --- IMAGE UPLOAD (SAVES TO EXCEL AS TEXT) ---
+    function uploadFile(key, inputId) {
+        const file = document.getElementById(inputId).files[0];
+        if(!file) return alert("Please select a JPG file first.");
 
-    async function saveEdit(sheetName, id, original) {
-        const updates = {};
-        Object.keys(original).forEach(key => updates[key] = document.getElementById(`edit_${key}`).value);
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'editRow', sheetName, id, updates }) });
-        closeModal(); await refreshData(); refreshCurrentView();
-    }
-
-    async function deleteEntry(sheetName, id) {
-        if(!confirm("Are you sure?")) return;
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', sheetName, id }) });
-        await refreshData(); refreshCurrentView();
-    }
-
-    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
-
-    /* --- Generator/Lookup (Kept same as previous working version) --- */
-    function renderGenerator() {
-        const invNum = "INV-" + Math.floor(Math.random() * 900000 + 100000);
-        document.getElementById('mainView').innerHTML = `
-            <h2>New Invoice</h2>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <div><label>INV #</label><input type="text" id="invNum" value="${invNum}" disabled style="width:100%"></div>
-                <div><label>DATE</label><input type="text" id="invDate" value="${new Date().toLocaleDateString()}" disabled style="width:100%"></div>
-                <div><label>CUSTOMER</label>
-                    <select id="custSelect" style="width:100%"><option value="Walk-in">Walk-in</option>
-                    ${customers.map(c => `<option value="${c.Name}">${c.Name}</option>`).join('')}</select>
-                </div>
-            </div>
-            <div style="display:flex; gap:10px;"><input type="text" id="skuInput" placeholder="Scan SKU..." style="flex:1; padding:10px;" onkeypress="if(event.key==='Enter') addItem()"><button class="btn btn-blue" onclick="addItem()">Add Item</button></div>
-            <table style="margin-top:20px;"><thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody id="posBody"></tbody></table>
-            <div style="text-align:right;"><h3>Total: <span id="totalDisp">$0.00</span></h3><button class="btn btn-green" onclick="finalizeSale()">Finalize & Print</button></div>`;
-    }
-
-    function addItem() {
-        const input = document.getElementById('skuInput');
-        const item = inventory.find(i => String(i.SKU).toLowerCase() === input.value.trim().toLowerCase());
-        if(!item) return alert("SKU Not Found");
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${item.SKU}</td><td>${item["Item Name"]}</td><td>1</td><td>${formatCurrency(item.Price)}</td><td class="row-total">${formatCurrency(item.Price)}</td><td><button class="btn btn-red" onclick="this.closest('tr').remove(); updateGenTotal()">X</button></td>`;
-        document.getElementById('posBody').appendChild(tr);
-        input.value = ""; updateGenTotal();
-    }
-
-    function updateGenTotal() {
-        let t = 0;
-        document.querySelectorAll('.row-total').forEach(td => t += parseFloat(td.innerText.replace(/[$,]/g, '')) || 0);
-        document.getElementById('totalDisp').innerText = formatCurrency(t);
-    }
-
-    function renderLookup() {
-        document.getElementById('mainView').innerHTML = `<h2>Invoice Lookup</h2><input type="text" id="searchInv" placeholder="Search Invoice #" oninput="applyFilters()" style="padding:10px; width:300px; margin-bottom:20px;"><table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="lookupBody"></tbody></table>`;
-        applyFilters();
-    }
-
-    function applyFilters() {
-        const q = document.getElementById('searchInv').value.toLowerCase();
-        const filtered = invoices.filter(i => String(i["Invoice Number"]).toLowerCase().includes(q));
-        document.getElementById('lookupBody').innerHTML = filtered.map(i => `<tr><td>${i["Invoice Number"]}</td><td>${new Date(i.Date).toLocaleDateString()}</td><td>${i.Customer}</td><td>${formatCurrency(i.Total)}</td><td><button class="btn btn-blue" onclick="printExisting('${i["Invoice Number"]}')">Print</button>${currentUser === "Alessio" ? `<button class="btn btn-red" onclick="deleteEntry('Invoices', '${i["Invoice Number"]}')">Delete</button>` : ''}</td></tr>`).join('');
-    }
-
-    async function finalizeSale() {
-        const d = { 
-            action: 'save',
-            invoiceNumber: document.getElementById('invNum').value,
-            date: document.getElementById('invDate').value,
-            customer: document.getElementById('custSelect').value,
-            employee: currentUser,
-            total: document.getElementById('totalDisp').innerText.replace(/[$,]/g, '')
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Data = e.target.result;
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'saveSetting', key: key, value: base64Data })
+            });
+            alert("Branding successfully saved to Excel! The page will now reload.");
+            location.reload();
         };
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(d) });
-        alert("Sale Finalized!");
-        await refreshData(); renderGenerator();
+        reader.readAsDataURL(file);
     }
+
+    // --- TAX UPDATE ---
+    async function updateTax() {
+        const newRate = document.getElementById('newTaxRate').value;
+        if(!newRate) return alert("Please enter a decimal value.");
+        
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'saveSetting', key: 'TaxRate', value: newRate })
+        });
+        alert("Tax Rate successfully updated in Excel!");
+        location.reload();
+    }
+
+    // --- MANAGER OVERRIDE LOGIC ---
+    function checkPermission(permType, callback) {
+        if(currentUser.role === "Admin") return callback();
+        
+        // Check if Staff has specific toggle enabled in Excel
+        if(permType === 'editInv' && currentUser.canEditInv === true) return callback();
+        if(permType === 'editCust' && currentUser.canEditCust === true) return callback();
+
+        // If no permission, trigger PIN modal
+        pendingAction = callback;
+        document.getElementById('pinModal').style.display = 'flex';
+        document.getElementById('managerPinInput').focus();
+    }
+
+    async function verifyManagerPin() {
+        const pin = document.getElementById('managerPinInput').value;
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'verifyPin', pin: pin })
+        });
+        const data = await res.json();
+
+        if(data.success) {
+            document.getElementById('pinModal').style.display = 'none';
+            document.getElementById('managerPinInput').value = "";
+            pendingAction();
+        } else {
+            alert("Incorrect Manager PIN.");
+            document.getElementById('managerPinInput').value = "";
+        }
+    }
+
+    function closePinModal() {
+        document.getElementById('pinModal').style.display = 'none';
+        document.getElementById('managerPinInput').value = "";
+    }
+
 </script>
 </body>
 </html>
