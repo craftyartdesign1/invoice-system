@@ -3,109 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | POS SYSTEM</title>
+    <title>CRAFTY ART DESIGN | POS</title>
     <style>
-        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
+        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        
+        /* LOGIN OVERLAY */
+        #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         /* NAVIGATION */
-        .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-links { display: flex; height: 100%; }
-        .nav-links div { padding: 0 20px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; transition: 0.3s; border-bottom: 3px solid transparent; }
-        .nav-links div:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-        .active-tab { opacity: 1 !important; border-bottom: 3px solid white !important; background: rgba(255,255,255,0.1); }
+        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; height: 60px; }
+        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.7; transition: 0.3s; padding: 5px 0; }
+        .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
+
+        /* ROLE SWITCHER - THE TOGGLE YOU WANTED */
+        .test-controls { background: #ffd700; color: black; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 15px; border: none; }
 
         /* LAYOUT */
-        .container { max-width: 1300px; margin: 25px auto; padding: 0 20px; }
-        .pos-grid { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none !important; }
         
         /* INPUTS */
-        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 15px; }
-        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 15px; transition: 0.2s; }
-        input:focus { outline: none; border-color: var(--blue); ring: 2px var(--blue); }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 15px; }
+        .search-container { position: relative; }
+        .search-results { border: 1px solid #ddd; max-height: 250px; overflow-y: auto; background: white; position: absolute; width: 100%; z-index: 100; border-radius: 0 0 8px 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .search-item:hover { background: #f0f9ff; }
         
-        /* TABLES */
+        /* TABLE */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; border-bottom: 2px solid #f1f5f9; padding: 12px; color: var(--blue); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        th { text-align: left; border-bottom: 2px solid var(--blue); padding: 12px; color: var(--blue); }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
 
-        /* BUTTONS */
-        .btn { padding: 14px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:active { transform: translateY(1px); }
-        .btn-green { background: var(--green); width: 100%; font-size: 1.1rem; }
-        .btn-red { background: var(--red); color: white; }
-        .btn-small { padding: 8px 14px; font-size: 12px; }
-        
-        /* SEARCH RESULTS */
-        .search-results { border: 1px solid #e2e8f0; max-height: 250px; overflow-y: auto; background: white; position: absolute; width: 100%; z-index: 100; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; }
-        .search-item:hover { background: #f8fafc; color: var(--blue); }
-        
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; background: #dcfce7; color: #166534; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; width: 100%; transition: 0.2s; }
+        .btn-green { background: var(--green); }
+        .btn-small { padding: 8px 12px; width: auto; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
+<div id="loginOverlay">
+    <h1>CRAFTY ART DESIGN</h1>
+    <div class="login-box">
+        <input type="text" id="userIn" placeholder="Username">
+        <input type="password" id="passIn" placeholder="Password">
+        <button class="btn" style="margin-top:20px;" onclick="attemptLogin()">Login to POS</button>
+        <p style="font-size: 11px; color: #666; margin-top: 15px;">Note: Enter any credentials to bypass during testing.</p>
+    </div>
+</div>
+
 <div class="navbar">
-    <div style="display:flex; align-items:center; gap:15px;">
-        <div style="font-weight:900; font-size: 1.4rem; letter-spacing: -0.5px;">CRAFTY ART DESIGN</div>
-        <span class="status-badge">ADMIN MODE</span>
+    <div style="display:flex; align-items:center;">
+        <div style="font-weight:bold; font-size: 1.2rem; margin-right:20px;">CRAFTY ART DESIGN</div>
+        <div class="nav-links">
+            <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">New Sale</div>
+            <div id="tabInv" onclick="switchTab('Inv')">Inventory</div>
+            <div id="tabCust" onclick="switchTab('Cust')">Customers</div>
+            <div id="tabAdm" onclick="switchTab('Adm')">Admin Suite</div>
+        </div>
     </div>
-    <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
-        <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
-        <div id="tabCust" onclick="switchTab('Cust')">CUSTOMERS</div>
-        <div id="tabAdm" onclick="switchTab('Adm')">ADMIN SUITE</div>
-    </div>
-    <div style="font-size: 13px; text-align: right; line-height: 1.4;">
-        <span style="color: rgba(255,255,255,0.7)">Logged in as:</span><br>
-        <b>Alessio</b> | 12/12/2025
+    <div style="display:flex; align-items:center;">
+        <div id="userDisplay" style="font-size: 12px; text-align:right; line-height: 1.2;"></div>
+        <button id="roleSwitcher" class="test-controls" onclick="toggleRole()">SWITCH TO STAFF VIEW</button>
+        <button class="btn btn-small" style="background:rgba(255,255,255,0.2); margin-left:15px;" onclick="logout()">Logout</button>
     </div>
 </div>
 
 <div class="container">
     <div id="viewGen" class="pos-grid">
-        <div style="position: relative;">
+        <div class="search-container">
             <div class="card">
-                <h3 style="margin-top:0;">Product Search</h3>
-                <input type="text" id="invSearch" placeholder="Scan SKU or type item name..." onkeyup="searchInventory()">
+                <h3>Product Search</h3>
+                <input type="text" id="invSearch" placeholder="Search SKU or Product Name..." onkeyup="searchInventory()">
                 <div id="searchResults" class="search-results"></div>
                 <table>
-                    <thead><tr><th>Item Description</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+                    <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
                     <tbody id="cartBody"></tbody>
                 </table>
             </div>
         </div>
         <div>
             <div class="card">
-                <h3 style="margin-top:0;">Invoice Summary</h3>
-                <p style="margin-bottom: 20px; font-size: 0.9rem;">Date: <b>12/12/2025</b></p>
-                
-                <label>Customer Selection</label>
+                <h3>Invoice Details</h3>
+                <p>Date: <b>12/12/2025</b></p>
+                <label>Select Customer:</label>
                 <select id="customerSelect"><option value="Walk-in">Walk-in Customer</option></select>
-                
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px dashed #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom: 10px; color: var(--gray);">
-                        <span>Subtotal</span><span id="subTotal">$0.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size: 1.6rem; font-weight: 900; color: var(--blue);">
-                        <span>TOTAL</span>
-                        <span id="grandTotal">$0.00</span>
-                    </div>
+                <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+                <div style="display:flex; justify-content:space-between; font-size: 1.4rem; font-weight: bold; color: var(--blue);">
+                    <span>Total:</span>
+                    <span id="grandTotal">$0.00</span>
                 </div>
-                
-                <button class="btn btn-green" style="margin-top:25px;" onclick="alert('Invoice Saved to Spreadsheet!')">FINALIZE & PRINT</button>
+                <button class="btn btn-green" style="margin-top:20px;" onclick="alert('Sale Recorded!')">FINALIZE SALE</button>
             </div>
         </div>
     </div>
 
     <div id="viewInv" class="hidden">
         <div class="card">
-            <h2>Inventory Management</h2>
+            <h2>Live Inventory</h2>
             <table id="fullInvTable">
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Unit Price</th></tr></thead>
+                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead>
                 <tbody id="fullInvBody"></tbody>
             </table>
         </div>
@@ -115,7 +115,7 @@
         <div class="card">
             <h2>Customer Database</h2>
             <table id="fullCustTable">
-                <thead><tr><th>Customer Name / Company</th><th>Contact Details</th></tr></thead>
+                <thead><tr><th>Name</th><th>Contact</th></tr></thead>
                 <tbody id="fullCustBody"></tbody>
             </table>
         </div>
@@ -123,114 +123,98 @@
 
     <div id="viewAdm" class="hidden">
         <div class="card">
-            <h3 style="margin-top:0; color: var(--red);">Branding & Identity</h3>
-            <p style="font-size: 0.85rem; color: var(--gray);">Upload your company assets for printed invoices.</p>
-            
-            <label>Store Logo (URL)</label>
-            <input type="text" id="logoUrl" placeholder="https://yourwebsite.com/logo.png">
-            
-            <label>Invoice Watermark/Background (URL)</label>
-            <input type="text" id="bgUrl" placeholder="https://yourwebsite.com/watermark.png">
-            
-            <button class="btn btn-small" style="margin-top:15px;" onclick="alert('Settings Updated')">Update Branding</button>
-        </div>
-
-        <div class="card">
-            <h3 style="margin-top:0;">User & Security</h3>
-            <table>
-                <thead><tr><th>Username</th><th>Access Level</th><th>Status</th><th>Control</th></tr></thead>
-                <tbody id="userTable">
-                    <tr><td><b>Alessio</b></td><td><span class="status-badge">Owner</span></td><td>Active</td><td>-</td></tr>
-                    <tr><td>Staff_User</td><td>Staff</td><td>Active</td><td><button class="btn btn-red btn-small">Remove</button></td></tr>
-                </tbody>
-            </table>
-            <button class="btn btn-small" style="background:var(--blue); margin-top:20px;">+ Create New User Account</button>
-        </div>
-
-        <div class="card">
-            <h3>Manager Overrides</h3>
-            <label>Cart Item Deletion</label>
-            <select>
-                <option>Require Manager Authorization (Code)</option>
-                <option selected>Always Allowed (Testing Mode)</option>
-            </select>
+            <h3>Admin Settings</h3>
+            <label>Logo URL:</label>
+            <input type="text" id="logoUrl" placeholder="https://image-link.com/logo.png">
+            <label>Manager Override PIN:</label>
+            <input type="password" placeholder="****">
+            <button class="btn btn-small" style="margin-top:10px;">Save Settings</button>
         </div>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytUgh1lSjvMDMPYUv_OGuDHv0V9Z8haFMla4quAsU9ghf7YhCzrwL-w-7gyO6OTc3P/exec";
-    let inventory = [], customers = [], cart = [];
+    let currentUser = { displayName: "Alessio", role: "Admin" }, currentViewRole = "Admin", inventory = [], customers = [], cart = [];
 
-    window.onload = () => { loadData(); };
+    // AUTO-LOAD SESSION
+    window.onload = () => {
+        const saved = localStorage.getItem('pos_session');
+        if(saved) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            applyPermissions();
+            loadData();
+        }
+    };
+
+    async function attemptLogin() {
+        localStorage.setItem('pos_session', 'active');
+        document.getElementById('loginOverlay').style.display = 'none';
+        applyPermissions();
+        loadData();
+    }
+
+    function applyPermissions() {
+        document.getElementById('userDisplay').innerHTML = `<b>${currentUser.displayName}</b><br>${currentViewRole} View`;
+        const isAdmin = currentViewRole === "Admin";
+        document.getElementById('tabCust').classList.toggle('hidden', !isAdmin);
+        document.getElementById('tabAdm').classList.toggle('hidden', !isAdmin);
+        document.getElementById('roleSwitcher').innerText = isAdmin ? "SWITCH TO STAFF VIEW" : "SWITCH TO ADMIN VIEW";
+        if(!isAdmin) switchTab('Gen');
+    }
+
+    function toggleRole() {
+        currentViewRole = (currentViewRole === "Admin") ? "Staff" : "Admin";
+        applyPermissions();
+    }
 
     async function loadData() {
         try {
-            const invRes = await fetch(SCRIPT_URL + "?action=getInventory");
-            inventory = await invRes.json();
-            const custRes = await fetch(SCRIPT_URL + "?action=getCustomers");
-            customers = await custRes.json();
-            renderAll();
+            const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
+            inventory = await iRes.json();
+            const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
+            customers = await cRes.json();
+            
+            document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td></tr>`).join('');
+            document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"]}</td></tr>`).join('');
+            
+            const sel = document.getElementById('customerSelect');
+            sel.innerHTML = '<option value="Walk-in">Walk-in Customer</option>';
+            customers.forEach(c => { sel.innerHTML += `<option value="${c["Customer Name"]}">${c["Customer Name"]}</option>`; });
         } catch(e) { console.error("Sync Error"); }
     }
 
-    function renderAll() {
-        // Render Inventory Table
-        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td><b>${i.SKU}</b></td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td></tr>`).join('');
-        
-        // Render Customer Table & Dropdown
-        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td><b>${c["Customer Name"]}</b></td><td>${c["Contact Info"]}</td></tr>`).join('');
-        const sel = document.getElementById('customerSelect');
-        customers.forEach(c => { sel.innerHTML += `<option value="${c["Customer Name"]}">${c["Customer Name"]}</option>`; });
-    }
-
     function searchInventory() {
-        const q = document.getElementById('invSearch').value.toLowerCase();
-        const res = document.getElementById('searchResults');
-        res.innerHTML = "";
-        if(q.length < 2) return;
-
+        const q = document.getElementById('invSearch').value.toLowerCase(), res = document.getElementById('searchResults');
+        res.innerHTML = ""; if(q.length < 2) return;
         inventory.filter(i => i.SKU.toString().toLowerCase().includes(q) || i["Item Name"].toLowerCase().includes(q)).forEach(item => {
-            const div = document.createElement('div');
-            div.className = "search-item";
-            div.innerHTML = `<span><b>${item.SKU}</b> - ${item["Item Name"]}</span> <span>$${parseFloat(item.Price).toFixed(2)}</span>`;
-            div.onclick = () => { addToCart(item); res.innerHTML = ""; document.getElementById('invSearch').value = ""; };
+            const div = document.createElement('div'); div.className = 'search-item';
+            div.innerHTML = `<span>${item["Item Name"]}</span> <span>$${parseFloat(item.Price).toFixed(2)}</span>`;
+            div.onclick = () => { cart.push({...item, qty:1}); updateCart(); res.innerHTML = ""; document.getElementById('invSearch').value = ""; };
             res.appendChild(div);
         });
     }
 
-    function addToCart(item) {
-        const ex = cart.find(c => c.SKU === item.SKU);
-        if(ex) ex.qty++; else cart.push({...item, qty: 1});
-        updateCart();
-    }
-
     function updateCart() {
-        const body = document.getElementById('cartBody');
-        body.innerHTML = "";
+        const body = document.getElementById('cartBody'); body.innerHTML = "";
         let total = 0;
         cart.forEach((item, idx) => {
-            const line = item.Price * item.qty;
-            total += line;
-            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${parseFloat(item.Price).toFixed(2)}</td><td><input type="number" value="${item.qty}" style="width:60px; padding:5px; margin:0;" onchange="updateQty(${idx}, this.value)"></td><td><b>$${line.toFixed(2)}</b></td><td onclick="cart.splice(${idx},1);updateCart();" style="color:var(--red);cursor:pointer; text-align:center;">✖</td></tr>`;
+            const line = item.Price * item.qty; total += line;
+            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${parseFloat(item.Price).toFixed(2)}</td><td>${item.qty}</td><td>$${line.toFixed(2)}</td><td onclick="cart.splice(${idx},1);updateCart();" style="color:red;cursor:pointer;">✖</td></tr>`;
         });
-        document.getElementById('subTotal').innerText = "$" + total.toFixed(2);
         document.getElementById('grandTotal').innerText = "$" + total.toFixed(2);
     }
 
-    function updateQty(idx, val) {
-        cart[idx].qty = parseInt(val);
-        updateCart();
-    }
-
     function switchTab(t) {
+        document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
+        document.getElementById('tab' + t).classList.add('active-tab');
         document.getElementById('viewGen').style.display = (t === 'Gen' ? 'grid' : 'none');
         document.getElementById('viewInv').classList.toggle('hidden', t !== 'Inv');
         document.getElementById('viewCust').classList.toggle('hidden', t !== 'Cust');
         document.getElementById('viewAdm').classList.toggle('hidden', t !== 'Adm');
-        document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
-        document.getElementById('tab' + t).classList.add('active-tab');
     }
+
+    function logout() { localStorage.removeItem('pos_session'); location.reload(); }
 </script>
 </body>
 </html>
