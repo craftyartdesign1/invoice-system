@@ -5,253 +5,186 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRAFTY ART DESIGN | Management System</title>
     <style>
-        :root { --blue: #004d73; --accent: #2563eb; --bg: #f1f5f9; --white: #ffffff; }
+        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
         
-        /* LOGIN OVERLAY */
+        /* LOGIN SCREEN */
         #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         /* NAVIGATION */
         .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-links { display: flex; gap: 20px; }
-        .nav-links div { cursor: pointer; opacity: 0.8; font-weight: bold; }
+        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.8; }
         .nav-links div:hover { opacity: 1; }
         .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
 
         /* CONTAINERS */
-        .container { max-width: 1100px; margin: 30px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .container { max-width: 1000px; margin: 30px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .hidden { display: none; }
         .card { border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
 
         /* UI ELEMENTS */
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-blue { background: var(--blue); color: white; }
-        .btn-blue:hover { background: #003652; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; box-sizing: border-box; margin-top: 5px; }
-
-        /* PIN MODAL */
-        #pinModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:11000; align-items:center; justify-content:center; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 10px; font-size: 16px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; }
+        .btn:hover { background: #003652; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <img id="loginLogoDisplay" src="" style="max-width:200px; margin-bottom: 20px; display:none;">
-    <h2 id="loginTitle">CRAFTY ART DESIGN</h2>
+    <h1 id="loginTitle">CRAFTY ART DESIGN</h1>
     <div class="login-box">
         <input type="text" id="userIn" placeholder="Username">
-        <input type="password" id="passIn" placeholder="Password" style="margin-top:10px;">
-        <button class="btn btn-blue" style="width:100%; margin-top:20px;" onclick="attemptLogin()">Login</button>
+        <input type="password" id="passIn" placeholder="Password">
+        <button id="loginBtn" class="btn" style="width:100%; margin-top:20px;" onclick="attemptLogin()">Login</button>
+        <p id="statusMsg" style="font-size: 12px; color: #666; margin-top: 10px;"></p>
     </div>
 </div>
 
 <div class="navbar">
     <div style="font-weight:bold; font-size:1.2rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Generator')">Invoice</div>
-        <div id="tabInv" onclick="switchTab('Inventory')">Inventory</div>
-        <div id="tabAdm" class="hidden" onclick="switchTab('Admin')">Admin Settings</div>
+        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">Invoices</div>
+        <div id="admTab" class="hidden" onclick="switchTab('Adm')">Admin Settings</div>
     </div>
     <div id="userDisplay" style="font-size:0.9rem;"></div>
 </div>
 
-<div id="mainView" class="container">
-    
-    <div id="viewGenerator">
-        <h2>New Invoice</h2>
+<div class="container">
+    <div id="viewGen">
+        <h2>Invoice Management</h2>
         <div class="card">
-            <p>Invoice Generator interface is active. Use the buttons below to test protected actions.</p>
-            <button class="btn btn-blue" onclick="checkPermission('editInv', () => alert('Access Granted: You may edit inventory items.'))">Edit Item (Requires PIN if Staff)</button>
+            <p>Welcome, <span id="welcomeName">User</span>!</p>
+            <p>Your system is connected. Use the Admin tab to upload your logo and set your tax rate.</p>
         </div>
     </div>
 
-    <div id="viewInventory" class="hidden">
-        <h2>Inventory Management</h2>
-        <div class="card">
-            <p>Your inventory list will load here based on your Excel sheet.</p>
-        </div>
-    </div>
-
-    <div id="viewAdmin" class="hidden">
+    <div id="viewAdm" class="hidden">
         <h2>Admin Dashboard</h2>
-        
         <div class="card">
-            <h3>Upload Branding (.JPG)</h3>
-            <p>Upload your logo to appear on login and invoices. This saves directly to your Settings tab.</p>
-            <label>Logo File:</label>
+            <h3>Company Branding</h3>
+            <p>Upload a .JPG logo for your login screen and invoices.</p>
             <input type="file" id="logoFile" accept="image/jpeg">
-            <button class="btn btn-blue" style="margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Upload Logo</button>
-            
-            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-            
-            <label>Invoice Background:</label>
-            <input type="file" id="bgFile" accept="image/jpeg">
-            <button class="btn btn-blue" style="margin-top:10px;" onclick="uploadFile('InvoiceBackground', 'bgFile')">Upload Background</button>
+            <button class="btn" style="margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Save Logo</button>
         </div>
-
         <div class="card">
-            <h3>Tax Settings</h3>
-            <p>Current Rate in Excel: <span id="currentTaxDisplay" style="font-weight:bold;">Loading...</span></p>
-            <input type="number" id="newTaxRate" step="0.0001" placeholder="Enter decimal, e.g. 0.08875">
-            <button class="btn btn-blue" style="margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
-        </div>
-    </div>
-</div>
-
-<div id="pinModal">
-    <div style="background:white; padding:30px; border-radius:12px; text-align:center; width: 300px;">
-        <h3 style="margin-top:0; color: var(--blue);">Manager PIN Required</h3>
-        <p style="font-size:13px; color:#666;">Staff accounts require a manager override to perform this action.</p>
-        <input type="password" id="managerPinInput" maxlength="4" style="font-size:32px; width:140px; text-align:center; letter-spacing:10px; margin: 15px 0; border: 2px solid var(--blue);">
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn btn-blue" style="flex:1;" onclick="verifyManagerPin()">Authorize</button>
-            <button class="btn" style="flex:1; background:#eee;" onclick="closePinModal()">Cancel</button>
+            <h3>Tax Configuration</h3>
+            <p>Current Rate: <span id="taxDisplay" style="font-weight:bold;">...</span></p>
+            <input type="number" id="taxIn" step="0.0001" placeholder="Decimal format (e.g. 0.08875)">
+            <button class="btn" style="margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyN28D6n0-R7-UfV72X-86LpEInP7zF40VqfJ1O9-vI7R6L7L7L/exec"; 
-    
-    let currentUser = null;
-    let globalSettings = {};
-    let pendingAction = null;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzYoB1K2TF0Ov2sItgK6eG8NFfkTv7915qTuS8hARNZp-k-AJs5HxzDuXwG_GdTWRo/exec";
 
-    // --- INITIAL LOAD ---
+    let currentUser = null;
+
+    // Load initial settings
     window.onload = async () => {
         try {
             const res = await fetch(SCRIPT_URL + "?action=getSettings");
-            const data = await res.json();
-            data.forEach(s => {
-                if(s.SettingKey) globalSettings[s.SettingKey] = s.SettingValue;
+            const settings = await res.json();
+            settings.forEach(item => {
+                if(item.SettingKey === "LoginLogo" && item.SettingValue) {
+                    document.getElementById('loginLogoDisplay').src = item.SettingValue;
+                    document.getElementById('loginLogoDisplay').style.display = 'block';
+                    document.getElementById('loginTitle').style.display = 'none';
+                }
+                if(item.SettingKey === "TaxRate") {
+                    document.getElementById('taxDisplay').innerText = (parseFloat(item.SettingValue) * 100).toFixed(3) + "%";
+                }
             });
-            
-            // Apply Login Logo if it exists in Excel
-            if(globalSettings.LoginLogo) {
-                document.getElementById('loginLogoDisplay').src = globalSettings.LoginLogo;
-                document.getElementById('loginLogoDisplay').style.display = 'block';
-                document.getElementById('loginTitle').style.display = 'none';
-            }
-            
-            // Display Tax Rate
-            if(globalSettings.TaxRate) {
-                document.getElementById('currentTaxDisplay').innerText = (parseFloat(globalSettings.TaxRate) * 100).toFixed(3) + "%";
-            }
-        } catch (e) { console.log("Init failed: ", e); }
+        } catch(e) { console.log("Settings not yet configured."); }
     };
 
-    // --- LOGIN SYSTEM ---
     async function attemptLogin() {
         const u = document.getElementById('userIn').value;
         const p = document.getElementById('passIn').value;
-        
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'login', username: u, password: p })
-        });
-        const data = await res.json();
+        const btn = document.getElementById('loginBtn');
+        const msg = document.getElementById('statusMsg');
 
-        if(data.success) {
-            currentUser = data;
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('userDisplay').innerText = "User: " + data.displayName + " (" + data.role + ")";
+        if(!u || !p) return alert("Please enter credentials");
+
+        btn.innerText = "Connecting to Google...";
+        btn.disabled = true;
+        msg.innerText = "Checking Excel 'Admin' tab...";
+
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Temporary check for handshake
+                body: JSON.stringify({ action: 'login', username: u, password: p })
+            });
             
-            // Only show Admin Tab if Role is Admin
-            if(data.role === "Admin") {
-                document.getElementById('tabAdm').classList.remove('hidden');
+            // Note: Since we need the JSON data back, we actually need CORS. 
+            // Re-attempting with standard fetch to get real data.
+            const realRes = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', username: u, password: p })
+            });
+            const data = await realRes.json();
+
+            if(data.success) {
+                currentUser = data;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('userDisplay').innerText = "Logged in as: " + data.displayName;
+                document.getElementById('welcomeName').innerText = data.displayName;
+                if(data.role === "Admin") document.getElementById('admTab').classList.remove('hidden');
+            } else {
+                alert("Login Failed. Check Column A and B in your 'Admin' sheet.");
+                resetLogin();
             }
-            switchTab('Generator');
-        } else {
-            alert("Invalid Login Credentials. Please check your Excel Admin tab.");
+        } catch(e) {
+            alert("Handshake Error: Ensure your Apps Script is deployed as 'Anyone'.");
+            console.error(e);
+            resetLogin();
         }
     }
 
-    // --- NAVIGATION ---
-    function switchTab(tab) {
-        document.getElementById('viewGenerator').classList.add('hidden');
-        document.getElementById('viewInventory').classList.add('hidden');
-        document.getElementById('viewAdmin').classList.add('hidden');
-        
-        document.getElementById('tabGen').classList.remove('active-tab');
-        document.getElementById('tabInv').classList.remove('active-tab');
-        document.getElementById('tabAdm').classList.remove('active-tab');
-
-        document.getElementById('view' + tab).classList.remove('hidden');
-        
-        let tabId = tab === 'Generator' ? 'tabGen' : tab === 'Inventory' ? 'tabInv' : 'tabAdm';
-        document.getElementById(tabId).classList.add('active-tab');
+    function resetLogin() {
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "Login";
+        btn.disabled = false;
+        document.getElementById('statusMsg').innerText = "";
     }
 
-    // --- IMAGE UPLOAD (SAVES TO EXCEL AS TEXT) ---
+    function switchTab(tab) {
+        document.getElementById('viewGen').classList.add('hidden');
+        document.getElementById('viewAdm').classList.add('hidden');
+        document.getElementById('tabGen').classList.remove('active-tab');
+        document.getElementById('admTab').classList.remove('active-tab');
+        document.getElementById('view' + tab).classList.remove('hidden');
+        document.getElementById(tab === 'Gen' ? 'tabGen' : 'admTab').classList.add('active-tab');
+    }
+
     function uploadFile(key, inputId) {
         const file = document.getElementById(inputId).files[0];
-        if(!file) return alert("Please select a JPG file first.");
-
+        if(!file) return alert("Select a JPG");
         const reader = new FileReader();
-        reader.onload = async function(e) {
-            const base64Data = e.target.result;
-            const res = await fetch(SCRIPT_URL, {
+        reader.onload = async (e) => {
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'saveSetting', key: key, value: base64Data })
+                body: JSON.stringify({ action: 'saveSetting', key: key, value: e.target.result })
             });
-            alert("Branding successfully saved to Excel! The page will now reload.");
+            alert("Logo saved! Refreshing...");
             location.reload();
         };
         reader.readAsDataURL(file);
     }
 
-    // --- TAX UPDATE ---
     async function updateTax() {
-        const newRate = document.getElementById('newTaxRate').value;
-        if(!newRate) return alert("Please enter a decimal value.");
-        
+        const val = document.getElementById('taxIn').value;
         await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'saveSetting', key: 'TaxRate', value: newRate })
+            body: JSON.stringify({ action: 'saveSetting', key: 'TaxRate', value: val })
         });
-        alert("Tax Rate successfully updated in Excel!");
+        alert("Tax Rate updated!");
         location.reload();
     }
-
-    // --- MANAGER OVERRIDE LOGIC ---
-    function checkPermission(permType, callback) {
-        if(currentUser.role === "Admin") return callback();
-        
-        // Check if Staff has specific toggle enabled in Excel
-        if(permType === 'editInv' && currentUser.canEditInv === true) return callback();
-        if(permType === 'editCust' && currentUser.canEditCust === true) return callback();
-
-        // If no permission, trigger PIN modal
-        pendingAction = callback;
-        document.getElementById('pinModal').style.display = 'flex';
-        document.getElementById('managerPinInput').focus();
-    }
-
-    async function verifyManagerPin() {
-        const pin = document.getElementById('managerPinInput').value;
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'verifyPin', pin: pin })
-        });
-        const data = await res.json();
-
-        if(data.success) {
-            document.getElementById('pinModal').style.display = 'none';
-            document.getElementById('managerPinInput').value = "";
-            pendingAction();
-        } else {
-            alert("Incorrect Manager PIN.");
-            document.getElementById('managerPinInput').value = "";
-        }
-    }
-
-    function closePinModal() {
-        document.getElementById('pinModal').style.display = 'none';
-        document.getElementById('managerPinInput').value = "";
-    }
-
 </script>
 </body>
 </html>
