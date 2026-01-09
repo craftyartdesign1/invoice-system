@@ -18,12 +18,12 @@
         .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
 
         /* CONTENT */
-        .container { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 0 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none; }
         
         /* SEARCH & TABLE */
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 15px; }
         .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; border-radius: 0 0 6px 6px; }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
         .search-item:hover { background: #f8fafc; }
@@ -34,6 +34,7 @@
 
         .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; width: 100%; }
         .btn-green { background: #10b981; }
+        .btn-green:hover { background: #059669; }
     </style>
 </head>
 <body>
@@ -84,6 +85,14 @@
             <h3>Invoice Summary</h3>
             <p>Inv #: <span id="invNum" style="font-weight:bold;">...</span></p>
             <hr>
+            
+            <label style="font-weight: bold; font-size: 0.9rem;">Select Customer:</label>
+            <select id="customerSelect">
+                <option value="Walk-in Customer">-- Walk-in Customer --</option>
+            </select>
+            
+            <hr style="margin: 20px 0;">
+            
             <div style="display:flex; justify-content:space-between; margin:10px 0;">
                 <span>Subtotal:</span> <span id="subTotal">$0.00</span>
             </div>
@@ -116,11 +125,12 @@
     
     let currentUser = null;
     let inventory = [];
+    let customers = [];
     let cart = [];
     let taxRate = 0;
 
     window.onload = async () => {
-        // Load Settings (Logo and Tax)
+        // 1. Load Settings
         const res = await fetch(SCRIPT_URL + "?action=getSettings");
         const settings = await res.json();
         settings.forEach(s => {
@@ -135,9 +145,21 @@
             }
         });
         
-        // Load Inventory
+        // 2. Load Inventory
         const invRes = await fetch(SCRIPT_URL + "?action=getInventory");
         inventory = await invRes.json();
+        
+        // 3. Load Customers
+        const custRes = await fetch(SCRIPT_URL + "?action=getCustomers");
+        customers = await custRes.json();
+        const cSelect = document.getElementById('customerSelect');
+        customers.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c["Customer Name"] || c["Name"]; // Adjust based on your header
+            opt.innerText = c["Customer Name"] || c["Name"];
+            cSelect.appendChild(opt);
+        });
+
         document.getElementById('invNum').innerText = Math.floor(1000 + Math.random() * 9000);
     };
 
@@ -167,7 +189,7 @@
 
         inventory.filter(i => 
             i.SKU.toString().toLowerCase().includes(query) || 
-            i["Item Name"].toLowerCase().includes(query)
+            (i["Item Name"] && i["Item Name"].toLowerCase().includes(query))
         ).forEach(item => {
             const div = document.createElement('div');
             div.className = "search-item";
@@ -200,7 +222,6 @@
         cart.forEach((item, index) => {
             const lineTotal = item.Price * item.qty;
             sub += lineTotal;
-            // Check Column E "Tax Exempt". If NOT true, add tax.
             if(item["Tax Exempt"] !== true && item["Tax Exempt"] !== "TRUE") {
                 tax += lineTotal * taxRate;
             }
@@ -238,7 +259,7 @@
             action: "saveInvoice",
             invoiceNumber: document.getElementById('invNum').innerText,
             date: new Date().toLocaleDateString(),
-            customer: "Walk-in",
+            customer: document.getElementById('customerSelect').value,
             employee: currentUser.displayName,
             subtotal: document.getElementById('subTotal').innerText,
             tax: document.getElementById('taxTotal').innerText,
@@ -247,7 +268,7 @@
         };
 
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(invoiceData) });
-        alert("Sale Saved to Excel!");
+        alert("Sale for " + invoiceData.customer + " Saved to Excel!");
         location.reload();
     }
 
@@ -257,7 +278,6 @@
         document.getElementById('viewAdm').classList.toggle('hidden', tab !== 'Adm');
     }
 
-    // Admin Uploads
     function uploadFile(key, id) {
         const file = document.getElementById(id).files[0];
         const reader = new FileReader();
