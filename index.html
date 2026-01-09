@@ -3,244 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | POS</title>
+    <title>CRAFTY ART DESIGN | POS SYSTEM</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.7; transition: 0.3s; }
-        .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .hidden { display: none; }
-        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 15px; }
-        .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; position: absolute; width: calc(100% - 40px); z-index: 10; }
-        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .search-item:hover { background: #f8fafc; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; border-bottom: 2px solid var(--blue); padding: 12px; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; width: 100%; }
-        .btn-green { background: var(--green); }
-        .btn-small { padding: 8px 12px; width: auto; font-size: 11px; margin-top: 10px; border-radius: 4px; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:11000; align-items:center; justify-content:center; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        
+        #loginOverlay { background: var(--white); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        h1 { color: var(--blue); margin-bottom: 25px; font-size: 1.5rem; }
+        
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 1rem; }
+        
+        .btn { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; width: 100%; font-size: 1rem; transition: 0.3s; }
+        .btn:hover { background: #003a57; }
+        
+        #mainContent { display: none; text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .success-icon { font-size: 3rem; color: var(--green); margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <h1>CRAFTY ART DESIGN</h1>
-    <div class="login-box">
-        <input type="text" id="userIn" placeholder="Username">
-        <input type="password" id="passIn" placeholder="Password">
-        <button class="btn" style="margin-top:20px;" onclick="attemptLogin()">Login</button>
-    </div>
+    <input type="text" id="userIn" placeholder="Username">
+    <input type="password" id="passIn" placeholder="Password">
+    <button class="btn" id="loginBtn" onclick="attemptLogin()">Login to POS</button>
 </div>
 
-<div class="navbar">
-    <div style="font-weight:bold;">CRAFTY ART DESIGN</div>
-    <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">New Invoice</div>
-        <div id="tabInv" class="hidden" onclick="switchTab('Inv')">Inventory List</div>
-        <div id="tabCust" class="hidden" onclick="switchTab('Cust')">Customer Database</div>
-        <div id="tabAdm" class="hidden" onclick="switchTab('Adm')">System Settings</div>
-    </div>
-    <div id="userDisplay" style="font-size: 12px; opacity: 0.8;"></div>
-</div>
-
-<div class="container">
-    <div id="viewGen" class="pos-grid">
-        <div style="position: relative;">
-            <div class="card">
-                <h3>Find Items</h3>
-                <input type="text" id="invSearch" placeholder="Search SKU or Item Name..." onkeyup="searchInventory()">
-                <div id="searchResults" class="search-results"></div>
-                <table>
-                    <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
-                    <tbody id="cartBody"></tbody>
-                </table>
-            </div>
-        </div>
-        <div>
-            <div class="card">
-                <h3>Summary</h3>
-                <p>Invoice #: <span id="invNum" style="font-weight:bold;">...</span></p>
-                <label>Search Customer:</label>
-                <input type="text" id="custSearch" placeholder="Search name..." onkeyup="filterCustomers()">
-                <select id="customerSelect" size="4" style="height: 100px; margin-top: 5px;"><option value="Walk-in">-- Walk-in --</option></select>
-                <button class="btn btn-small" onclick="showModal()">+ Quick Add Customer</button>
-                <hr style="margin:20px 0;">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
-                    <span style="font-size: 1.2rem; font-weight: bold; color: var(--blue);">Grand Total:</span>
-                    <span id="grandTotal" style="font-size: 1.2rem; font-weight: bold; color: var(--blue);">$0.00</span>
-                </div>
-                <button class="btn btn-green" onclick="saveInvoice()">Finalize Sale</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="viewInv" class="hidden">
-        <div class="card">
-            <h2>Inventory List</h2>
-            <input type="text" id="fullInvSearch" placeholder="Filter inventory..." onkeyup="filterInventoryTable()">
-            <table id="fullInvTable">
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead>
-                <tbody id="fullInvBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="viewCust" class="hidden">
-        <div class="card"><h2>Customers</h2><table id="fullCustTable"><thead><tr><th>Name</th><th>Contact</th></tr></thead><tbody id="fullCustBody"></tbody></table></div>
-    </div>
-
-    <div id="viewAdm" class="hidden">
-        <div class="card">
-            <h2>Settings</h2>
-            <label>Tax Rate (Decimal):</label>
-            <input type="number" id="taxIn" step="0.0001">
-            <button class="btn btn-small" onclick="updateTax()">Update Tax</button>
-        </div>
-    </div>
-</div>
-
-<div id="custModal" class="modal">
-    <div style="background:white; padding:30px; border-radius:12px; width:300px;">
-        <h3 style="margin-top:0;">New Customer</h3>
-        <input type="text" id="newCustName" placeholder="Name or Company">
-        <input type="text" id="newCustContact" placeholder="Phone or Email" style="margin-top:10px;">
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn btn-green" onclick="addNewCustomer()">Save</button>
-            <button class="btn" style="background:#ccc;" onclick="hideModal()">Cancel</button>
-        </div>
-    </div>
+<div id="mainContent">
+    <div class="success-icon">✔</div>
+    <h2>System Connected</h2>
+    <p>Welcome back, <span id="userGreeting" style="font-weight:bold; color:var(--blue);"></span>!</p>
+    <p style="color: #666; font-size: 0.9rem;">The connection to your Google Sheet is active.</p>
+    <button class="btn" style="margin-top: 20px; background: #64748b;" onclick="location.reload()">Logout</button>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbSaiCrg4YTrT0NrreA2mKbi23KPELkDqyqouK5XFeiW1236hXPJ9pJ0KcmKyvLPnl_/exec";
-    let currentUser = null, inventory = [], customers = [], taxRate = 0, cart = [];
-
-    window.onload = async () => {
-        try {
-            const res = await fetch(SCRIPT_URL + "?action=getSettings");
-            const settings = await res.json();
-            settings.forEach(s => { if(s.SettingKey === "TaxRate") { taxRate = parseFloat(s.SettingValue); document.getElementById('taxIn').value = taxRate; } });
-            loadData();
-            document.getElementById('invNum').innerText = Math.floor(10000 + Math.random() * 90000);
-        } catch(e) { console.log("Connection Error:", e); }
-    };
-
-    async function loadData() {
-        try {
-            const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
-            inventory = await iRes.json();
-            const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
-            customers = await cRes.json();
-            renderCustomerOptions(customers);
-            document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td><td>${i.Size || '-'}</td></tr>`).join('');
-            document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"] || '-'}</td></tr>`).join('');
-        } catch(e) { console.log("Data Load Error:", e); }
-    }
-
-    function renderCustomerOptions(list) {
-        const sel = document.getElementById('customerSelect');
-        sel.innerHTML = '<option value="Walk-in">-- Walk-in --</option>';
-        list.forEach(c => { if(c["Customer Name"]) sel.innerHTML += `<option value="${c["Customer Name"]}">${c["Customer Name"]}</option>`; });
-    }
-
-    function filterCustomers() {
-        const q = document.getElementById('custSearch').value.toLowerCase();
-        renderCustomerOptions(customers.filter(c => c["Customer Name"].toLowerCase().includes(q)));
-    }
+    // YOUR NEW UPDATED URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytUgh1lSjvMDMPYUv_OGuDHv0V9Z8haFMla4quAsU9ghf7YhCzrwL-w-7gyO6OTc3P/exec";
 
     async function attemptLogin() {
-        const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value;
-        if(!u || !p) return alert("Please enter credentials");
+        const u = document.getElementById('userIn').value;
+        const p = document.getElementById('passIn').value;
+        const btn = document.getElementById('loginBtn');
+
+        if (!u || !p) {
+            alert("Please enter both username and password.");
+            return;
+        }
+
+        btn.innerText = "Connecting...";
+        btn.disabled = true;
+
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
-            const data = await res.json();
-            if(data.success) {
-                currentUser = data;
+            // Sending login request to Google Script
+            const response = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    action: "login", 
+                    username: u, 
+                    password: p 
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Hide login, show success
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('userDisplay').innerText = "Logged in as: " + data.displayName;
-                document.getElementById('tabInv').classList.remove('hidden');
-                if(data.role === "Admin") {
-                    document.getElementById('tabCust').classList.remove('hidden');
-                    document.getElementById('tabAdm').classList.remove('hidden');
-                }
-            } else { alert("Login failed. Check your spreadsheet."); }
-        } catch(e) { alert("Could not connect to Google Sheets. Check your Script URL."); }
-    }
-
-    function searchInventory() {
-        const q = document.getElementById('invSearch').value.toLowerCase(), r = document.getElementById('searchResults');
-        r.innerHTML = ""; if(q.length < 2) return;
-        inventory.filter(i => i.SKU.toString().toLowerCase().includes(q) || (i["Item Name"] && i["Item Name"].toLowerCase().includes(q))).forEach(item => {
-            const d = document.createElement('div'); d.className = "search-item";
-            d.innerHTML = `<strong>${item.SKU}</strong> - ${item["Item Name"]} ($${item.Price})`;
-            d.onclick = () => { addToCart(item); r.innerHTML = ""; document.getElementById('invSearch').value = ""; };
-            r.appendChild(d);
-        });
-    }
-
-    function addToCart(item) {
-        const ex = cart.find(c => c.SKU === item.SKU);
-        if(ex) ex.qty++; else cart.push({ ...item, qty: 1 });
-        updateCartUI();
-    }
-
-    function updateCartUI() {
-        const body = document.getElementById('cartBody'); body.innerHTML = "";
-        let total = 0;
-        cart.forEach((item, idx) => {
-            const line = item.Price * item.qty; total += line;
-            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${item.Price}</td><td><input type="number" value="${item.qty}" style="width:60px" onchange="updateQty(${idx},this.value)"></td><td>$${line.toFixed(2)}</td><td onclick="removeItem(${idx})" style="color:red;cursor:pointer">✖</td></tr>`;
-        });
-        if(taxRate > 0) total += (total * taxRate);
-        document.getElementById('grandTotal').innerText = "$" + total.toFixed(2);
-    }
-
-    function updateQty(i, v) { cart[i].qty = parseInt(v); updateCartUI(); }
-    function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
-    function showModal() { document.getElementById('custModal').style.display = 'flex'; }
-    function hideModal() { document.getElementById('custModal').style.display = 'none'; }
-
-    async function addNewCustomer() {
-        const n = document.getElementById('newCustName').value, c = document.getElementById('newCustContact').value;
-        if(!n) return;
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "saveNewCust", name: n, contact: c }) });
-        alert("Customer Added!"); hideModal(); loadData();
-    }
-
-    async function saveInvoice() {
-        if(cart.length === 0) return alert("Cart is empty");
-        const inv = { action: "saveInvoice", invoiceNumber: document.getElementById('invNum').innerText, date: new Date().toLocaleDateString(), customer: document.getElementById('customerSelect').value, employee: currentUser.displayName, total: document.getElementById('grandTotal').innerText, items: cart };
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(inv) });
-        alert("Invoice Saved!"); location.reload();
-    }
-
-    function switchTab(t) {
-        document.getElementById('viewGen').style.display = (t === 'Gen') ? 'grid' : 'none';
-        document.getElementById('viewInv').classList.toggle('hidden', t !== 'Inv');
-        document.getElementById('viewCust').classList.toggle('hidden', t !== 'Cust');
-        document.getElementById('viewAdm').classList.toggle('hidden', t !== 'Adm');
-        document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
-        document.getElementById('tab' + t).classList.add('active-tab');
-    }
-
-    function filterInventoryTable() {
-        const q = document.getElementById('fullInvSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#fullInvBody tr');
-        rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none'; });
-    }
-
-    async function updateTax() {
-        await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify({action:'saveSetting', key:'TaxRate', value:document.getElementById('taxIn').value}) });
-        alert("Tax Updated!"); location.reload();
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('userGreeting').innerText = data.displayName;
+            } else {
+                alert("Invalid Username or Password. Please check your 'Admin' sheet.");
+                btn.innerText = "Login to POS";
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Connection Error:", error);
+            alert("Connection Failed. Did you remember to deploy the Google Script as 'Anyone'?");
+            btn.innerText = "Login to POS";
+            btn.disabled = false;
+        }
     }
 </script>
+
 </body>
 </html>
