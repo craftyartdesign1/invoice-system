@@ -3,38 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | POS System</title>
+    <title>CRAFTY ART DESIGN | Management System</title>
     <style>
-        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
         
-        /* LOGIN */
+        /* LOGIN OVERLAY */
         #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* NAV */
-        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.8; }
+        /* NAVIGATION */
+        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 999; }
+        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.7; transition: 0.3s; padding: 5px 0; }
         .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
 
-        /* CONTENT */
-        .container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 0 20px; }
+        /* LAYOUT */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .pos-grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none; }
         
-        /* SEARCH & TABLE */
+        /* INPUTS */
         input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 15px; }
-        .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; border-radius: 0 0 6px 6px; }
+        .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; position: absolute; width: calc(100% - 40px); z-index: 10; }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
         .search-item:hover { background: #f8fafc; }
         
+        /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; border-bottom: 2px solid var(--blue); padding: 10px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
+        th { text-align: left; border-bottom: 2px solid var(--blue); padding: 12px; background: #fcfcfc; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
 
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; width: 100%; }
-        .btn-green { background: #10b981; }
-        .btn-green:hover { background: #059669; }
+        /* BUTTONS */
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; width: 100%; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); }
+        .btn-green { background: var(--green); }
+        .btn-small { padding: 8px 12px; width: auto; font-size: 12px; margin-top: 10px; border-radius: 4px; }
+        
+        /* MODAL */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:11000; align-items:center; justify-content:center; }
+        
+        /* PRINT STYLES */
+        @media print {
+            body * { visibility: hidden; }
+            #receiptArea, #receiptArea * { visibility: visible; }
+            #receiptArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -53,84 +67,124 @@
     <div style="font-weight:bold; font-size:1.2rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
         <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">New Invoice</div>
-        <div id="admTab" class="hidden" onclick="switchTab('Adm')">Admin</div>
+        <div id="tabInv" class="hidden" onclick="switchTab('Inv')">Inventory List</div>
+        <div id="tabCust" class="hidden" onclick="switchTab('Cust')">Customer Database</div>
+        <div id="tabAdm" class="hidden" onclick="switchTab('Adm')">System Settings</div>
     </div>
-    <div id="userDisplay"></div>
+    <div id="userDisplay" style="font-size: 0.8rem; opacity: 0.8;"></div>
 </div>
 
-<div id="mainApp" class="container">
-    <div id="viewGen">
+<div class="container">
+    <div id="viewGen" class="pos-grid">
+        <div style="position: relative;">
+            <div class="card">
+                <h3>Item Search</h3>
+                <input type="text" id="invSearch" placeholder="Search SKU or Item Name..." onkeyup="searchInventory()">
+                <div id="searchResults" class="search-results"></div>
+                <table>
+                    <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+                    <tbody id="cartBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <div class="card">
+                <h3>Invoice Details</h3>
+                <p>Invoice #: <span id="invNum" style="font-weight:bold;">...</span></p>
+                
+                <label>Find Customer / Company:</label>
+                <input type="text" id="custSearch" placeholder="Type name or company..." onkeyup="filterCustomers()">
+                <select id="customerSelect" size="4" style="margin-top:5px; height: 100px;">
+                    <option value="Walk-in">-- Walk-in --</option>
+                </select>
+                <button class="btn btn-small" onclick="showModal('custModal')">+ Add New Customer</button>
+                
+                <hr style="margin:20px 0;">
+                <div style="display:flex; justify-content:space-between; margin:5px 0;"><span>Subtotal:</span> <span id="subTotal">$0.00</span></div>
+                <div style="display:flex; justify-content:space-between; margin:5px 0;"><span>Tax:</span> <span id="taxTotal">$0.00</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:1.4rem; font-weight:bold; color:var(--blue); margin-top:10px;">
+                    <span>Total:</span> <span id="grandTotal">$0.00</span>
+                </div>
+                <button class="btn btn-green" style="margin-top:20px;" onclick="saveInvoice()">Finalize & Save</button>
+                <button class="btn" style="margin-top:10px; background: #64748b;" onclick="window.print()">Print Receipt Only</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewInv" class="hidden">
         <div class="card">
-            <h3>Find Items</h3>
-            <input type="text" id="invSearch" placeholder="Search by SKU or Item Name..." onkeyup="searchInventory()">
-            <div id="searchResults" class="search-results"></div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Price</th>
-                        <th>Qty</th>
-                        <th>Total</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="cartBody"></tbody>
+            <h2>Inventory Reference</h2>
+            <input type="text" id="fullInvSearch" placeholder="Filter inventory list..." onkeyup="filterInventoryTable()">
+            <table id="fullInvTable">
+                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Status</th></tr></thead>
+                <tbody id="fullInvBody"></tbody>
             </table>
         </div>
     </div>
 
-    <div id="viewGenTotals">
+    <div id="viewCust" class="hidden">
         <div class="card">
-            <h3>Invoice Summary</h3>
-            <p>Inv #: <span id="invNum" style="font-weight:bold;">...</span></p>
-            <hr>
-            
-            <label style="font-weight: bold; font-size: 0.9rem;">Select Customer:</label>
-            <select id="customerSelect">
-                <option value="Walk-in Customer">-- Walk-in Customer --</option>
-            </select>
-            
-            <hr style="margin: 20px 0;">
-            
-            <div style="display:flex; justify-content:space-between; margin:10px 0;">
-                <span>Subtotal:</span> <span id="subTotal">$0.00</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin:10px 0;">
-                <span>Tax:</span> <span id="taxTotal">$0.00</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin:10px 0; font-size:1.3rem; font-weight:bold; color:var(--blue);">
-                <span>Total:</span> <span id="grandTotal">$0.00</span>
-            </div>
-            <button class="btn btn-green" style="margin-top:20px;" onclick="saveInvoice()">Finalize Sale</button>
+            <h2>Customer Database</h2>
+            <table id="fullCustTable">
+                <thead><tr><th>Customer/Company Name</th><th>Contact Info</th></tr></thead>
+                <tbody id="fullCustBody"></tbody>
+            </table>
         </div>
     </div>
 
-    <div id="viewAdm" class="hidden" style="grid-column: span 2;">
+    <div id="viewAdm" class="hidden">
         <div class="card">
-            <h2>Branding & Settings</h2>
-            <label>Logo (.JPG):</label>
-            <input type="file" id="logoFile" accept="image/jpeg">
-            <button class="btn" style="width:auto; margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Upload Logo</button>
-            <hr style="margin:20px 0;">
-            <label>Current Tax Decimal (e.g. 0.08875):</label>
-            <input type="number" id="taxIn" step="0.0001">
-            <button class="btn" style="width:auto; margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
+            <h2>Settings & Branding</h2>
+            <div class="card" style="border: 1px solid #eee; box-shadow: none;">
+                <label>Company Logo (.JPG):</label>
+                <input type="file" id="logoFile" accept="image/jpeg">
+                <button class="btn btn-small" onclick="uploadFile('LoginLogo', 'logoFile')">Upload Logo</button>
+            </div>
+            <div class="card" style="border: 1px solid #eee; box-shadow: none;">
+                <label>Tax Rate (Decimal format, e.g. 0.08875):</label>
+                <input type="number" id="taxIn" step="0.0001">
+                <button class="btn btn-small" onclick="updateTax()">Update Tax Rate</button>
+            </div>
         </div>
     </div>
 </div>
 
+<div id="custModal" class="modal">
+    <div style="background:white; padding:30px; border-radius:12px; width:320px;">
+        <h3 style="margin-top:0;">New Customer</h3>
+        <input type="text" id="newCustName" placeholder="Full Name or Company">
+        <input type="text" id="newCustContact" placeholder="Phone or Email" style="margin-top:10px;">
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button class="btn btn-green" onclick="addNewCustomer()">Save Customer</button>
+            <button class="btn" style="background:#ccc;" onclick="hideModal('custModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="receiptArea" class="hidden">
+    <center>
+        <h2 id="receiptCoName">CRAFTY ART DESIGN</h2>
+        <p id="receiptDate"></p>
+        <p>Invoice #: <span id="receiptInvNum"></span></p>
+        <p>Customer: <span id="receiptCust"></span></p>
+        <hr>
+        <table style="width:100%; border:none;">
+            <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+            <tbody id="receiptItems"></tbody>
+        </table>
+        <hr>
+        <p>Subtotal: <span id="receiptSub"></span></p>
+        <p>Tax: <span id="receiptTax"></span></p>
+        <h3 style="margin-top:5px;">Total: <span id="receiptTotal"></span></h3>
+        <p>Thank you for your business!</p>
+    </center>
+</div>
+
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwu2LgN3QsscYUFFvGi5oNoaqoDTB6q7vEj8lK4V5SFh2iXQlI7BnmPtJd9JhPJYKGm/exec";
-    
-    let currentUser = null;
-    let inventory = [];
-    let customers = [];
-    let cart = [];
-    let taxRate = 0;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYGGE4Kp7ajMW1QzvuVGhKeA36GfHhW3Ay8ZQvIP5bNs5Vkay2uiZPgBws_OvAI6dE/exec";
+    let currentUser = null, inventory = [], customers = [], taxRate = 0, cart = [];
 
     window.onload = async () => {
-        // 1. Load Settings
         const res = await fetch(SCRIPT_URL + "?action=getSettings");
         const settings = await res.json();
         settings.forEach(s => {
@@ -144,117 +198,98 @@
                 document.getElementById('taxIn').value = taxRate;
             }
         });
-        
-        // 2. Load Inventory
-        const invRes = await fetch(SCRIPT_URL + "?action=getInventory");
-        inventory = await invRes.json();
-        
-        // 3. Load Customers
-        const custRes = await fetch(SCRIPT_URL + "?action=getCustomers");
-        customers = await custRes.json();
-        const cSelect = document.getElementById('customerSelect');
-        customers.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c["Customer Name"] || c["Name"]; // Adjust based on your header
-            opt.innerText = c["Customer Name"] || c["Name"];
-            cSelect.appendChild(opt);
-        });
-
-        document.getElementById('invNum').innerText = Math.floor(1000 + Math.random() * 9000);
+        loadData();
+        document.getElementById('invNum').innerText = Math.floor(100000 + Math.random() * 900000);
     };
 
-    async function attemptLogin() {
-        const u = document.getElementById('userIn').value;
-        const p = document.getElementById('passIn').value;
-        const res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'login', username: u, password: p })
+    async function loadData() {
+        const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
+        inventory = await iRes.json();
+        const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
+        customers = await cRes.json();
+        
+        renderCustomerList(customers);
+        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td><td>${i.Size || '-'}</td><td>${(i["Tax Exempt"] === true || i["Tax Exempt"] === "TRUE") ? 'Exempt' : 'Taxable'}</td></tr>`).join('');
+        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"] || '-'}</td></tr>`).join('');
+    }
+
+    function renderCustomerList(list) {
+        const select = document.getElementById('customerSelect');
+        select.innerHTML = '<option value="Walk-in">-- Walk-in --</option>';
+        list.forEach(c => {
+            if(c["Customer Name"]) select.innerHTML += `<option value="${c["Customer Name"]}">${c["Customer Name"]}</option>`;
         });
+    }
+
+    function filterCustomers() {
+        const q = document.getElementById('custSearch').value.toLowerCase();
+        const filtered = customers.filter(c => c["Customer Name"].toLowerCase().includes(q));
+        renderCustomerList(filtered);
+    }
+
+    async function attemptLogin() {
+        const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value;
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
         const data = await res.json();
         if(data.success) {
             currentUser = data;
             document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('userDisplay').innerText = data.displayName;
-            if(data.role === "Admin") document.getElementById('admTab').classList.remove('hidden');
-        } else {
-            alert("Login Failed");
-        }
+            document.getElementById('userDisplay').innerText = "Active User: " + data.displayName;
+            
+            // Access control
+            document.getElementById('tabInv').classList.remove('hidden');
+            if(data.role === "Admin") {
+                document.getElementById('tabCust').classList.remove('hidden');
+                document.getElementById('tabAdm').classList.remove('hidden');
+            }
+        } else { alert("Incorrect credentials. Please check your sheet."); }
     }
 
     function searchInventory() {
-        const query = document.getElementById('invSearch').value.toLowerCase();
-        const results = document.getElementById('searchResults');
-        results.innerHTML = "";
-        if(query.length < 2) return;
-
-        inventory.filter(i => 
-            i.SKU.toString().toLowerCase().includes(query) || 
-            (i["Item Name"] && i["Item Name"].toLowerCase().includes(query))
-        ).forEach(item => {
-            const div = document.createElement('div');
-            div.className = "search-item";
-            div.innerHTML = `<strong>${item.SKU}</strong> - ${item["Item Name"]} ($${item.Price})`;
-            div.onclick = () => {
-                addToCart(item);
-                results.innerHTML = "";
-                document.getElementById('invSearch').value = "";
-            };
-            results.appendChild(div);
+        const q = document.getElementById('invSearch').value.toLowerCase(), r = document.getElementById('searchResults');
+        r.innerHTML = ""; if(q.length < 2) return;
+        inventory.filter(i => i.SKU.toString().toLowerCase().includes(q) || (i["Item Name"] && i["Item Name"].toLowerCase().includes(q))).forEach(item => {
+            const d = document.createElement('div'); d.className = "search-item";
+            d.innerHTML = `<strong>${item.SKU}</strong> - ${item["Item Name"]} ($${parseFloat(item.Price).toFixed(2)})`;
+            d.onclick = () => { addToCart(item); r.innerHTML = ""; document.getElementById('invSearch').value = ""; };
+            r.appendChild(d);
         });
     }
 
     function addToCart(item) {
-        const existing = cart.find(c => c.SKU === item.SKU);
-        if(existing) {
-            existing.qty++;
-        } else {
-            cart.push({ ...item, qty: 1 });
-        }
+        const ex = cart.find(c => c.SKU === item.SKU);
+        if(ex) ex.qty++; else cart.push({ ...item, qty: 1 });
         updateCartUI();
     }
 
     function updateCartUI() {
-        const body = document.getElementById('cartBody');
-        body.innerHTML = "";
-        let sub = 0;
-        let tax = 0;
-
-        cart.forEach((item, index) => {
-            const lineTotal = item.Price * item.qty;
-            sub += lineTotal;
-            if(item["Tax Exempt"] !== true && item["Tax Exempt"] !== "TRUE") {
-                tax += lineTotal * taxRate;
-            }
-
-            body.innerHTML += `
-                <tr>
-                    <td>${item["Item Name"]}</td>
-                    <td>$${item.Price}</td>
-                    <td><input type="number" value="${item.qty}" style="width:60px" onchange="updateQty(${index}, this.value)"></td>
-                    <td>$${lineTotal.toFixed(2)}</td>
-                    <td onclick="removeItem(${index})" style="color:red; cursor:pointer;">✖</td>
-                </tr>
-            `;
+        const body = document.getElementById('cartBody'); body.innerHTML = "";
+        let sub = 0, tax = 0;
+        cart.forEach((item, idx) => {
+            const line = item.Price * item.qty; sub += line;
+            if(item["Tax Exempt"] !== true && item["Tax Exempt"] !== "TRUE") tax += line * taxRate;
+            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${item.Price}</td><td><input type="number" value="${item.qty}" style="width:60px" onchange="updateQty(${idx},this.value)"></td><td>$${line.toFixed(2)}</td><td onclick="removeItem(${idx})" style="color:red;cursor:pointer">✖</td></tr>`;
         });
-
         document.getElementById('subTotal').innerText = "$" + sub.toFixed(2);
         document.getElementById('taxTotal').innerText = "$" + tax.toFixed(2);
         document.getElementById('grandTotal').innerText = "$" + (sub + tax).toFixed(2);
+        updateReceiptData();
     }
 
-    function updateQty(idx, val) {
-        cart[idx].qty = parseInt(val);
-        updateCartUI();
-    }
+    function updateQty(i, v) { cart[i].qty = parseInt(v); updateCartUI(); }
+    function removeItem(i) { cart.splice(i, 1); updateCartUI(); }
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function hideModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function removeItem(idx) {
-        cart.splice(idx, 1);
-        updateCartUI();
+    async function addNewCustomer() {
+        const name = document.getElementById('newCustName').value, contact = document.getElementById('newCustContact').value;
+        if(!name) return;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "saveNewCust", name: name, contact: contact }) });
+        alert("Customer successfully added!"); hideModal('custModal'); loadData();
     }
 
     async function saveInvoice() {
-        if(cart.length === 0) return alert("Cart is empty");
-        
+        if(cart.length === 0) return alert("Your cart is empty.");
         const invoiceData = {
             action: "saveInvoice",
             invoiceNumber: document.getElementById('invNum').innerText,
@@ -266,32 +301,45 @@
             total: document.getElementById('grandTotal').innerText,
             items: cart
         };
-
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(invoiceData) });
-        alert("Sale for " + invoiceData.customer + " Saved to Excel!");
+        alert("Sale Finalized and Saved to Excel!");
         location.reload();
     }
 
-    function switchTab(tab) {
-        document.getElementById('viewGen').classList.toggle('hidden', tab !== 'Gen');
-        document.getElementById('viewGenTotals').classList.toggle('hidden', tab !== 'Gen');
-        document.getElementById('viewAdm').classList.toggle('hidden', tab !== 'Adm');
+    function updateReceiptData() {
+        document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+        document.getElementById('receiptInvNum').innerText = document.getElementById('invNum').innerText;
+        document.getElementById('receiptCust').innerText = document.getElementById('customerSelect').value;
+        document.getElementById('receiptSub').innerText = document.getElementById('subTotal').innerText;
+        document.getElementById('receiptTax').innerText = document.getElementById('taxTotal').innerText;
+        document.getElementById('receiptTotal').innerText = document.getElementById('grandTotal').innerText;
+        document.getElementById('receiptItems').innerHTML = cart.map(i => `<tr><td>${i["Item Name"]}</td><td>${i.qty}</td><td>$${(i.Price * i.qty).toFixed(2)}</td></tr>`).join('');
     }
 
-    function uploadFile(key, id) {
-        const file = document.getElementById(id).files[0];
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action:'saveSetting', key:key, value:e.target.result}) });
-            alert("Uploaded!"); location.reload();
-        };
-        reader.readAsDataURL(file);
+    function switchTab(t) {
+        document.getElementById('viewGen').style.display = (t === 'Gen') ? 'grid' : 'none';
+        document.getElementById('viewInv').classList.toggle('hidden', t !== 'Inv');
+        document.getElementById('viewCust').classList.toggle('hidden', t !== 'Cust');
+        document.getElementById('viewAdm').classList.toggle('hidden', t !== 'Adm');
+        document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
+        document.getElementById('tab' + t).classList.add('active-tab');
+    }
+
+    function filterInventoryTable() {
+        const q = document.getElementById('fullInvSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#fullInvBody tr');
+        rows.forEach(row => { row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none'; });
+    }
+
+    function uploadFile(k, i) {
+        const f = document.getElementById(i).files[0], r = new FileReader();
+        r.onload = async (e) => { await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify({action:'saveSetting', key:k, value:e.target.result}) }); location.reload(); };
+        if(f) r.readAsDataURL(f);
     }
 
     async function updateTax() {
-        const val = document.getElementById('taxIn').value;
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action:'saveSetting', key:'TaxRate', value:val}) });
-        alert("Tax Updated!"); location.reload();
+        await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify({action:'saveSetting', key:'TaxRate', value:document.getElementById('taxIn').value}) });
+        alert("Tax Rate Updated!"); location.reload();
     }
 </script>
 </body>
