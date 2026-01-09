@@ -9,38 +9,32 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
         
         /* NAVIGATION */
-        .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
+        .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .nav-links { display: flex; height: 100%; }
         .nav-links div { padding: 0 15px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; transition: 0.3s; border-bottom: 3px solid transparent; font-size: 0.9rem; }
         .active-tab { opacity: 1 !important; border-bottom: 3px solid white !important; background: rgba(255,255,255,0.1); }
 
-        /* ROLE TOGGLE */
         .test-controls { background: #ffd700; color: black; padding: 8px 15px; border-radius: 4px; font-size: 11px; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; margin-left: 15px; }
 
-        /* CONTAINERS */
+        /* LAYOUT */
         .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
-        .pos-grid { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
         /* FORM ELEMENTS */
         label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 15px; }
         input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 15px; }
+        .pass-wrapper { position: relative; display: flex; align-items: center; }
+        .toggle-pass { position: absolute; right: 12px; cursor: pointer; font-size: 1.2rem; color: var(--gray); user-select: none; }
         
         /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; border-bottom: 2px solid #f1f5f9; padding: 12px; color: var(--blue); font-size: 0.85rem; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
 
-        /* BUTTONS */
         .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; }
-        .btn-green { background: var(--green); width: 100%; font-size: 1.1rem; padding: 18px; }
-        .btn-red { background: var(--red); color: white; }
         .btn-small { padding: 6px 12px; font-size: 11px; margin: 2px; }
-        
-        .search-results { border: 1px solid #ddd; max-height: 250px; overflow-y: auto; background: white; position: absolute; width: 100%; z-index: 100; border-radius: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-        .search-item:hover { background: #f0f9ff; }
+        .btn-red { background: var(--red); }
     </style>
 </head>
 <body>
@@ -63,183 +57,98 @@
 </div>
 
 <div class="container">
-    <div id="viewGen" class="pos-grid">
-        <div style="position: relative;">
-            <div class="card">
-                <h3>Product Search</h3>
-                <input type="text" id="invSearch" placeholder="Search SKU or Product Name..." onkeyup="searchInventory()">
-                <div id="searchResults" class="search-results"></div>
-                <table>
-                    <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
-                    <tbody id="cartBody"></tbody>
-                </table>
-            </div>
-        </div>
-        <div>
-            <div class="card">
-                <h3>Order Summary</h3>
-                <p>Date: <b>12/12/2025</b></p>
-                <label>Assign Customer:</label>
-                <select id="customerSelect"><option>Walk-in</option></select>
-                <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:1.6rem; font-weight:900; color:var(--blue);">
-                    <span>Total:</span><span id="grandTotal">$0.00</span>
-                </div>
-                <button class="btn btn-green" style="margin-top:20px;" onclick="alert('Sale Finalized!')">Finalize & Print</button>
-            </div>
-        </div>
+    <div id="viewGen" class="card">
+        <h3>New Sale Search</h3>
+        <input type="text" placeholder="Search SKU or Name...">
+        <p style="color: var(--gray); font-size: 0.8rem; margin-top: 10px;">Manager PIN may be required for item removals in Staff view.</p>
     </div>
 
-    <div id="viewInv" class="hidden">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Inventory Management</h2>
-                <button class="btn btn-small" onclick="alert('Open Add Item Modal')">+ Add Item</button>
-            </div>
-            <table>
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead>
-                <tbody id="fullInvBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="viewCust" class="hidden">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Customer Database</h2>
-                <button class="btn btn-small" onclick="alert('Open Add Customer Modal')">+ Add Customer</button>
-            </div>
-            <table>
-                <thead><tr><th>Name</th><th>Company</th><th>Address</th><th>City</th><th>Actions</th></tr></thead>
-                <tbody id="fullCustBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="viewLook" class="hidden">
-        <div class="card">
-            <h2>Invoice History</h2>
-            <input type="text" placeholder="Search Invoice # or Name..." style="margin-bottom:15px;">
-            <table>
-                <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
-                <tbody id="invoiceHistoryBody">
-                    <tr><td>INV-1001</td><td>12/12/2025</td><td>Walk-in</td><td>$0.00</td><td>
-                        <button class="btn btn-small" style="background:var(--gray)">View</button>
-                        <button class="btn btn-small btn-red">Delete</button>
-                    </td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <div id="viewInv" class="hidden"><div class="card"><h2>Inventory List</h2></div></div>
+    <div id="viewCust" class="hidden"><div class="card"><h2>Customer Database</h2></div></div>
+    <div id="viewLook" class="hidden"><div class="card"><h2>Invoice Lookup</h2></div></div>
 
     <div id="viewAdm" class="hidden">
         <div class="card">
-            <h3 style="color:var(--red); margin-top:0;">Store Branding</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div>
-                    <label>Upload Logo</label>
-                    <input type="file" accept="image/*">
-                </div>
-                <div>
-                    <label>Upload Invoice Watermark</label>
-                    <input type="file" accept="image/*">
-                </div>
-            </div>
-            <button class="btn btn-small" style="margin-top:20px;">Apply Branding Changes</button>
-        </div>
-
-        <div class="card">
-            <h3>User & Password Management</h3>
+            <h3 style="margin-top:0;">User Management</h3>
             <table>
-                <thead><tr><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr></thead>
-                <tbody id="userTable">
-                    <tr><td><b>Alessio</b></td><td>********</td><td>Admin</td><td>-</td></tr>
+                <thead>
+                    <tr><th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr>
+                        <td>Alessio</td>
+                        <td>craftyartdesign1</td>
+                        <td class="pass-wrapper">
+                            <input type="password" value="Crafty1Art" id="pass0" readonly style="border:none; background:transparent; padding:0; width:100px;">
+                            <span class="toggle-pass" onclick="togglePassView('pass0')">👁️</span>
+                        </td>
+                        <td>Admin</td>
+                        <td><button class="btn btn-small">Edit</button></td>
+                    </tr>
                 </tbody>
             </table>
-            <div style="display:flex; gap:10px; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
-                <input type="text" id="newUserName" placeholder="New Username">
-                <input type="password" id="newUserPass" placeholder="Set Password">
-                <select id="newUserRole"><option>Staff</option><option>Admin</option></select>
-                <button class="btn btn-small" style="background:var(--blue);">Add User</button>
+
+            <h4 style="margin-bottom:10px; margin-top:30px;">Add New User</h4>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
+                <input type="text" id="newName" placeholder="Display Name">
+                <input type="text" id="newUsername" placeholder="Username">
+                <div class="pass-wrapper">
+                    <input type="password" id="newPass" placeholder="Password">
+                    <span class="toggle-pass" onclick="togglePassView('newPass')">👁️</span>
+                </div>
+                <select id="newRole"><option>Staff</option><option>Admin</option></select>
             </div>
+            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);">+ Create Account</button>
         </div>
 
         <div class="card">
-            <h3>Manager Security Overrides</h3>
-            <label>Staff Permission: Delete items from cart</label>
-            <select><option>Require Manager PIN</option><option selected>Open Access (Testing)</option></select>
+            <h3>Security & Overrides</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <label>Manager Override PIN</label>
+                    <div class="pass-wrapper">
+                        <input type="password" value="1234" id="managerPin">
+                        <span class="toggle-pass" onclick="togglePassView('managerPin')">👁️</span>
+                    </div>
+                </div>
+                <div>
+                    <label>Store Branding (Logo Upload)</label>
+                    <input type="file" accept="image/*">
+                </div>
+            </div>
+            <button class="btn btn-small" style="margin-top:20px;">Save System Settings</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytUgh1lSjvMDMPYUv_OGuDHv0V9Z8haFMla4quAsU9ghf7YhCzrwL-w-7gyO6OTc3P/exec";
-    let inventory = [], customers = [], cart = [], currentView = "Admin";
-
-    window.onload = () => { loadData(); };
-
-    async function loadData() {
-        try {
-            const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
-            inventory = await iRes.json();
-            const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
-            customers = await cRes.json();
-            renderData();
-        } catch(e) { console.error("Sync Error"); }
-    }
-
-    function renderData() {
-        // Inventory Mapping
-        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price || 0).toFixed(2)}</td><td><button class="btn btn-small" style="background:var(--gray)">Edit</button> <button class="btn btn-small btn-red">Del</button></td></tr>`).join('');
-        
-        // Customer Mapping (Using headers from your screenshot: Name, Company, Street Address, City)
-        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td><b>${c.Name || ""}</b></td><td>${c.Company || ""}</td><td>${c["Street Address"] || ""}</td><td>${c.City || ""}</td><td><button class="btn btn-small" style="background:var(--gray)">Edit</button> <button class="btn btn-small btn-red">Del</button></td></tr>`).join('');
-        
-        // Update Sale Dropdown
-        const sel = document.getElementById('customerSelect');
-        sel.innerHTML = '<option>Walk-in</option>';
-        customers.forEach(c => { if(c.Name) sel.innerHTML += `<option>${c.Name}</option>`; });
-    }
-
-    function searchInventory() {
-        const q = document.getElementById('invSearch').value.toLowerCase(), res = document.getElementById('searchResults');
-        res.innerHTML = ""; if(q.length < 2) return;
-        inventory.filter(i => i.SKU.toString().toLowerCase().includes(q) || i["Item Name"].toLowerCase().includes(q)).forEach(item => {
-            const div = document.createElement('div'); div.className = 'search-item';
-            div.innerHTML = `<span><b>${item.SKU}</b> - ${item["Item Name"]}</span> <span>$${parseFloat(item.Price || 0).toFixed(2)}</span>`;
-            div.onclick = () => { cart.push({...item, qty:1}); updateCart(); res.innerHTML = ""; document.getElementById('invSearch').value = ""; };
-            res.appendChild(div);
-        });
-    }
-
-    function updateCart() {
-        const body = document.getElementById('cartBody'); body.innerHTML = "";
-        let total = 0;
-        cart.forEach((item, idx) => {
-            const line = (item.Price || 0) * item.qty; total += line;
-            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${parseFloat(item.Price || 0).toFixed(2)}</td><td>${item.qty}</td><td>$${line.toFixed(2)}</td><td onclick="cart.splice(${idx},1);updateCart();" style="color:var(--red);cursor:pointer;font-weight:bold;">✖</td></tr>`;
-        });
-        document.getElementById('grandTotal').innerText = "$" + total.toFixed(2);
+    function togglePassView(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === 'password' ? 'text' : 'password';
     }
 
     function toggleRole() {
-        currentView = (currentView === "Admin") ? "Staff" : "Admin";
-        document.getElementById('viewLabel').innerText = currentView + " Mode";
-        document.getElementById('roleSwitcher').innerText = currentView === "Admin" ? "Switch to Staff View" : "Switch to Admin View";
-        const isAdmin = currentView === "Admin";
-        document.getElementById('tabCust').classList.toggle('hidden', !isAdmin);
-        document.getElementById('tabAdm').classList.toggle('hidden', !isAdmin);
-        document.getElementById('tabLook').classList.toggle('hidden', !isAdmin);
-        if(!isAdmin) switchTab('Gen');
+        const label = document.getElementById('viewLabel');
+        const switcher = document.getElementById('roleSwitcher');
+        const isAdmin = label.innerText.includes('Admin');
+        
+        label.innerText = isAdmin ? 'Staff Mode' : 'Admin Mode';
+        switcher.innerText = isAdmin ? 'Switch to Admin View' : 'Switch to Staff View';
+        
+        // Tab visibility
+        const restricted = ['tabCust', 'tabLook', 'tabAdm'];
+        restricted.forEach(tab => document.getElementById(tab).classList.toggle('hidden'));
+        
+        if (isAdmin) switchTab('Gen');
     }
 
     function switchTab(t) {
         document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab' + t).classList.add('active-tab');
-        document.getElementById('viewGen').style.display = (t === 'Gen' ? 'grid' : 'none');
-        document.getElementById('viewInv').classList.toggle('hidden', t !== 'Inv');
-        document.getElementById('viewCust').classList.toggle('hidden', t !== 'Cust');
-        document.getElementById('viewLook').classList.toggle('hidden', t !== 'Look');
-        document.getElementById('viewAdm').classList.toggle('hidden', t !== 'Adm');
+        
+        const views = ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'];
+        views.forEach(v => document.getElementById(v).classList.add('hidden'));
+        document.getElementById('view' + t).classList.remove('hidden');
     }
 </script>
 </body>
