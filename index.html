@@ -134,13 +134,15 @@
     };
 
     async function loadData() {
-        const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
-        inventory = await iRes.json();
-        const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
-        customers = await cRes.json();
-        renderCustomerOptions(customers);
-        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td><td>${i.Size || '-'}</td></tr>`).join('');
-        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"] || '-'}</td></tr>`).join('');
+        try {
+            const iRes = await fetch(SCRIPT_URL + "?action=getInventory");
+            inventory = await iRes.json();
+            const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
+            customers = await cRes.json();
+            renderCustomerOptions(customers);
+            document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td><td>${i.Size || '-'}</td></tr>`).join('');
+            document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"] || '-'}</td></tr>`).join('');
+        } catch(e) { console.log("Data Load Error:", e); }
     }
 
     function renderCustomerOptions(list) {
@@ -157,7 +159,6 @@
     async function attemptLogin() {
         const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value;
         if(!u || !p) return alert("Please enter credentials");
-        
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
             const data = await res.json();
