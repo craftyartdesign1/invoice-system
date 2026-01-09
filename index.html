@@ -3,31 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | Management System</title>
+    <title>CRAFTY ART DESIGN | POS System</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
         
-        /* LOGIN SCREEN */
+        /* LOGIN */
         #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* NAVIGATION */
+        /* NAV */
         .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.8; }
-        .nav-links div:hover { opacity: 1; }
         .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
 
-        /* CONTAINERS */
-        .container { max-width: 1000px; margin: 30px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        /* CONTENT */
+        .container { max-width: 1100px; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 0 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none; }
-        .card { border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        
+        /* SEARCH & TABLE */
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; }
+        .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; border-radius: 0 0 6px 6px; }
+        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .search-item:hover { background: #f8fafc; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; border-bottom: 2px solid var(--blue); padding: 10px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
 
-        /* UI ELEMENTS */
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 10px; font-size: 16px; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; }
-        .btn:hover { background: #003652; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; width: 100%; }
+        .btn-green { background: #10b981; }
     </style>
 </head>
 <body>
@@ -38,152 +44,234 @@
     <div class="login-box">
         <input type="text" id="userIn" placeholder="Username">
         <input type="password" id="passIn" placeholder="Password">
-        <button id="loginBtn" class="btn" style="width:100%; margin-top:20px;" onclick="attemptLogin()">Login</button>
-        <p id="statusMsg" style="font-size: 12px; color: #666; margin-top: 10px;"></p>
+        <button class="btn" style="margin-top:20px;" onclick="attemptLogin()">Login</button>
     </div>
 </div>
 
 <div class="navbar">
     <div style="font-weight:bold; font-size:1.2rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">Invoices</div>
-        <div id="admTab" class="hidden" onclick="switchTab('Adm')">Admin Settings</div>
+        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">New Invoice</div>
+        <div id="admTab" class="hidden" onclick="switchTab('Adm')">Admin</div>
     </div>
-    <div id="userDisplay" style="font-size:0.9rem;"></div>
+    <div id="userDisplay"></div>
 </div>
 
-<div class="container">
+<div id="mainApp" class="container">
     <div id="viewGen">
-        <h2>Invoice Management</h2>
         <div class="card">
-            <p>Welcome, <span id="welcomeName">User</span>!</p>
-            <p>Your system is connected. Use the Admin tab to upload your logo and set your tax rate.</p>
+            <h3>Find Items</h3>
+            <input type="text" id="invSearch" placeholder="Search by SKU or Item Name..." onkeyup="searchInventory()">
+            <div id="searchResults" class="search-results"></div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="cartBody"></tbody>
+            </table>
         </div>
     </div>
 
-    <div id="viewAdm" class="hidden">
-        <h2>Admin Dashboard</h2>
+    <div id="viewGenTotals">
         <div class="card">
-            <h3>Company Branding</h3>
-            <p>Upload a .JPG logo for your login screen and invoices.</p>
-            <input type="file" id="logoFile" accept="image/jpeg">
-            <button class="btn" style="margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Save Logo</button>
+            <h3>Invoice Summary</h3>
+            <p>Inv #: <span id="invNum" style="font-weight:bold;">...</span></p>
+            <hr>
+            <div style="display:flex; justify-content:space-between; margin:10px 0;">
+                <span>Subtotal:</span> <span id="subTotal">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:10px 0;">
+                <span>Tax:</span> <span id="taxTotal">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:10px 0; font-size:1.3rem; font-weight:bold; color:var(--blue);">
+                <span>Total:</span> <span id="grandTotal">$0.00</span>
+            </div>
+            <button class="btn btn-green" style="margin-top:20px;" onclick="saveInvoice()">Finalize Sale</button>
         </div>
+    </div>
+
+    <div id="viewAdm" class="hidden" style="grid-column: span 2;">
         <div class="card">
-            <h3>Tax Configuration</h3>
-            <p>Current Rate: <span id="taxDisplay" style="font-weight:bold;">...</span></p>
-            <input type="number" id="taxIn" step="0.0001" placeholder="Decimal format (e.g. 0.08875)">
-            <button class="btn" style="margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
+            <h2>Branding & Settings</h2>
+            <label>Logo (.JPG):</label>
+            <input type="file" id="logoFile" accept="image/jpeg">
+            <button class="btn" style="width:auto; margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Upload Logo</button>
+            <hr style="margin:20px 0;">
+            <label>Current Tax Decimal (e.g. 0.08875):</label>
+            <input type="number" id="taxIn" step="0.0001">
+            <button class="btn" style="width:auto; margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzYoB1K2TF0Ov2sItgK6eG8NFfkTv7915qTuS8hARNZp-k-AJs5HxzDuXwG_GdTWRo/exec";
-
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwu2LgN3QsscYUFFvGi5oNoaqoDTB6q7vEj8lK4V5SFh2iXQlI7BnmPtJd9JhPJYKGm/exec";
+    
     let currentUser = null;
+    let inventory = [];
+    let cart = [];
+    let taxRate = 0;
 
-    // Load initial settings
     window.onload = async () => {
-        try {
-            const res = await fetch(SCRIPT_URL + "?action=getSettings");
-            const settings = await res.json();
-            settings.forEach(item => {
-                if(item.SettingKey === "LoginLogo" && item.SettingValue) {
-                    document.getElementById('loginLogoDisplay').src = item.SettingValue;
-                    document.getElementById('loginLogoDisplay').style.display = 'block';
-                    document.getElementById('loginTitle').style.display = 'none';
-                }
-                if(item.SettingKey === "TaxRate") {
-                    document.getElementById('taxDisplay').innerText = (parseFloat(item.SettingValue) * 100).toFixed(3) + "%";
-                }
-            });
-        } catch(e) { console.log("Settings not yet configured."); }
+        // Load Settings (Logo and Tax)
+        const res = await fetch(SCRIPT_URL + "?action=getSettings");
+        const settings = await res.json();
+        settings.forEach(s => {
+            if(s.SettingKey === "LoginLogo") {
+                document.getElementById('loginLogoDisplay').src = s.SettingValue;
+                document.getElementById('loginLogoDisplay').style.display = 'block';
+                document.getElementById('loginTitle').style.display = 'none';
+            }
+            if(s.SettingKey === "TaxRate") {
+                taxRate = parseFloat(s.SettingValue);
+                document.getElementById('taxIn').value = taxRate;
+            }
+        });
+        
+        // Load Inventory
+        const invRes = await fetch(SCRIPT_URL + "?action=getInventory");
+        inventory = await invRes.json();
+        document.getElementById('invNum').innerText = Math.floor(1000 + Math.random() * 9000);
     };
 
     async function attemptLogin() {
         const u = document.getElementById('userIn').value;
         const p = document.getElementById('passIn').value;
-        const btn = document.getElementById('loginBtn');
-        const msg = document.getElementById('statusMsg');
-
-        if(!u || !p) return alert("Please enter credentials");
-
-        btn.innerText = "Connecting to Google...";
-        btn.disabled = true;
-        msg.innerText = "Checking Excel 'Admin' tab...";
-
-        try {
-            const res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Temporary check for handshake
-                body: JSON.stringify({ action: 'login', username: u, password: p })
-            });
-            
-            // Note: Since we need the JSON data back, we actually need CORS. 
-            // Re-attempting with standard fetch to get real data.
-            const realRes = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'login', username: u, password: p })
-            });
-            const data = await realRes.json();
-
-            if(data.success) {
-                currentUser = data;
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('userDisplay').innerText = "Logged in as: " + data.displayName;
-                document.getElementById('welcomeName').innerText = data.displayName;
-                if(data.role === "Admin") document.getElementById('admTab').classList.remove('hidden');
-            } else {
-                alert("Login Failed. Check Column A and B in your 'Admin' sheet.");
-                resetLogin();
-            }
-        } catch(e) {
-            alert("Handshake Error: Ensure your Apps Script is deployed as 'Anyone'.");
-            console.error(e);
-            resetLogin();
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'login', username: u, password: p })
+        });
+        const data = await res.json();
+        if(data.success) {
+            currentUser = data;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('userDisplay').innerText = data.displayName;
+            if(data.role === "Admin") document.getElementById('admTab').classList.remove('hidden');
+        } else {
+            alert("Login Failed");
         }
     }
 
-    function resetLogin() {
-        const btn = document.getElementById('loginBtn');
-        btn.innerText = "Login";
-        btn.disabled = false;
-        document.getElementById('statusMsg').innerText = "";
+    function searchInventory() {
+        const query = document.getElementById('invSearch').value.toLowerCase();
+        const results = document.getElementById('searchResults');
+        results.innerHTML = "";
+        if(query.length < 2) return;
+
+        inventory.filter(i => 
+            i.SKU.toString().toLowerCase().includes(query) || 
+            i["Item Name"].toLowerCase().includes(query)
+        ).forEach(item => {
+            const div = document.createElement('div');
+            div.className = "search-item";
+            div.innerHTML = `<strong>${item.SKU}</strong> - ${item["Item Name"]} ($${item.Price})`;
+            div.onclick = () => {
+                addToCart(item);
+                results.innerHTML = "";
+                document.getElementById('invSearch').value = "";
+            };
+            results.appendChild(div);
+        });
+    }
+
+    function addToCart(item) {
+        const existing = cart.find(c => c.SKU === item.SKU);
+        if(existing) {
+            existing.qty++;
+        } else {
+            cart.push({ ...item, qty: 1 });
+        }
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const body = document.getElementById('cartBody');
+        body.innerHTML = "";
+        let sub = 0;
+        let tax = 0;
+
+        cart.forEach((item, index) => {
+            const lineTotal = item.Price * item.qty;
+            sub += lineTotal;
+            // Check Column E "Tax Exempt". If NOT true, add tax.
+            if(item["Tax Exempt"] !== true && item["Tax Exempt"] !== "TRUE") {
+                tax += lineTotal * taxRate;
+            }
+
+            body.innerHTML += `
+                <tr>
+                    <td>${item["Item Name"]}</td>
+                    <td>$${item.Price}</td>
+                    <td><input type="number" value="${item.qty}" style="width:60px" onchange="updateQty(${index}, this.value)"></td>
+                    <td>$${lineTotal.toFixed(2)}</td>
+                    <td onclick="removeItem(${index})" style="color:red; cursor:pointer;">✖</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('subTotal').innerText = "$" + sub.toFixed(2);
+        document.getElementById('taxTotal').innerText = "$" + tax.toFixed(2);
+        document.getElementById('grandTotal').innerText = "$" + (sub + tax).toFixed(2);
+    }
+
+    function updateQty(idx, val) {
+        cart[idx].qty = parseInt(val);
+        updateCartUI();
+    }
+
+    function removeItem(idx) {
+        cart.splice(idx, 1);
+        updateCartUI();
+    }
+
+    async function saveInvoice() {
+        if(cart.length === 0) return alert("Cart is empty");
+        
+        const invoiceData = {
+            action: "saveInvoice",
+            invoiceNumber: document.getElementById('invNum').innerText,
+            date: new Date().toLocaleDateString(),
+            customer: "Walk-in",
+            employee: currentUser.displayName,
+            subtotal: document.getElementById('subTotal').innerText,
+            tax: document.getElementById('taxTotal').innerText,
+            total: document.getElementById('grandTotal').innerText,
+            items: cart
+        };
+
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(invoiceData) });
+        alert("Sale Saved to Excel!");
+        location.reload();
     }
 
     function switchTab(tab) {
-        document.getElementById('viewGen').classList.add('hidden');
-        document.getElementById('viewAdm').classList.add('hidden');
-        document.getElementById('tabGen').classList.remove('active-tab');
-        document.getElementById('admTab').classList.remove('active-tab');
-        document.getElementById('view' + tab).classList.remove('hidden');
-        document.getElementById(tab === 'Gen' ? 'tabGen' : 'admTab').classList.add('active-tab');
+        document.getElementById('viewGen').classList.toggle('hidden', tab !== 'Gen');
+        document.getElementById('viewGenTotals').classList.toggle('hidden', tab !== 'Gen');
+        document.getElementById('viewAdm').classList.toggle('hidden', tab !== 'Adm');
     }
 
-    function uploadFile(key, inputId) {
-        const file = document.getElementById(inputId).files[0];
-        if(!file) return alert("Select a JPG");
+    // Admin Uploads
+    function uploadFile(key, id) {
+        const file = document.getElementById(id).files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'saveSetting', key: key, value: e.target.result })
-            });
-            alert("Logo saved! Refreshing...");
-            location.reload();
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action:'saveSetting', key:key, value:e.target.result}) });
+            alert("Uploaded!"); location.reload();
         };
         reader.readAsDataURL(file);
     }
 
     async function updateTax() {
         const val = document.getElementById('taxIn').value;
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'saveSetting', key: 'TaxRate', value: val })
-        });
-        alert("Tax Rate updated!");
-        location.reload();
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action:'saveSetting', key:'TaxRate', value:val}) });
+        alert("Tax Updated!"); location.reload();
     }
 </script>
 </body>
