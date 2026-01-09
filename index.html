@@ -7,34 +7,22 @@
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        
-        /* LOGIN */
         #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        /* NAV */
         .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.7; transition: 0.3s; }
         .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
-
-        /* LAYOUT */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
         .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none; }
-        
-        /* INPUTS */
         input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 15px; }
         .search-results { border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; position: absolute; width: calc(100% - 40px); z-index: 10; }
         .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
         .search-item:hover { background: #f8fafc; }
-        
-        /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; border-bottom: 2px solid var(--blue); padding: 12px; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-
-        /* BUTTONS */
         .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; width: 100%; }
         .btn-green { background: var(--green); }
         .btn-small { padding: 8px 12px; width: auto; font-size: 11px; margin-top: 10px; border-radius: 4px; }
@@ -44,7 +32,7 @@
 <body>
 
 <div id="loginOverlay">
-    <h1 id="loginTitle">CRAFTY ART DESIGN</h1>
+    <h1>CRAFTY ART DESIGN</h1>
     <div class="login-box">
         <input type="text" id="userIn" placeholder="Username">
         <input type="password" id="passIn" placeholder="Password">
@@ -80,14 +68,10 @@
             <div class="card">
                 <h3>Summary</h3>
                 <p>Invoice #: <span id="invNum" style="font-weight:bold;">...</span></p>
-                
-                <label>Search Customer/Company:</label>
+                <label>Search Customer:</label>
                 <input type="text" id="custSearch" placeholder="Search name..." onkeyup="filterCustomers()">
-                <select id="customerSelect" size="4" style="height: 100px; margin-top: 5px;">
-                    <option value="Walk-in">-- Walk-in --</option>
-                </select>
+                <select id="customerSelect" size="4" style="height: 100px; margin-top: 5px;"><option value="Walk-in">-- Walk-in --</option></select>
                 <button class="btn btn-small" onclick="showModal()">+ Quick Add Customer</button>
-                
                 <hr style="margin:20px 0;">
                 <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
                     <span style="font-size: 1.2rem; font-weight: bold; color: var(--blue);">Grand Total:</span>
@@ -100,7 +84,7 @@
 
     <div id="viewInv" class="hidden">
         <div class="card">
-            <h2>Live Inventory</h2>
+            <h2>Inventory List</h2>
             <input type="text" id="fullInvSearch" placeholder="Filter inventory..." onkeyup="filterInventoryTable()">
             <table id="fullInvTable">
                 <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th></tr></thead>
@@ -110,19 +94,13 @@
     </div>
 
     <div id="viewCust" class="hidden">
-        <div class="card">
-            <h2>Customer History</h2>
-            <table id="fullCustTable">
-                <thead><tr><th>Name / Company</th><th>Contact Info</th></tr></thead>
-                <tbody id="fullCustBody"></tbody>
-            </table>
-        </div>
+        <div class="card"><h2>Customers</h2><table id="fullCustTable"><thead><tr><th>Name</th><th>Contact</th></tr></thead><tbody id="fullCustBody"></tbody></table></div>
     </div>
 
     <div id="viewAdm" class="hidden">
         <div class="card">
-            <h2>System Settings</h2>
-            <label>Tax Rate (Decimal format, e.g. 0.08875):</label>
+            <h2>Settings</h2>
+            <label>Tax Rate (Decimal):</label>
             <input type="number" id="taxIn" step="0.0001">
             <button class="btn btn-small" onclick="updateTax()">Update Tax</button>
         </div>
@@ -142,20 +120,17 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycb SaiCrg4YTrT0NrreA2mKbi23KPELkDqyqouK5XFeiW1236hXPJ9pJ0KcmKyvLPnl_/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbSaiCrg4YTrT0NrreA2mKbi23KPELkDqyqouK5XFeiW1236hXPJ9pJ0KcmKyvLPnl_/exec";
     let currentUser = null, inventory = [], customers = [], taxRate = 0, cart = [];
 
     window.onload = async () => {
-        const res = await fetch(SCRIPT_URL + "?action=getSettings");
-        const settings = await res.json();
-        settings.forEach(s => {
-            if(s.SettingKey === "TaxRate") {
-                taxRate = parseFloat(s.SettingValue);
-                document.getElementById('taxIn').value = taxRate;
-            }
-        });
-        loadData();
-        document.getElementById('invNum').innerText = Math.floor(10000 + Math.random() * 90000);
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=getSettings");
+            const settings = await res.json();
+            settings.forEach(s => { if(s.SettingKey === "TaxRate") { taxRate = parseFloat(s.SettingValue); document.getElementById('taxIn').value = taxRate; } });
+            loadData();
+            document.getElementById('invNum').innerText = Math.floor(10000 + Math.random() * 90000);
+        } catch(e) { console.log("Connection Error:", e); }
     };
 
     async function loadData() {
@@ -163,7 +138,6 @@
         inventory = await iRes.json();
         const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
         customers = await cRes.json();
-        
         renderCustomerOptions(customers);
         document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price).toFixed(2)}</td><td>${i.Size || '-'}</td></tr>`).join('');
         document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td>${c["Customer Name"]}</td><td>${c["Contact Info"] || '-'}</td></tr>`).join('');
@@ -182,18 +156,22 @@
 
     async function attemptLogin() {
         const u = document.getElementById('userIn').value, p = document.getElementById('passIn').value;
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
-        const data = await res.json();
-        if(data.success) {
-            currentUser = data;
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('userDisplay').innerText = "Active: " + data.displayName;
-            document.getElementById('tabInv').classList.remove('hidden');
-            if(data.role === "Admin") {
-                document.getElementById('tabCust').classList.remove('hidden');
-                document.getElementById('tabAdm').classList.remove('hidden');
-            }
-        } else { alert("Login Error"); }
+        if(!u || !p) return alert("Please enter credentials");
+        
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: u, password: p }) });
+            const data = await res.json();
+            if(data.success) {
+                currentUser = data;
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('userDisplay').innerText = "Logged in as: " + data.displayName;
+                document.getElementById('tabInv').classList.remove('hidden');
+                if(data.role === "Admin") {
+                    document.getElementById('tabCust').classList.remove('hidden');
+                    document.getElementById('tabAdm').classList.remove('hidden');
+                }
+            } else { alert("Login failed. Check your spreadsheet."); }
+        } catch(e) { alert("Could not connect to Google Sheets. Check your Script URL."); }
     }
 
     function searchInventory() {
@@ -217,8 +195,7 @@
         const body = document.getElementById('cartBody'); body.innerHTML = "";
         let total = 0;
         cart.forEach((item, idx) => {
-            const line = item.Price * item.qty;
-            total += line;
+            const line = item.Price * item.qty; total += line;
             body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${item.Price}</td><td><input type="number" value="${item.qty}" style="width:60px" onchange="updateQty(${idx},this.value)"></td><td>$${line.toFixed(2)}</td><td onclick="removeItem(${idx})" style="color:red;cursor:pointer">✖</td></tr>`;
         });
         if(taxRate > 0) total += (total * taxRate);
@@ -241,7 +218,7 @@
         if(cart.length === 0) return alert("Cart is empty");
         const inv = { action: "saveInvoice", invoiceNumber: document.getElementById('invNum').innerText, date: new Date().toLocaleDateString(), customer: document.getElementById('customerSelect').value, employee: currentUser.displayName, total: document.getElementById('grandTotal').innerText, items: cart };
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(inv) });
-        alert("Sale Finalized!"); location.reload();
+        alert("Invoice Saved!"); location.reload();
     }
 
     function switchTab(t) {
