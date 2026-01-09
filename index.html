@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | POS SYSTEM</title>
+    <title>CRAFTY ART DESIGN | PROFESSIONAL POS</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
@@ -34,7 +34,7 @@
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
 
         /* BUTTONS */
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; }
         .btn-green { background: var(--green); width: 100%; font-size: 1.1rem; padding: 18px; }
         .btn-red { background: var(--red); }
         .btn-small { padding: 6px 12px; font-size: 11px; }
@@ -48,7 +48,7 @@
 <body>
 
 <div class="navbar">
-    <div style="font-weight:900; font-size: 1.3rem; letter-spacing: -0.5px;">CRAFTY ART DESIGN</div>
+    <div style="font-weight:900; font-size: 1.3rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
         <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
         <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
@@ -81,21 +81,24 @@
             <div class="card">
                 <h3>Order Summary</h3>
                 <p>Date: <b>12/12/2025</b></p>
-                <label>Customer:</label>
+                <label>Select Customer:</label>
                 <select id="customerSelect"><option>Walk-in</option></select>
                 <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:1.6rem; font-weight:900; color:var(--blue);">
                     <span>Total:</span><span id="grandTotal">$0.00</span>
                 </div>
-                <button class="btn btn-green" style="margin-top:20px;" onclick="alert('Invoice Saved!')">Finalize Sale</button>
+                <button class="btn btn-green" style="margin-top:20px;" onclick="alert('Invoice Finalized!')">Finalize & Print</button>
             </div>
         </div>
     </div>
 
     <div id="viewInv" class="hidden">
         <div class="card">
-            <h2>Inventory List</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Live Inventory</h2>
+                <button class="btn btn-small" style="background:var(--blue)">+ Add New Item</button>
+            </div>
             <table id="fullInvTable">
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead>
+                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Action</th></tr></thead>
                 <tbody id="fullInvBody"></tbody>
             </table>
         </div>
@@ -103,9 +106,12 @@
 
     <div id="viewCust" class="hidden">
         <div class="card">
-            <h2>Customer Database</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Customer Database</h2>
+                <button class="btn btn-small" style="background:var(--blue)">+ Add Customer</button>
+            </div>
             <table id="fullCustTable">
-                <thead><tr><th>Name</th><th>Company</th><th>Street Address</th><th>City</th></tr></thead>
+                <thead><tr><th>Name</th><th>Company</th><th>Address</th><th>City</th><th>Action</th></tr></thead>
                 <tbody id="fullCustBody"></tbody>
             </table>
         </div>
@@ -114,11 +120,11 @@
     <div id="viewLook" class="hidden">
         <div class="card">
             <h2>Invoice History</h2>
-            <input type="text" placeholder="Search by Invoice # or Customer..." style="margin-bottom:15px;">
+            <input type="text" placeholder="Search by Invoice # or Customer Name..." style="margin-bottom:15px;">
             <table>
                 <thead><tr><th>Inv #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
                 <tbody>
-                    <tr><td>INV-88214</td><td>12/12/2025</td><td>Walk-in</td><td>$45.00</td><td><button class="btn btn-small">View</button></td></tr>
+                    <tr><td>INV-1002</td><td>12/12/2025</td><td>Walk-in</td><td>$0.00</td><td><button class="btn btn-small" style="background:var(--gray)">View</button> <button class="btn btn-small btn-red">Delete</button></td></tr>
                 </tbody>
             </table>
         </div>
@@ -126,30 +132,48 @@
 
     <div id="viewAdm" class="hidden">
         <div class="card">
-            <h3 style="color:var(--red);">Branding & Logos</h3>
-            <label>Store Logo URL</label>
-            <input type="text" id="logoUrlIn" placeholder="https://link-to-your-logo.png">
-            <label>Invoice Background URL</label>
-            <input type="text" id="bgUrlIn" placeholder="https://link-to-your-bg.png">
-            <button class="btn btn-small" style="margin-top:10px;">Save Assets</button>
+            <h3 style="color:var(--red); margin-top:0;">Branding & Identity</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <label>Store Logo (File Upload)</label>
+                    <input type="file" accept="image/*">
+                </div>
+                <div>
+                    <label>Invoice Background (File Upload)</label>
+                    <input type="file" accept="image/*">
+                </div>
+            </div>
+            <button class="btn btn-small" style="margin-top:20px;">Save Branding Assets</button>
         </div>
 
         <div class="card">
-            <h3>User Management</h3>
+            <h3>User & Staff Management</h3>
             <table>
-                <thead><tr><th>Username</th><th>Role</th><th>Control</th></tr></thead>
-                <tbody>
-                    <tr><td><b>Alessio</b></td><td>Admin</td><td>-</td></tr>
-                    <tr><td>Staff_User</td><td>Staff</td><td><button class="btn btn-red btn-small">Remove</button></td></tr>
+                <thead><tr><th>Username</th><th>Password</th><th>Role</th><th>Action</th></tr></thead>
+                <tbody id="userTable">
+                    <tr><td><b>Alessio</b></td><td>********</td><td>Admin</td><td>-</td></tr>
                 </tbody>
             </table>
-            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);">+ Add User</button>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <input type="text" id="newUserName" placeholder="Username" style="flex:1;">
+                <input type="password" id="newUserPass" placeholder="Password" style="flex:1;">
+                <select id="newUserRole" style="flex:1;"><option>Staff</option><option>Admin</option></select>
+                <button class="btn btn-small" style="background:var(--blue);">Add User</button>
+            </div>
         </div>
 
         <div class="card">
-            <h3>Manager Overrides</h3>
-            <label>Deletion Policy</label>
-            <select><option>Require Manager PIN</option><option selected>Allow All (Testing)</option></select>
+            <h3>System Overrides</h3>
+            <div style="display:flex; gap:20px;">
+                <div style="flex:1;">
+                    <label>Require PIN for Deletions?</label>
+                    <select><option>Yes</option><option selected>No (Testing)</option></select>
+                </div>
+                <div style="flex:1;">
+                    <label>Currency Symbol</label>
+                    <input type="text" value="$" readonly>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -167,14 +191,14 @@
             const cRes = await fetch(SCRIPT_URL + "?action=getCustomers");
             customers = await cRes.json();
             renderData();
-        } catch(e) { console.error("Data Sync Failed"); }
+        } catch(e) { console.error("Sync Failed"); }
     }
 
     function renderData() {
         // Inventory
-        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price || 0).toFixed(2)}</td></tr>`).join('');
-        // Customers (Name, Company, Street Address, City)
-        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td><b>${c.Name || ""}</b></td><td>${c.Company || ""}</td><td>${c["Street Address"] || ""}</td><td>${c.City || ""}</td></tr>`).join('');
+        document.getElementById('fullInvBody').innerHTML = inventory.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price || 0).toFixed(2)}</td><td><button class="btn btn-small" style="background:var(--gray)">Edit</button></td></tr>`).join('');
+        // Customers
+        document.getElementById('fullCustBody').innerHTML = customers.map(c => `<tr><td><b>${c.Name || ""}</b></td><td>${c.Company || ""}</td><td>${c["Street Address"] || ""}</td><td>${c.City || ""}</td><td><button class="btn btn-small" style="background:var(--gray)">Edit</button> <button class="btn btn-small btn-red">Del</button></td></tr>`).join('');
         // Dropdown
         const sel = document.getElementById('customerSelect');
         sel.innerHTML = '<option>Walk-in</option>';
@@ -186,7 +210,7 @@
         res.innerHTML = ""; if(q.length < 2) return;
         inventory.filter(i => i.SKU.toString().toLowerCase().includes(q) || i["Item Name"].toLowerCase().includes(q)).forEach(item => {
             const div = document.createElement('div'); div.className = 'search-item';
-            div.innerHTML = `<span>${item["Item Name"]}</span> <span>$${parseFloat(item.Price || 0).toFixed(2)}</span>`;
+            div.innerHTML = `<span><b>${item.SKU}</b> - ${item["Item Name"]}</span> <span>$${parseFloat(item.Price || 0).toFixed(2)}</span>`;
             div.onclick = () => { cart.push({...item, qty:1}); updateCart(); res.innerHTML = ""; document.getElementById('invSearch').value = ""; };
             res.appendChild(div);
         });
@@ -197,7 +221,7 @@
         let total = 0;
         cart.forEach((item, idx) => {
             const line = (item.Price || 0) * item.qty; total += line;
-            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${parseFloat(item.Price || 0).toFixed(2)}</td><td>${item.qty}</td><td>$${line.toFixed(2)}</td><td onclick="cart.splice(${idx},1);updateCart();" style="color:red;cursor:pointer;">✖</td></tr>`;
+            body.innerHTML += `<tr><td>${item["Item Name"]}</td><td>$${parseFloat(item.Price || 0).toFixed(2)}</td><td>${item.qty}</td><td>$${line.toFixed(2)}</td><td onclick="cart.splice(${idx},1);updateCart();" style="color:var(--red);cursor:pointer;font-weight:bold;">✖</td></tr>`;
         });
         document.getElementById('grandTotal').innerText = "$" + total.toFixed(2);
     }
@@ -206,7 +230,6 @@
         currentView = (currentView === "Admin") ? "Staff" : "Admin";
         document.getElementById('viewLabel').innerText = currentView + " Mode";
         document.getElementById('roleSwitcher').innerText = currentView === "Admin" ? "Switch to Staff View" : "Switch to Admin View";
-        
         const isAdmin = currentView === "Admin";
         document.getElementById('tabCust').classList.toggle('hidden', !isAdmin);
         document.getElementById('tabAdm').classList.toggle('hidden', !isAdmin);
