@@ -1,191 +1,146 @@
-yes code 
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRAFTY ART DESIGN | Management System</title>
+    <title>CRAFTY ART DESIGN | MASTER POS</title>
     <style>
-        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
         
-        /* LOGIN SCREEN */
-        #loginOverlay { position: fixed; inset: 0; background: var(--white); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .login-box { width: 320px; padding: 40px; border: 1px solid #ddd; border-radius: 12px; text-align: center; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-links { display: flex; height: 100%; }
+        .nav-links div { padding: 0 15px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; transition: 0.3s; border-bottom: 3px solid transparent; font-size: 0.9rem; }
+        .active-tab { opacity: 1 !important; border-bottom: 3px solid white !important; background: rgba(255,255,255,0.1); }
+        .test-controls { background: #ffd700; color: black; padding: 8px 15px; border-radius: 4px; font-size: 11px; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; margin-left: 15px; }
+
+        .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .hidden { display: none !important; }
         
-        /* NAVIGATION */
-        .navbar { background: var(--blue); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-links div { cursor: pointer; margin-right: 20px; display: inline-block; font-weight: bold; opacity: 0.8; }
-        .nav-links div:hover { opacity: 1; }
-        .active-tab { border-bottom: 2px solid white; opacity: 1 !important; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 15px; }
+        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 15px; }
+        
+        .pass-wrapper { position: relative; display: flex; align-items: center; }
+        .toggle-pass { position: absolute; right: 12px; cursor: pointer; font-size: 1.2rem; color: var(--gray); user-select: none; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; border-bottom: 2px solid #f1f5f9; padding: 12px; color: var(--blue); font-size: 0.85rem; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
 
-        /* CONTAINERS */
-        .container { max-width: 1000px; margin: 30px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .hidden { display: none; }
-        .card { border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-
-        /* UI ELEMENTS */
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 10px; font-size: 16px; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.3s; }
-        .btn:hover { background: #003652; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; }
+        .btn-small { padding: 6px 12px; font-size: 11px; margin: 2px; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <img id="loginLogoDisplay" src="" style="max-width:200px; margin-bottom: 20px; display:none;">
-    <h1 id="loginTitle">CRAFTY ART DESIGN</h1>
-    <div class="login-box">
-        <input type="text" id="userIn" placeholder="Username">
-        <input type="password" id="passIn" placeholder="Password">
-        <button id="loginBtn" class="btn" style="width:100%; margin-top:20px;" onclick="attemptLogin()">Login</button>
-        <p id="statusMsg" style="font-size: 12px; color: #666; margin-top: 10px;"></p>
-    </div>
-</div>
-
 <div class="navbar">
-    <div style="font-weight:bold; font-size:1.2rem;">CRAFTY ART DESIGN</div>
+    <div style="font-weight:900; font-size: 1.3rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">Invoices</div>
-        <div id="admTab" class="hidden" onclick="switchTab('Adm')">Admin Settings</div>
+        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
+        <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
+        <div id="tabCust" onclick="switchTab('Cust')">CUSTOMERS</div>
+        <div id="tabLook" onclick="switchTab('Look')">INVOICE LOOKUP</div>
+        <div id="tabAdm" onclick="switchTab('Adm')">ADMIN SUITE</div>
     </div>
-    <div id="userDisplay" style="font-size:0.9rem;"></div>
+    <div style="display:flex; align-items:center;">
+        <div style="font-size: 11px; text-align: right; line-height: 1.2;">
+            <b>Alessio</b><br><span id="viewLabel">Admin Mode</span> | 12/12/2025
+        </div>
+        <button id="roleSwitcher" class="test-controls" onclick="toggleRole()">Switch to Staff View</button>
+    </div>
 </div>
 
 <div class="container">
-    <div id="viewGen">
-        <h2>Invoice Management</h2>
-        <div class="card">
-            <p>Welcome, <span id="welcomeName">User</span>!</p>
-            <p>Your system is connected. Use the Admin tab to upload your logo and set your tax rate.</p>
-        </div>
+    <div id="viewGen" class="card"><h3>New Sale Section</h3><p>Syncing products...</p></div>
+    
+    <div id="viewInv" class="hidden">
+        <div class="card"><h2>Inventory Management</h2><table id="fullInvTable"><thead><tr><th>SKU</th><th>Item</th><th>Price</th></tr></thead><tbody id="fullInvBody"></tbody></table></div>
+    </div>
+
+    <div id="viewCust" class="hidden">
+        <div class="card"><h2>Customer Database</h2><table id="fullCustTable"><thead><tr><th>Name</th><th>Company</th><th>City</th></tr></thead><tbody id="fullCustBody"></tbody></table></div>
+    </div>
+
+    <div id="viewLook" class="hidden">
+        <div class="card"><h2>Invoice History</h2><p>Search previous sales...</p></div>
     </div>
 
     <div id="viewAdm" class="hidden">
-        <h2>Admin Dashboard</h2>
         <div class="card">
-            <h3>Company Branding</h3>
-            <p>Upload a .JPG logo for your login screen and invoices.</p>
-            <input type="file" id="logoFile" accept="image/jpeg">
-            <button class="btn" style="margin-top:10px;" onclick="uploadFile('LoginLogo', 'logoFile')">Save Logo</button>
+            <h3 style="color:var(--red); margin-top:0;">Store Branding</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div><label>Store Logo (Upload)</label><input type="file" accept="image/*"></div>
+                <div><label>Invoice Background (Upload)</label><input type="file" accept="image/*"></div>
+            </div>
+            <button class="btn btn-small" style="margin-top:20px;">Save Branding Assets</button>
         </div>
+
         <div class="card">
-            <h3>Tax Configuration</h3>
-            <p>Current Rate: <span id="taxDisplay" style="font-weight:bold;">...</span></p>
-            <input type="number" id="taxIn" step="0.0001" placeholder="Decimal format (e.g. 0.08875)">
-            <button class="btn" style="margin-top:10px;" onclick="updateTax()">Update Tax Rate</button>
+            <h3>User Management</h3>
+            <table>
+                <thead><tr><th>Name</th><th>Username</th><th>Password</th><th>PIN</th><th>Role</th></tr></thead>
+                <tbody>
+                    <tr><td>Alessio</td><td>admin_main</td><td>*****</td><td>8888</td><td>Admin</td></tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-top:25px;">Add New User</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <input type="text" placeholder="Full Name">
+                <input type="text" placeholder="Username">
+                <select id="newRole" onchange="togglePinInput()"><option>Staff</option><option>Admin</option></select>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <div class="pass-wrapper">
+                    <input type="password" id="np" placeholder="Password">
+                    <span class="toggle-pass" onclick="togglePass('np')">👁️</span>
+                </div>
+                <div class="pass-wrapper" id="pinInputWrap" style="display:none;">
+                    <input type="password" id="npin" placeholder="Override PIN">
+                    <span class="toggle-pass" onclick="togglePass('npin')">👁️</span>
+                </div>
+            </div>
+            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);">+ Add User</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzYoB1K2TF0Ov2sItgK6eG8NFfkTv7915qTuS8hARNZp-k-AJs5HxzDuXwG_GdTWRo/exec";
-
-    let currentUser = null;
-
-    // Load initial settings
-    window.onload = async () => {
-        try {
-            const res = await fetch(SCRIPT_URL + "?action=getSettings");
-            const settings = await res.json();
-            settings.forEach(item => {
-                if(item.SettingKey === "LoginLogo" && item.SettingValue) {
-                    document.getElementById('loginLogoDisplay').src = item.SettingValue;
-                    document.getElementById('loginLogoDisplay').style.display = 'block';
-                    document.getElementById('loginTitle').style.display = 'none';
-                }
-                if(item.SettingKey === "TaxRate") {
-                    document.getElementById('taxDisplay').innerText = (parseFloat(item.SettingValue) * 100).toFixed(3) + "%";
-                }
-            });
-        } catch(e) { console.log("Settings not yet configured."); }
-    };
-
-    async function attemptLogin() {
-        const u = document.getElementById('userIn').value;
-        const p = document.getElementById('passIn').value;
-        const btn = document.getElementById('loginBtn');
-        const msg = document.getElementById('statusMsg');
-
-        if(!u || !p) return alert("Please enter credentials");
-
-        btn.innerText = "Connecting to Google...";
-        btn.disabled = true;
-        msg.innerText = "Checking Excel 'Admin' tab...";
-
-        try {
-            const res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Temporary check for handshake
-                body: JSON.stringify({ action: 'login', username: u, password: p })
-            });
-            
-            // Note: Since we need the JSON data back, we actually need CORS. 
-            // Re-attempting with standard fetch to get real data.
-            const realRes = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'login', username: u, password: p })
-            });
-            const data = await realRes.json();
-
-            if(data.success) {
-                currentUser = data;
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('userDisplay').innerText = "Logged in as: " + data.displayName;
-                document.getElementById('welcomeName').innerText = data.displayName;
-                if(data.role === "Admin") document.getElementById('admTab').classList.remove('hidden');
-            } else {
-                alert("Login Failed. Check Column A and B in your 'Admin' sheet.");
-                resetLogin();
-            }
-        } catch(e) {
-            alert("Handshake Error: Ensure your Apps Script is deployed as 'Anyone'.");
-            console.error(e);
-            resetLogin();
-        }
+    function togglePass(id) {
+        const x = document.getElementById(id);
+        x.type = x.type === "password" ? "text" : "password";
     }
 
-    function resetLogin() {
-        const btn = document.getElementById('loginBtn');
-        btn.innerText = "Login";
-        btn.disabled = false;
-        document.getElementById('statusMsg').innerText = "";
+    function togglePinInput() {
+        const role = document.getElementById('newRole').value;
+        document.getElementById('pinInputWrap').style.display = (role === 'Admin') ? 'block' : 'none';
     }
 
-    function switchTab(tab) {
-        document.getElementById('viewGen').classList.add('hidden');
-        document.getElementById('viewAdm').classList.add('hidden');
-        document.getElementById('tabGen').classList.remove('active-tab');
-        document.getElementById('admTab').classList.remove('active-tab');
-        document.getElementById('view' + tab).classList.remove('hidden');
-        document.getElementById(tab === 'Gen' ? 'tabGen' : 'admTab').classList.add('active-tab');
-    }
-
-    function uploadFile(key, inputId) {
-        const file = document.getElementById(inputId).files[0];
-        if(!file) return alert("Select a JPG");
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'saveSetting', key: key, value: e.target.result })
-            });
-            alert("Logo saved! Refreshing...");
-            location.reload();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async function updateTax() {
-        const val = document.getElementById('taxIn').value;
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'saveSetting', key: 'TaxRate', value: val })
+    function switchTab(t) {
+        const tabs = ['Gen', 'Inv', 'Cust', 'Look', 'Adm'];
+        tabs.forEach(tab => {
+            document.getElementById('tab' + tab).classList.remove('active-tab');
+            document.getElementById('view' + tab).classList.add('hidden');
         });
-        alert("Tax Rate updated!");
-        location.reload();
+        document.getElementById('tab' + t).classList.add('active-tab');
+        document.getElementById('view' + t).classList.remove('hidden');
+    }
+
+    function toggleRole() {
+        const label = document.getElementById('viewLabel');
+        const switcher = document.getElementById('roleSwitcher');
+        const isAdmin = label.innerText.includes('Admin');
+        
+        label.innerText = isAdmin ? 'Staff Mode' : 'Admin Mode';
+        switcher.innerText = isAdmin ? 'Switch to Admin View' : 'Switch to Staff View';
+        
+        ['tabCust', 'tabLook', 'tabAdm'].forEach(id => {
+            document.getElementById(id).style.display = isAdmin ? 'none' : 'flex';
+        });
+
+        if(isAdmin) switchTab('Gen');
     }
 </script>
 </body>
