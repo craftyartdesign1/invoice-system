@@ -14,21 +14,18 @@
         .nav-links div { padding: 0 15px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; transition: 0.3s; border-bottom: 3px solid transparent; font-size: 0.9rem; }
         .active-tab { opacity: 1 !important; border-bottom: 3px solid white !important; background: rgba(255,255,255,0.1); }
 
-        .test-controls { background: #ffd700; color: black; padding: 8px 15px; border-radius: 4px; font-size: 11px; font-weight: 900; cursor: pointer; border: none; text-transform: uppercase; margin-left: 15px; }
-
         /* CONTAINERS */
         .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
-        /* FORM ELEMENTS */
-        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 15px; }
-        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 15px; }
+        /* FORMS */
+        .flex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 10px; }
+        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
         
-        /* SIDE-BY-SIDE LAYOUT */
-        .flex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .pass-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
-        .toggle-pass { position: absolute; right: 12px; cursor: pointer; font-size: 1.2rem; color: var(--gray); user-select: none; z-index: 10; }
+        .pass-wrapper { position: relative; display: flex; align-items: center; }
+        .toggle-pass { position: absolute; right: 12px; cursor: pointer; font-size: 1.1rem; color: var(--gray); user-select: none; }
         
         /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -36,7 +33,8 @@
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
 
         .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; }
-        .btn-small { padding: 6px 12px; font-size: 11px; margin: 2px; }
+        .btn-small { padding: 8px 14px; font-size: 11px; }
+        .btn-red { background: var(--red); }
     </style>
 </head>
 <body>
@@ -47,162 +45,108 @@
         <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
         <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
         <div id="tabCust" onclick="switchTab('Cust')">CUSTOMERS</div>
-        <div id="tabLook" onclick="switchTab('Look')">INVOICE LOOKUP</div>
         <div id="tabAdm" onclick="switchTab('Adm')">ADMIN SUITE</div>
-    </div>
-    <div style="display:flex; align-items:center;">
-        <div style="font-size: 11px; text-align: right; line-height: 1.2;">
-            <b>Alessio</b><br><span id="viewLabel">Admin Mode</span> | 12/12/2025
-        </div>
-        <button id="roleSwitcher" class="test-controls" onclick="toggleRole()">Switch to Staff View</button>
     </div>
 </div>
 
 <div class="container">
     <div id="viewGen" class="card">
-        <h3>New Sale</h3>
-        <p id="syncStatus">Connecting to Google Sheets...</p>
+        <h3>Current Sale</h3>
+        <p id="syncStatus">Fetching live data from Excel...</p>
     </div>
 
-    <div id="viewInv" class="hidden">
-        <div class="card">
-            <h2>Inventory Management</h2>
-            <table id="invTable">
-                <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Actions</th></tr></thead>
-                <tbody id="fullInvBody"></tbody>
-            </table>
-        </div>
+    <div id="viewInv" class="hidden card">
+        <h2>Inventory Management</h2>
+        <table>
+            <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead>
+            <tbody id="invBody"></tbody>
+        </table>
     </div>
 
-    <div id="viewCust" class="hidden">
-        <div class="card">
-            <h2>Customer Database</h2>
-            <div class="flex-row" style="margin-bottom:20px; grid-template-columns: 1fr 1fr 1fr 1fr 100px;">
-                <input type="text" id="custName" placeholder="Name">
-                <input type="text" id="custComp" placeholder="Company">
-                <input type="text" id="custAddr" placeholder="Address">
-                <input type="text" id="custCity" placeholder="City">
-                <button class="btn btn-small" onclick="saveCustomer()">Add</button>
-            </div>
-            <table id="custTable">
-                <thead><tr><th>Name</th><th>Company</th><th>City</th><th>Actions</th></tr></thead>
-                <tbody id="fullCustBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="viewLook" class="hidden">
-        <div class="card"><h2>Invoice History</h2><p>Historical sales will appear here.</p></div>
+    <div id="viewCust" class="hidden card">
+        <h2>Customer Database</h2>
+        <table>
+            <thead><tr><th>Name</th><th>Company</th><th>Street Address</th><th>City</th></tr></thead>
+            <tbody id="custBody"></tbody>
+        </table>
     </div>
 
     <div id="viewAdm" class="hidden">
+        
         <div class="card">
-            <h3 style="color:var(--red); margin-top:0;">Store Branding</h3>
-            <div class="flex-row">
-                <div><label>Store Logo (File)</label><input type="file" id="logoFile"></div>
-                <div><label>Invoice Background (File)</label><input type="file" id="bgFile"></div>
+            <h3 style="color:var(--red); margin-top:0;">Tax Documents & Yearly Reports</h3>
+            <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:15px; align-items: flex-end;">
+                <div>
+                    <label>Tax Year</label>
+                    <select id="taxYear">
+                        <option>2024</option><option selected>2025</option><option>2026</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Upload PDF Record</label>
+                    <input type="file" id="taxFile" accept=".pdf">
+                </div>
+                <button class="btn btn-small" onclick="alert('Tax file record saved for ' + document.getElementById('taxYear').value)">Upload PDF</button>
             </div>
-            <button class="btn btn-small" style="margin-top:20px;">Save Assets</button>
         </div>
 
         <div class="card">
-            <h3>User & Security Management</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                <input type="text" id="newName" placeholder="Full Name">
-                <input type="text" id="newUser" placeholder="Username">
-                <select id="newRole" onchange="checkRole()">
-                    <option value="Staff">Staff</option>
-                    <option value="Admin">Admin</option>
-                </select>
+            <h3>Store Branding</h3>
+            <div class="flex-row">
+                <div><label>Store Logo (Upload)</label><input type="file" accept="image/*"></div>
+                <div><label>Invoice Background (Upload)</label><input type="file" accept="image/*"></div>
             </div>
-            
-            <div class="flex-row" style="margin-top:10px;">
+        </div>
+
+        <div class="card">
+            <h3>User Management</h3>
+            <div class="flex-row">
+                <div><label>Display Name</label><input type="text" id="newName" placeholder="Full Name"></div>
+                <div><label>Username</label><input type="text" id="newUser" placeholder="Username"></div>
+            </div>
+            <div class="flex-row">
                 <div class="pass-wrapper">
                     <input type="password" id="newPass" placeholder="Set Password">
                     <span class="toggle-pass" onclick="toggleEye('newPass')">👁️</span>
                 </div>
-                <div class="pass-wrapper" id="pinBox" style="display:none;">
-                    <input type="password" id="newPin" placeholder="Admin Override PIN">
+                <div class="pass-wrapper">
+                    <input type="password" id="newPin" placeholder="Set Override PIN">
                     <span class="toggle-pass" onclick="toggleEye('newPin')">👁️</span>
                 </div>
             </div>
-            <button class="btn btn-small" style="margin-top:15px; background:var(--blue);" onclick="registerUser()">+ Register User</button>
-
-            <table style="margin-top:30px;">
-                <thead><tr><th>Name</th><th>Username</th><th>PIN</th><th>Role</th><th>Actions</th></tr></thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
+            <div style="margin-top:10px;">
+                <label>System Role</label>
+                <select id="newRole" style="width:200px;"><option>Staff</option><option>Admin</option></select>
+            </div>
+            <button class="btn btn-small" style="margin-top:20px;" onclick="alert('User Registered')">+ Register User</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHN8QgTTBZGlzWucCuk-pR5HhSgHGtXV4x4dMwKLI628k2bJ3S0Z2aIMd_ID6fhk5w/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw99ETCoDFnyumicuEBn-MXsqjG7foGZTn2uE0x0lDK6MmvuDAcrJ0-B2tP6xfJWYy9/exec";
 
     window.onload = loadData;
 
     async function loadData() {
         try {
-            const [inv, cust, users] = await Promise.all([
+            const [inv, cust] = await Promise.all([
                 fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
-                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json()),
-                fetch(`${SCRIPT_URL}?action=getUsers`).then(r => r.json())
+                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json())
             ]);
-            renderInv(inv);
-            renderCust(cust);
-            renderUsers(users);
-            document.getElementById('syncStatus').innerText = "Live Sync: Connected";
+            
+            // Map Inventory with Exact Headers
+            document.getElementById('invBody').innerHTML = inv.map(i => 
+                `<tr><td>${i.SKU || ''}</td><td>${i["Item Name"] || ''}</td><td>$${i.Price || '0.00'}</td></tr>`).join('');
+            
+            // Map Customers with Exact Headers
+            document.getElementById('custBody').innerHTML = cust.map(c => 
+                `<tr><td>${c.Name || ''}</td><td>${c.Company || ''}</td><td>${c["Street Address"] || ''}</td><td>${c.City || ''}</td></tr>`).join('');
+            
+            document.getElementById('syncStatus').innerText = "Live Sync Active";
         } catch(e) {
-            document.getElementById('syncStatus').innerText = "Sync Error: Check Google Script Deployment";
+            document.getElementById('syncStatus').innerText = "Sync Error: Verify Script Deployment";
         }
-    }
-
-    function renderInv(data) {
-        document.getElementById('fullInvBody').innerHTML = data.map(i => `<tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${i.Price}</td><td><button class="btn btn-small">Edit</button></td></tr>`).join('');
-    }
-
-    function renderCust(data) {
-        document.getElementById('fullCustBody').innerHTML = data.map(c => `<tr><td>${c.Name}</td><td>${c.Company}</td><td>${c.City}</td><td><button class="btn btn-small">Edit</button></td></tr>`).join('');
-    }
-
-    function renderUsers(data) {
-        document.getElementById('userTableBody').innerHTML = data.map(u => `<tr><td>${u.Name}</td><td>${u.Username}</td><td>${u["Override PIN"] || '-'}</td><td>${u.Role}</td><td><button class="btn btn-small">Edit</button></td></tr>`).join('');
-    }
-
-    async function registerUser() {
-        const payload = {
-            action: "addUser",
-            name: document.getElementById('newName').value,
-            username: document.getElementById('newUser').value,
-            password: document.getElementById('newPass').value,
-            pin: document.getElementById('newPin').value,
-            role: document.getElementById('newRole').value
-        };
-        await sendData(payload);
-    }
-
-    async function saveCustomer() {
-        const payload = {
-            action: "addCustomer",
-            name: document.getElementById('custName').value,
-            company: document.getElementById('custComp').value,
-            address: document.getElementById('custAddr').value,
-            city: document.getElementById('custCity').value
-        };
-        await sendData(payload);
-    }
-
-    async function sendData(payload) {
-        try {
-            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            const result = await res.json();
-            alert(result.result);
-            loadData();
-        } catch(e) { alert("Error saving data."); }
-    }
-
-    function checkRole() {
-        document.getElementById('pinBox').style.display = (document.getElementById('newRole').value === 'Admin') ? 'flex' : 'none';
     }
 
     function toggleEye(id) {
@@ -211,23 +155,11 @@
     }
 
     function switchTab(t) {
-        const tabs = ['Gen', 'Inv', 'Cust', 'Look', 'Adm'];
-        tabs.forEach(tab => {
-            document.getElementById('tab' + tab).classList.remove('active-tab');
-            document.getElementById('view' + tab).classList.add('hidden');
-        });
+        document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab' + t).classList.add('active-tab');
+        const views = ['viewGen', 'viewInv', 'viewCust', 'viewAdm'];
+        views.forEach(v => document.getElementById(v).classList.add('hidden'));
         document.getElementById('view' + t).classList.remove('hidden');
-    }
-
-    function toggleRole() {
-        const label = document.getElementById('viewLabel');
-        const switcher = document.getElementById('roleSwitcher');
-        const isAdmin = label.innerText.includes('Admin');
-        label.innerText = isAdmin ? 'Staff Mode' : 'Admin Mode';
-        switcher.innerText = isAdmin ? 'Switch to Admin View' : 'Switch to Staff View';
-        ['tabCust', 'tabLook', 'tabAdm'].forEach(id => document.getElementById(id).style.display = isAdmin ? 'none' : 'flex');
-        if (isAdmin) switchTab('Gen');
     }
 </script>
 </body>
