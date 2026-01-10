@@ -6,46 +6,41 @@
     <title>CRAFTY ART DESIGN | MASTER POS</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; --border: #cbd5e1; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; color: #1e293b; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         
-        /* NAVIGATION */
+        /* NAVBAR */
         .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .nav-links { display: flex; height: 100%; }
         .nav-links div { padding: 0 15px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; border-bottom: 3px solid transparent; }
         .active-tab { opacity: 1 !important; border-bottom: 3px solid white !important; background: rgba(255,255,255,0.1); }
 
         .container { max-width: 1400px; margin: 25px auto; padding: 0 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--border); }
         .hidden { display: none !important; }
-
-        /* NEW SALE LAYOUT (MATCHING SCREENSHOT) */
-        .sale-header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .sale-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
-        .totals-box { font-weight: bold; font-size: 1.1rem; line-height: 1.6; }
 
         /* TABLES */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8fafc; color: var(--blue); font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        /* MODALS (DRAGGABLE) */
-        .modal { position: fixed; z-index: 2000; width: 480px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); display: none; top: 100px; left: calc(50% - 240px); border: 1px solid var(--gray); }
-        .modal-header { background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; cursor: move; display: flex; justify-content: space-between; }
-        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
-        
-        /* INPUTS */
-        .form-group { margin-bottom: 15px; }
+        /* ADMIN & FORMS */
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .form-group { margin-bottom: 15px; position: relative; }
         label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--gray); }
-        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box; }
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
         
+        .pass-wrapper { position: relative; }
+        .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 1.2rem; color: var(--gray); }
+
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 11px; color: white; background: var(--blue); }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn-small { padding: 6px 10px; font-size: 9px; margin-right: 4px; }
-        
-        /* DIMENSION BOXES */
-        .dim-wrap { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-        .dim-wrap input { text-align: center; }
+
+        /* MODALS */
+        .modal { position: fixed; z-index: 2000; width: 500px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); display: none; top: 100px; left: calc(50% - 250px); border: 1px solid var(--gray); }
+        .modal-header { background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; cursor: move; display: flex; justify-content: space-between; }
+        .modal-body { padding: 20px; }
     </style>
 </head>
 <body>
@@ -65,31 +60,18 @@
     
     <div id="viewGen" class="card">
         <h2>Create New Invoice</h2>
-        <div class="sale-header-grid">
-            <div class="form-group"><label>Invoice Number</label><input type="text" id="invNum" readonly></div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
             <div class="form-group"><label>Date</label><input type="text" id="invDate" readonly></div>
-            <div class="form-group"><label>Customer Name</label><select id="saleCustList"><option>Select Customer</option></select></div>
-            <div class="form-group"><label>Company</label><select><option>Select Company</option></select></div>
+            <div class="form-group"><label>Customer</label><select id="saleCustSelect"><option>Select Customer</option></select></div>
             <div class="form-group"><label>Employee</label><input type="text" value="Alessio" readonly></div>
         </div>
-
-        <div style="display:flex; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px;">
-            <div style="flex:2;"><label>Add Item by SKU</label><input type="text" placeholder="Scan or enter SKU"></div>
-            <button class="btn btn-green" style="align-self: flex-end; height:40px;">ADD</button>
-        </div>
-
         <table>
-            <thead><tr><th>SKU</th><th>Item</th><th>Size</th><th>Qty</th><th>Price</th><th>Tax Exempt</th><th>Total</th><th>Action</th></tr></thead>
-            <tbody id="saleTableBody"></tbody>
+            <thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th><th>Action</th></tr></thead>
+            <tbody id="saleItems"></tbody>
         </table>
-
-        <div class="sale-footer">
-            <div class="totals-box">
-                <div>Subtotal: $0.00</div>
-                <div>Tax (8.875%): $0.00</div>
-                <div style="font-size:1.5rem; color:var(--blue);">Total: $0.00</div>
-            </div>
-            <button class="btn btn-green" style="height:50px; font-size:1rem;">Save Invoice</button>
+        <div style="text-align: right; margin-top: 20px; font-size: 1.2rem; font-weight: bold;">
+            Subtotal: $0.00 | Tax: $0.00 | <span style="color:var(--blue)">TOTAL: $0.00</span>
         </div>
     </div>
 
@@ -110,58 +92,87 @@
             <button class="btn btn-green" onclick="openPopup('custPopup')">+ Add New Customer</button>
         </div>
         <table>
-            <thead><tr><th>Name</th><th>Company</th><th>City</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Company</th><th>Contact</th><th>Actions</th></tr></thead>
             <tbody id="custBody"></tbody>
         </table>
     </div>
 
     <div id="viewLook" class="hidden card">
-        <h2>Invoice History</h2>
+        <h2>Invoice Lookup</h2>
         <table>
             <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
             <tbody>
-                <tr><td>INV-2026010901</td><td>1/9/2026</td><td>Joe Smith</td><td>$0.00</td>
-                <td>
-                    <button class="btn btn-small">VIEW</button>
-                    <button class="btn btn-small btn-green">EDIT</button>
-                    <button class="btn btn-small btn-red">DELETE</button>
-                </td></tr>
+                <tr><td>INV-1001</td><td>01/09/2026</td><td>Walk-in</td><td>$0.00</td>
+                <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>
             </tbody>
         </table>
     </div>
 
     <div id="viewAdm" class="hidden">
-        <div class="card"><h3>Store Branding</h3></div>
-        <div class="card"><h3>Tax Archive</h3><button class="btn">Download PDF</button></div>
         <div class="card">
-            <h3>User Management</h3>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <input type="text" placeholder="Display Name">
-                <input type="text" placeholder="Username">
+            <h3>1. Store Branding</h3>
+            <div class="admin-grid">
+                <div class="form-group"><label>Store Logo (Upload)</label><input type="file" accept="image/*"></div>
+                <div class="form-group"><label>Invoice Background Pattern (Upload)</label><input type="file" accept="image/*"></div>
             </div>
+            <button class="btn">Save Brand Settings</button>
+        </div>
+
+        <div class="card">
+            <h3 style="color:var(--red);">2. Tax Record Archive</h3>
+            <div style="display:flex; gap:15px; align-items:flex-end;">
+                <div class="form-group" style="flex:1;">
+                    <label>Select Tax Year for PDF Export</label>
+                    <select id="taxYearSelect">
+                        <option>2024 Full Year Tax Report</option>
+                        <option selected>2025 Q1 Tax Report</option>
+                        <option>2025 Full Year (Draft)</option>
+                    </select>
+                </div>
+                <button class="btn btn-red" style="margin-bottom:15px;">PRINT TAX PDF</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>3. User Management</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
+                <div class="form-group"><label>Full Name</label><input type="text" placeholder="e.g. Alessio"></div>
+                <div class="form-group"><label>Username</label><input type="text" placeholder="Username"></div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="pass-wrapper">
+                        <input type="password" id="userPass" placeholder="••••••••">
+                        <button class="eye-btn" onclick="togglePass('userPass')">👁️</button>
+                    </div>
+                </div>
+                <div class="form-group"><label>Role</label>
+                    <select><option>Admin</option><option>Employee</option><option>Manager</option></select>
+                </div>
+                <div class="form-group"><label>Override PIN (4-Digits)</label><input type="password" maxlength="4" placeholder="0000"></div>
+            </div>
+            <button class="btn btn-green">REGISTER NEW USER</button>
+            <hr style="margin:25px 0; border:0; border-top:1px solid #eee;">
+            <table>
+                <thead><tr><th>Name</th><th>User</th><th>Role</th><th>Actions</th></tr></thead>
+                <tbody><tr><td>Alessio</td><td>Admin_01</td><td>Admin</td><td><button class="btn btn-small">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr></tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <div id="invPopup" class="modal">
-    <div class="modal-header"><span>Product Editor</span><span onclick="closePopup('invPopup')" style="cursor:pointer">×</span></div>
+    <div class="modal-header"><span>Inventory Editor</span><span onclick="closePopup('invPopup')" style="cursor:pointer">×</span></div>
     <div class="modal-body">
         <div class="form-group"><label>SKU</label><input type="text"></div>
         <div class="form-group"><label>Item Name</label><input type="text"></div>
-        <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" value="0.00"></div>
-        <div class="form-group">
-            <label>Size Selection</label>
-            <select id="szType" onchange="toggleCustomSize()">
-                <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL-5XL</option>
-                <option value="custom">Custom Dimensions...</option>
+        <div class="form-group"><label>Size</label>
+            <select onchange="this.nextElementSibling.style.display=(this.value=='Custom'?'flex':'none')">
+                <option>XS-5XL</option><option value="Custom">Custom Dimensions...</option>
             </select>
+            <div style="display:none; gap:10px; margin-top:10px;"><input placeholder="W"> × <input placeholder="H"></div>
         </div>
-        <div id="szCustom" class="hidden">
-            <div class="dim-wrap">
-                <input type="number" placeholder="Width"> <span>×</span> <input type="number" placeholder="Height"> <span>Inches</span>
-            </div>
-        </div>
-        <button class="btn btn-green" style="width:100%; margin-top:20px;">Save Product</button>
+        <div class="form-group"><label>Price ($)</label><input type="number" step="0.01"></div>
+        <button class="btn btn-green" style="width:100%;">Save Item</button>
     </div>
 </div>
 
@@ -171,11 +182,10 @@
         <div class="form-group"><label>Full Name</label><input type="text"></div>
         <div class="form-group"><label>Company</label><input type="text"></div>
         <div class="form-group"><label>Street Address</label><input type="text"></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-            <input type="text" placeholder="City"> <input type="text" placeholder="Zip Code">
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
+            <input placeholder="City"> <input placeholder="Zip Code">
         </div>
         <div class="form-group"><label>Email</label><input type="email"></div>
-        <div class="form-group"><label>Phone</label><input type="tel"></div>
         <button class="btn btn-green" style="width:100%;">Save Customer</button>
     </div>
 </div>
@@ -186,7 +196,7 @@
     window.onload = () => {
         const d = new Date();
         document.getElementById('invDate').value = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-        document.getElementById('invNum').value = 'INV-' + d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate().toString().padStart(2,'0') + '001';
+        document.getElementById('invNum').value = 'INV-' + d.getFullYear() + '001';
         loadData();
     };
 
@@ -201,10 +211,10 @@
                 <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>`).join('');
 
             document.getElementById('custBody').innerHTML = cust.filter(c => c.Name).map(c => `
-                <tr><td>${c.Name}</td><td>${c.Company || '--'}</td><td>${c.City || '--'}</td>
+                <tr><td>${c.Name}</td><td>${c.Company || '--'}</td><td>${c.Email || c.Phone}</td>
                 <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>`).join('');
             
-            document.getElementById('saleCustList').innerHTML = '<option>Select Customer</option>' + cust.map(c => `<option>${c.Name}</option>`).join('');
+            document.getElementById('saleCustSelect').innerHTML = '<option>Select Customer</option>' + cust.map(c => `<option>${c.Name}</option>`).join('');
         } catch(e) { console.error("Sync Error"); }
     }
 
@@ -215,18 +225,22 @@
         document.getElementById('view'+t).classList.remove('hidden');
     }
 
+    function togglePass(id) {
+        const x = document.getElementById(id);
+        x.type = (x.type === "password" ? "text" : "password");
+    }
+
     function openPopup(id) { document.getElementById(id).style.display = 'block'; dragElement(document.getElementById(id)); }
     function closePopup(id) { document.getElementById(id).style.display = 'none'; }
-    function toggleCustomSize() { document.getElementById('szCustom').classList.toggle('hidden', document.getElementById('szType').value !== 'custom'); }
 
-    function dragElement(elmnt) {
-        var p1 = 0, p2 = 0, p3 = 0, p4 = 0;
-        elmnt.querySelector(".modal-header").onmousedown = (e) => {
+    function dragElement(elm) {
+        var p1=0, p2=0, p3=0, p4=0;
+        elm.querySelector(".modal-header").onmousedown = (e) => {
             p3 = e.clientX; p4 = e.clientY;
-            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmouseup = () => { document.onmouseup=null; document.onmousemove=null; };
             document.onmousemove = (e) => {
                 p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY;
-                elmnt.style.top = (elmnt.offsetTop - p2) + "px"; elmnt.style.left = (elmnt.offsetLeft - p1) + "px";
+                elm.style.top = (elm.offsetTop - p2) + "px"; elm.style.left = (elm.offsetLeft - p1) + "px";
             };
         };
     }
