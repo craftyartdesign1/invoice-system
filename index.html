@@ -6,7 +6,7 @@
     <title>CRAFTY ART DESIGN | MASTER POS</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; overflow-x: hidden; }
         
         /* NAVIGATION */
         .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
@@ -19,23 +19,25 @@
         .hidden { display: none !important; }
 
         /* TABLES */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th { text-align: left; padding: 15px; color: var(--blue); font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid #edf2f7; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; padding: 12px; color: var(--blue); font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        /* MODAL / POPUP STYLES */
-        .modal { position: fixed; z-index: 2000; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 450px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #ccc; display: none; }
+        /* DRAGGABLE POPUPS */
+        .modal { position: fixed; z-index: 2000; width: 450px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: none; top: 150px; left: calc(50% - 225px); }
         .modal-header { background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; cursor: move; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; max-height: 80vh; overflow-y: auto; }
+        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
         
-        /* FORM STYLING */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.75rem; font-weight: bold; color: var(--gray); margin-bottom: 5px; }
+        /* INPUTS */
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.75rem; font-weight: bold; color: var(--gray); margin-bottom: 4px; }
         input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box; }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; text-transform: uppercase; font-size: 11px; }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
-        .custom-dim { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        
+        .dim-box { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .dim-input { text-align: center; }
     </style>
 </head>
 <body>
@@ -52,12 +54,19 @@
 </div>
 
 <div class="container">
-    <div id="viewGen" class="card"><h3>New Sale</h3><p id="syncStatus">Syncing...</p></div>
+    <div id="viewGen" class="card">
+        <h3>New Sale Section</h3>
+        <div style="display:flex; gap:15px; margin-bottom:20px;">
+            <input type="text" id="saleSearch" placeholder="Search SKU or Name..." style="flex:2">
+            <button class="btn">ADD TO CART</button>
+        </div>
+        <p id="syncStatus">Live Sync: Connected to Google Sheets</p>
+    </div>
 
     <div id="viewInv" class="hidden card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2>Inventory Management</h2>
-            <button class="btn btn-green" onclick="showModal('invModal')">+ Add New Item</button>
+            <button class="btn btn-green" onclick="openPopup('invPopup')">+ ADD NEW ITEM</button>
         </div>
         <table>
             <thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Actions</th></tr></thead>
@@ -68,66 +77,95 @@
     <div id="viewCust" class="hidden card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2>Customer Database</h2>
-            <button class="btn btn-green" onclick="showModal('custModal')">+ Add New Customer</button>
+            <button class="btn btn-green" onclick="openPopup('custPopup')">+ ADD NEW CUSTOMER</button>
         </div>
         <table>
-            <thead><tr><th>Name</th><th>Company</th><th>Address</th><th>Contact</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Company</th><th>City</th><th>Email</th><th>Actions</th></tr></thead>
             <tbody id="custBody"></tbody>
         </table>
     </div>
 
-    <div id="viewLook" class="hidden card"><h2>Invoice Lookup</h2></div>
+    <div id="viewLook" class="hidden card">
+        <h2>Invoice Lookup</h2>
+        <input type="text" placeholder="Search Invoices..." style="margin-bottom:15px;">
+        <table>
+            <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
+            <tbody><tr><td>#1001</td><td>01/09/2026</td><td>Joe Smith</td><td>$0.00</td><td><button class="btn">VIEW</button></td></tr></tbody>
+        </table>
+    </div>
 
     <div id="viewAdm" class="hidden">
-        <div class="card"><h3>Store Branding</h3></div>
         <div class="card">
-            <h3>Tax Archive</h3>
-            <select style="width:200px;"><option>2024 Report</option><option>2025 Report</option></select>
-            <button class="btn">Download PDF</button>
+            <h3>Store Branding</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div><label>Upload Logo</label><input type="file"></div>
+                <div><label>Invoice Background</label><input type="file"></div>
+            </div>
         </div>
-        <div class="card"><h3>User Management</h3></div>
+
+        <div class="card">
+            <h3 style="color:var(--red);">Tax Archive</h3>
+            <div style="display:flex; gap:15px;">
+                <select id="taxSelect" style="max-width:300px;">
+                    <option>2024 Tax Report (Full Year)</option>
+                    <option>2025 Q1 Tax Report</option>
+                </select>
+                <button class="btn">DOWNLOAD PDF</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>User Management</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                <input type="text" placeholder="Display Name (e.g. Alessio)">
+                <input type="text" placeholder="Username">
+                <input type="password" placeholder="Password">
+                <input type="password" placeholder="Override PIN (4-digits)">
+            </div>
+            <button class="btn">SAVE USER ACCOUNT</button>
+        </div>
     </div>
 </div>
 
-<div id="invModal" class="modal">
-    <div class="modal-header"><span>Add New Item</span><span onclick="closeModal('invModal')" style="cursor:pointer">×</span></div>
+<div id="invPopup" class="modal">
+    <div class="modal-header"><span>Add New Product</span><span onclick="closePopup('invPopup')" style="cursor:pointer">×</span></div>
     <div class="modal-body">
         <div class="form-group"><label>SKU</label><input type="text"></div>
         <div class="form-group"><label>Item Name</label><input type="text"></div>
         <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" placeholder="0.00"></div>
         <div class="form-group">
             <label>Size Selection</label>
-            <select id="sizeSelect" onchange="toggleCustomSize()">
-                <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-                <option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option>
-                <option value="3XL">3XL</option><option value="4XL">4XL</option><option value="5XL">5XL</option>
-                <option value="Custom">Custom Size...</option>
+            <select id="sizeType" onchange="toggleSize()">
+                <option value="Standard">XS - 5XL</option>
+                <option value="Custom">Custom Size (Inch)</option>
             </select>
         </div>
-        <div id="customSizeBox" class="custom-dim hidden">
-            <div><label>Width (in)</label><input type="number" placeholder="0"></div>
-            <div><label>Height (in)</label><input type="number" placeholder="0"></div>
+        <div id="stdSize"><select><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>2XL</option><option>3XL</option><option>4XL</option><option>5XL</option></select></div>
+        <div id="custSize" class="hidden">
+            <div class="dim-box">
+                <div class="dim-input"><label>Width (Inch)</label><input type="number" value="1"></div>
+                <div style="padding-top:20px;">×</div>
+                <div class="dim-input"><label>Height (Inch)</label><input type="number" value="1"></div>
+            </div>
         </div>
-        <button class="btn btn-green" style="width:100%; margin-top:20px;">Save Item to Inventory</button>
+        <button class="btn btn-green" style="width:100%; margin-top:20px;">Save to Inventory</button>
     </div>
 </div>
 
-<div id="custModal" class="modal">
-    <div class="modal-header"><span>Add New Customer</span><span onclick="closeModal('custModal')" style="cursor:pointer">×</span></div>
+<div id="custPopup" class="modal">
+    <div class="modal-header"><span>Add New Customer</span><span onclick="closePopup('custPopup')" style="cursor:pointer">×</span></div>
     <div class="modal-body">
-        <div class="form-group"><label>Full Name</label><input type="text"></div>
-        <div class="form-group"><label>Company (Optional)</label><input type="text"></div>
+        <div class="form-group"><label>Customer Name</label><input type="text"></div>
+        <div class="form-group"><label>Company</label><input type="text"></div>
         <div class="form-group"><label>Street Address</label><input type="text"></div>
-        <div class="flex-row">
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:12px;">
             <div><label>City</label><input type="text"></div>
-            <div><label>State</label>
-                <select><option>NY</option><option>CA</option><option>TX</option><option>FL</option></select>
-            </div>
-            <div><label>Zip Code</label><input type="text"></div>
+            <div><label>State</label><select><option>NY</option><option>NJ</option><option>CT</option></select></div>
+            <div><label>Zip</label><input type="text"></div>
         </div>
         <div class="form-group"><label>Email Address</label><input type="email"></div>
         <div class="form-group"><label>Phone Number</label><input type="tel"></div>
-        <button class="btn btn-green" style="width:100%; margin-top:10px;">Save Customer</button>
+        <button class="btn btn-green" style="width:100%;">Save Customer Data</button>
     </div>
 </div>
 
@@ -138,12 +176,9 @@
 
     async function loadData() {
         try {
-            const [invRes, custRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getInventory`),
-                fetch(`${SCRIPT_URL}?action=getCustomers`)
-            ]);
-            const inv = await invRes.json();
-            const cust = await custRes.json();
+            const [iRes, cRes] = await Promise.all([fetch(`${SCRIPT_URL}?action=getInventory`), fetch(`${SCRIPT_URL}?action=getCustomers`)]);
+            const inv = await iRes.json();
+            const cust = await cRes.json();
             
             document.getElementById('invBody').innerHTML = inv.filter(i => i.SKU).map(i => `
                 <tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>${i.Size || ''}</td>
@@ -151,36 +186,38 @@
                 <td><button class="btn btn-red" style="padding:4px 8px">DEL</button></td></tr>`).join('');
 
             document.getElementById('custBody').innerHTML = cust.filter(c => c.Name).map(c => `
-                <tr><td>${c.Name}</td><td>${c.Company || '--'}</td>
-                <td>${c["Street Address"]}, ${c.City}</td><td>${c.Email || c.Phone}</td>
+                <tr><td>${c.Name}</td><td>${c.Company || '--'}</td><td>${c.City || '--'}</td>
+                <td>${c.Email || c.Phone}</td>
                 <td><button class="btn btn-red" style="padding:4px 8px">DEL</button></td></tr>`).join('');
-            
-            document.getElementById('syncStatus').innerText = "Live Sync Active";
-        } catch(e) { document.getElementById('syncStatus').innerText = "Sync Error: Verify Script"; }
+        } catch(e) { console.log("Load Error"); }
     }
 
     function switchTab(t) {
         document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab'+t).classList.add('active-tab');
         ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'].forEach(v => document.getElementById(v).classList.add('hidden'));
-        document.getElementById('view' + t).classList.remove('hidden');
+        document.getElementById('view'+t).classList.remove('hidden');
     }
 
-    function showModal(id) { document.getElementById(id).style.display = 'block'; dragElement(document.getElementById(id)); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function toggleCustomSize() {
-        const isCustom = document.getElementById('sizeSelect').value === 'Custom';
-        document.getElementById('customSizeBox').classList.toggle('hidden', !isCustom);
+    function openPopup(id) { document.getElementById(id).style.display = 'block'; dragElement(document.getElementById(id)); }
+    function closePopup(id) { document.getElementById(id).style.display = 'none'; }
+
+    function toggleSize() {
+        const isCustom = document.getElementById('sizeType').value === 'Custom';
+        document.getElementById('stdSize').classList.toggle('hidden', isCustom);
+        document.getElementById('custSize').classList.toggle('hidden', !isCustom);
     }
 
-    // DRAGGABLE LOGIC
     function dragElement(elmnt) {
         var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        const header = elmnt.querySelector(".modal-header");
-        if (header) { header.onmousedown = dragMouseDown; }
-        function dragMouseDown(e) { e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
-        function elementDrag(e) { e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
-        function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
+        elmnt.querySelector(".modal-header").onmousedown = (e) => {
+            e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY;
+            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
+            document.onmousemove = (e) => {
+                e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            };
+        };
     }
 </script>
 </body>
