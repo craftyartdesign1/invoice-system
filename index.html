@@ -19,22 +19,20 @@
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
-        /* FORMS */
-        .flex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 5px; margin-top: 10px; }
+        /* FORM ELEMENTS */
+        .flex-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 15px; align-items: end; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--gray); margin-bottom: 5px; text-transform: uppercase; }
         input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
         
-        .pass-wrapper { position: relative; display: flex; align-items: center; }
-        .toggle-pass { position: absolute; right: 12px; cursor: pointer; font-size: 1.1rem; color: var(--gray); user-select: none; }
-        
         /* TABLES */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; border-bottom: 2px solid #f1f5f9; padding: 12px; color: var(--blue); font-size: 0.85rem; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        th { text-align: left; background: #f8fafc; padding: 15px; color: var(--blue); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #edf2f7; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; }
-        .btn-small { padding: 8px 14px; font-size: 11px; }
+        .btn { padding: 12px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--blue); color: white; transition: 0.2s; text-transform: uppercase; font-size: 11px; }
         .btn-red { background: var(--red); }
+        .btn-green { background: var(--green); }
+        .btn-small { padding: 6px 10px; font-size: 10px; margin-right: 4px; }
     </style>
 </head>
 <body>
@@ -45,80 +43,97 @@
         <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
         <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
         <div id="tabCust" onclick="switchTab('Cust')">CUSTOMERS</div>
+        <div id="tabLook" onclick="switchTab('Look')">INVOICE LOOKUP</div>
         <div id="tabAdm" onclick="switchTab('Adm')">ADMIN SUITE</div>
     </div>
 </div>
 
 <div class="container">
     <div id="viewGen" class="card">
-        <h3>Current Sale</h3>
-        <p id="syncStatus">Fetching live data from Excel...</p>
+        <h3>New Sale Section</h3>
+        <p id="syncStatus">Syncing with Excel...</p>
     </div>
 
     <div id="viewInv" class="hidden card">
         <h2>Inventory Management</h2>
+        <div class="flex-row">
+            <div><label>SKU</label><input type="text" placeholder="e.g. CAD-01"></div>
+            <div><label>Item Name</label><input type="text" placeholder="Item Name"></div>
+            <div><label>Size</label><input type="text" placeholder="e.g. 24x36"></div>
+            <div><label>Price</label><input type="number" placeholder="0.00" step="0.01"></div>
+            <button class="btn btn-green">ADD ITEM</button>
+        </div>
         <table>
-            <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th></tr></thead>
+            <thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Price</th><th>Actions</th></tr></thead>
             <tbody id="invBody"></tbody>
         </table>
     </div>
 
     <div id="viewCust" class="hidden card">
         <h2>Customer Database</h2>
+        <div class="flex-row" style="grid-template-columns: 2fr 1fr 1fr 1fr 100px;">
+            <input type="text" placeholder="Full Name">
+            <input type="text" placeholder="Company">
+            <input type="email" placeholder="Email">
+            <input type="tel" placeholder="Phone">
+            <button class="btn btn-green">ADD</button>
+        </div>
         <table>
-            <thead><tr><th>Name</th><th>Company</th><th>Street Address</th><th>City</th></tr></thead>
+            <thead><tr><th>Name</th><th>Company</th><th>Email/Phone</th><th>Actions</th></tr></thead>
             <tbody id="custBody"></tbody>
         </table>
     </div>
 
-    <div id="viewAdm" class="hidden">
-        
-        <div class="card">
-            <h3 style="color:var(--red); margin-top:0;">Tax Documents & Yearly Reports</h3>
-            <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:15px; align-items: flex-end;">
-                <div>
-                    <label>Tax Year</label>
-                    <select id="taxYear">
-                        <option>2024</option><option selected>2025</option><option>2026</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Upload PDF Record</label>
-                    <input type="file" id="taxFile" accept=".pdf">
-                </div>
-                <button class="btn btn-small" onclick="alert('Tax file record saved for ' + document.getElementById('taxYear').value)">Upload PDF</button>
-            </div>
+    <div id="viewLook" class="hidden card">
+        <h2>Invoice Lookup</h2>
+        <div class="flex-row" style="grid-template-columns: 3fr 1fr;">
+            <input type="text" placeholder="Search by Invoice # or Customer Name...">
+            <button class="btn">SEARCH</button>
         </div>
+        <table>
+            <thead><tr><th>Inv #</th><th>Customer</th><th>Date</th><th>Total</th><th>Actions</th></tr></thead>
+            <tbody>
+                <tr><td>#1001</td><td>Joe Smith</td><td>01/09/2026</td><td>$45.00</td><td><button class="btn btn-small">PRINT</button></td></tr>
+            </tbody>
+        </table>
+    </div>
 
+    <div id="viewAdm" class="hidden">
         <div class="card">
             <h3>Store Branding</h3>
             <div class="flex-row">
-                <div><label>Store Logo (Upload)</label><input type="file" accept="image/*"></div>
-                <div><label>Invoice Background (Upload)</label><input type="file" accept="image/*"></div>
+                <div><label>Store Logo</label><input type="file" accept="image/*"></div>
+                <div><label>Invoice Background</label><input type="file" accept="image/*"></div>
+            </div>
+            <button class="btn btn-small">Update Branding</button>
+        </div>
+
+        <div class="card">
+            <h3 style="color:var(--red);">Tax Record Archive</h3>
+            <div class="flex-row" style="grid-template-columns: 2fr 1fr;">
+                <div>
+                    <label>Select Year for Download</label>
+                    <select id="taxYear">
+                        <option>2024 Tax Report (Full Year)</option>
+                        <option selected>2025 Tax Report (Q1 & Q2)</option>
+                        <option>2025 Tax Report (Year to Date)</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="alert('Downloading Tax PDF for ' + document.getElementById('taxYear').value)">Download PDF</button>
             </div>
         </div>
 
         <div class="card">
-            <h3>User Management</h3>
+            <h3>User & Security Management</h3>
             <div class="flex-row">
-                <div><label>Display Name</label><input type="text" id="newName" placeholder="Full Name"></div>
-                <div><label>Username</label><input type="text" id="newUser" placeholder="Username"></div>
+                <input type="text" placeholder="Display Name">
+                <input type="text" placeholder="Username">
             </div>
             <div class="flex-row">
-                <div class="pass-wrapper">
-                    <input type="password" id="newPass" placeholder="Set Password">
-                    <span class="toggle-pass" onclick="toggleEye('newPass')">👁️</span>
-                </div>
-                <div class="pass-wrapper">
-                    <input type="password" id="newPin" placeholder="Set Override PIN">
-                    <span class="toggle-pass" onclick="toggleEye('newPin')">👁️</span>
-                </div>
+                <input type="password" placeholder="Set Password">
+                <input type="password" placeholder="Override PIN">
             </div>
-            <div style="margin-top:10px;">
-                <label>System Role</label>
-                <select id="newRole" style="width:200px;"><option>Staff</option><option>Admin</option></select>
-            </div>
-            <button class="btn btn-small" style="margin-top:20px;" onclick="alert('User Registered')">+ Register User</button>
+            <button class="btn btn-small">Save User Account</button>
         </div>
     </div>
 </div>
@@ -130,35 +145,53 @@
 
     async function loadData() {
         try {
-            const [inv, cust] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getInventory`).then(r => r.json()),
-                fetch(`${SCRIPT_URL}?action=getCustomers`).then(r => r.json())
+            const [invRes, custRes] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=getInventory`),
+                fetch(`${SCRIPT_URL}?action=getCustomers`)
             ]);
+            const inv = await invRes.json();
+            const cust = await custRes.json();
             
-            // Map Inventory with Exact Headers
-            document.getElementById('invBody').innerHTML = inv.map(i => 
-                `<tr><td>${i.SKU || ''}</td><td>${i["Item Name"] || ''}</td><td>$${i.Price || '0.00'}</td></tr>`).join('');
+            // RENDER INVENTORY (Filter out empty rows)
+            document.getElementById('invBody').innerHTML = inv.filter(i => i.SKU).map(i => {
+                const price = parseFloat(i.Price || 0).toFixed(2);
+                return `<tr>
+                    <td>${i.SKU}</td>
+                    <td>${i["Item Name"] || ''}</td>
+                    <td>${i.Size || '---'}</td>
+                    <td>$${price}</td>
+                    <td>
+                        <button class="btn btn-small">EDIT</button>
+                        <button class="btn btn-small btn-red">DELETE</button>
+                    </td>
+                </tr>`;
+            }).join('');
             
-            // Map Customers with Exact Headers
-            document.getElementById('custBody').innerHTML = cust.map(c => 
-                `<tr><td>${c.Name || ''}</td><td>${c.Company || ''}</td><td>${c["Street Address"] || ''}</td><td>${c.City || ''}</td></tr>`).join('');
-            
-            document.getElementById('syncStatus').innerText = "Live Sync Active";
-        } catch(e) {
-            document.getElementById('syncStatus').innerText = "Sync Error: Verify Script Deployment";
-        }
-    }
+            // RENDER CUSTOMERS
+            document.getElementById('custBody').innerHTML = cust.filter(c => c.Name).map(c => `
+                <tr>
+                    <td>${c.Name}</td>
+                    <td>${c.Company || '---'}</td>
+                    <td>${c.Email || c.Phone || '---'}</td>
+                    <td>
+                        <button class="btn btn-small">EDIT</button>
+                        <button class="btn btn-small btn-red">DELETE</button>
+                    </td>
+                </tr>`).join('');
 
-    function toggleEye(id) {
-        const x = document.getElementById(id);
-        x.type = (x.type === "password") ? "text" : "password";
+            document.getElementById('syncStatus').innerText = "Live Sync: Connected to Google Sheets";
+        } catch(e) {
+            document.getElementById('syncStatus').innerText = "Sync Error: Check Script URL";
+        }
     }
 
     function switchTab(t) {
         document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab' + t).classList.add('active-tab');
-        const views = ['viewGen', 'viewInv', 'viewCust', 'viewAdm'];
-        views.forEach(v => document.getElementById(v).classList.add('hidden'));
+        ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'].forEach(v => {
+            const el = document.getElementById(v);
+            if(el) el.classList.add('hidden');
+        });
         document.getElementById('view' + t).classList.remove('hidden');
     }
 </script>
