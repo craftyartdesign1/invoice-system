@@ -6,9 +6,9 @@
     <title>CRAFTY ART DESIGN | MASTER POS</title>
     <style>
         :root { --blue: #004d73; --bg: #f1f5f9; --white: #ffffff; --green: #10b981; --red: #ef4444; --gray: #64748b; --border: #cbd5e1; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; overflow-x: hidden; }
         
-        /* NAVBAR */
+        /* NAVIGATION */
         .navbar { background: var(--blue); color: white; padding: 0 20px; height: 70px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .nav-links { display: flex; height: 100%; }
         .nav-links div { padding: 0 15px; display: flex; align-items: center; cursor: pointer; font-weight: 600; opacity: 0.7; border-bottom: 3px solid transparent; }
@@ -23,24 +23,21 @@
         th { text-align: left; padding: 12px; background: #f8fafc; color: var(--blue); font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        /* ADMIN & FORMS */
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .form-group { margin-bottom: 15px; position: relative; }
+        /* FORMS */
+        .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--gray); }
-        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; width: 100%; box-sizing: border-box; }
         
-        .pass-wrapper { position: relative; }
-        .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; background: none; border: none; font-size: 1.2rem; color: var(--gray); }
-
+        /* BUTTONS */
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 11px; color: white; background: var(--blue); }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn-small { padding: 6px 10px; font-size: 9px; margin-right: 4px; }
 
-        /* MODALS */
-        .modal { position: fixed; z-index: 2000; width: 500px; background: white; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.3); display: none; top: 100px; left: calc(50% - 250px); border: 1px solid var(--gray); }
-        .modal-header { background: var(--blue); color: white; padding: 15px; border-radius: 12px 12px 0 0; cursor: move; display: flex; justify-content: space-between; }
-        .modal-body { padding: 20px; }
+        /* SECURITY STYLING */
+        .secure-cell { display: flex; align-items: center; gap: 8px; font-family: monospace; }
+        .eye-toggle { cursor: pointer; background: none; border: none; font-size: 1rem; padding: 0; color: var(--gray); }
+        .masked { -webkit-text-security: disc; }
     </style>
 </head>
 <body>
@@ -48,202 +45,103 @@
 <div class="navbar">
     <div style="font-weight:900; font-size: 1.3rem;">CRAFTY ART DESIGN</div>
     <div class="nav-links">
-        <div id="tabGen" class="active-tab" onclick="switchTab('Gen')">NEW SALE</div>
+        <div id="tabGen" onclick="switchTab('Gen')">NEW SALE</div>
         <div id="tabInv" onclick="switchTab('Inv')">INVENTORY</div>
         <div id="tabCust" onclick="switchTab('Cust')">CUSTOMERS</div>
         <div id="tabLook" onclick="switchTab('Look')">INVOICE LOOKUP</div>
-        <div id="tabAdm" onclick="switchTab('Adm')">ADMIN SUITE</div>
+        <div id="tabAdm" class="active-tab" onclick="switchTab('Adm')">ADMIN SUITE</div>
     </div>
 </div>
 
 <div class="container">
     
-    <div id="viewGen" class="card">
-        <h2>Create New Invoice</h2>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
-            <div class="form-group"><label>Invoice #</label><input type="text" id="invNum" readonly></div>
-            <div class="form-group"><label>Date</label><input type="text" id="invDate" readonly></div>
-            <div class="form-group"><label>Customer</label><select id="saleCustSelect"><option>Select Customer</option></select></div>
-            <div class="form-group"><label>Employee</label><input type="text" value="Alessio" readonly></div>
-        </div>
-        <table>
-            <thead><tr><th>SKU</th><th>Item Name</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th><th>Action</th></tr></thead>
-            <tbody id="saleItems"></tbody>
-        </table>
-        <div style="text-align: right; margin-top: 20px; font-size: 1.2rem; font-weight: bold;">
-            Subtotal: $0.00 | Tax: $0.00 | <span style="color:var(--blue)">TOTAL: $0.00</span>
-        </div>
-    </div>
-
-    <div id="viewInv" class="hidden card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <h2>Inventory Management</h2>
-            <button class="btn btn-green" onclick="openPopup('invPopup')">+ Add New Item</button>
-        </div>
-        <table>
-            <thead><tr><th>SKU</th><th>Item Name</th><th>Price</th><th>Size</th><th>Actions</th></tr></thead>
-            <tbody id="invBody"></tbody>
-        </table>
-    </div>
-
-    <div id="viewCust" class="hidden card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <h2>Customer Database</h2>
-            <button class="btn btn-green" onclick="openPopup('custPopup')">+ Add New Customer</button>
-        </div>
-        <table>
-            <thead><tr><th>Name</th><th>Company</th><th>Contact</th><th>Actions</th></tr></thead>
-            <tbody id="custBody"></tbody>
-        </table>
-    </div>
-
-    <div id="viewLook" class="hidden card">
-        <h2>Invoice Lookup</h2>
-        <table>
-            <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead>
-            <tbody>
-                <tr><td>INV-1001</td><td>01/09/2026</td><td>Walk-in</td><td>$0.00</td>
-                <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div id="viewAdm" class="hidden">
+    <div id="viewAdm">
         <div class="card">
-            <h3>1. Store Branding</h3>
-            <div class="admin-grid">
-                <div class="form-group"><label>Store Logo (Upload)</label><input type="file" accept="image/*"></div>
-                <div class="form-group"><label>Invoice Background Pattern (Upload)</label><input type="file" accept="image/*"></div>
-            </div>
-            <button class="btn">Save Brand Settings</button>
-        </div>
-
-        <div class="card">
-            <h3 style="color:var(--red);">2. Tax Record Archive</h3>
-            <div style="display:flex; gap:15px; align-items:flex-end;">
-                <div class="form-group" style="flex:1;">
-                    <label>Select Tax Year for PDF Export</label>
-                    <select id="taxYearSelect">
-                        <option>2024 Full Year Tax Report</option>
-                        <option selected>2025 Q1 Tax Report</option>
-                        <option>2025 Full Year (Draft)</option>
-                    </select>
-                </div>
-                <button class="btn btn-red" style="margin-bottom:15px;">PRINT TAX PDF</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>3. User Management</h3>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
-                <div class="form-group"><label>Full Name</label><input type="text" placeholder="e.g. Alessio"></div>
-                <div class="form-group"><label>Username</label><input type="text" placeholder="Username"></div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <div class="pass-wrapper">
-                        <input type="password" id="userPass" placeholder="••••••••">
-                        <button class="eye-btn" onclick="togglePass('userPass')">👁️</button>
-                    </div>
-                </div>
-                <div class="form-group"><label>Role</label>
-                    <select><option>Admin</option><option>Employee</option><option>Manager</option></select>
-                </div>
-                <div class="form-group"><label>Override PIN (4-Digits)</label><input type="password" maxlength="4" placeholder="0000"></div>
-            </div>
-            <button class="btn btn-green">REGISTER NEW USER</button>
-            <hr style="margin:25px 0; border:0; border-top:1px solid #eee;">
+            <h2>User Management</h2>
+            <p style="color:var(--gray); font-size: 0.85rem; margin-bottom: 20px;">Manage staff access, reset passwords, and assign manager override PINs.</p>
+            
             <table>
-                <thead><tr><th>Name</th><th>User</th><th>Role</th><th>Actions</th></tr></thead>
-                <tbody><tr><td>Alessio</td><td>Admin_01</td><td>Admin</td><td><button class="btn btn-small">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr></tbody>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Manager PIN</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr>
+                        <td>Alessio</td>
+                        <td>Admin_01</td>
+                        <td>
+                            <div class="secure-cell">
+                                <span class="masked" id="passText1">SuperSecret123</span>
+                                <button class="eye-toggle" onclick="toggleSecurity('passText1')">👁️</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="secure-cell">
+                                <span class="masked" id="pinText1">1234</span>
+                                <button class="eye-toggle" onclick="toggleSecurity('pinText1')">👁️</button>
+                            </div>
+                        </td>
+                        <td>Admin</td>
+                        <td>
+                            <button class="btn btn-small btn-green">EDIT</button>
+                            <button class="btn btn-small btn-red">DEL</button>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
+            
+            <button class="btn btn-green" style="margin-top:20px;" onclick="openAddUser()">+ Register New User</button>
         </div>
-    </div>
-</div>
 
-<div id="invPopup" class="modal">
-    <div class="modal-header"><span>Inventory Editor</span><span onclick="closePopup('invPopup')" style="cursor:pointer">×</span></div>
-    <div class="modal-body">
-        <div class="form-group"><label>SKU</label><input type="text"></div>
-        <div class="form-group"><label>Item Name</label><input type="text"></div>
-        <div class="form-group"><label>Size</label>
-            <select onchange="this.nextElementSibling.style.display=(this.value=='Custom'?'flex':'none')">
-                <option>XS-5XL</option><option value="Custom">Custom Dimensions...</option>
-            </select>
-            <div style="display:none; gap:10px; margin-top:10px;"><input placeholder="W"> × <input placeholder="H"></div>
+        <div class="card">
+            <h3>Tax Archive</h3>
+            <div style="display:flex; gap:10px;">
+                <select style="flex:1"><option>2024 Tax Report (Full)</option><option>2025 Q1 Tax Report</option></select>
+                <button class="btn">Download PDF</button>
+            </div>
         </div>
-        <div class="form-group"><label>Price ($)</label><input type="number" step="0.01"></div>
-        <button class="btn btn-green" style="width:100%;">Save Item</button>
     </div>
-</div>
 
-<div id="custPopup" class="modal">
-    <div class="modal-header"><span>Customer Editor</span><span onclick="closePopup('custPopup')" style="cursor:pointer">×</span></div>
-    <div class="modal-body">
-        <div class="form-group"><label>Full Name</label><input type="text"></div>
-        <div class="form-group"><label>Company</label><input type="text"></div>
-        <div class="form-group"><label>Street Address</label><input type="text"></div>
-        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
-            <input placeholder="City"> <input placeholder="Zip Code">
-        </div>
-        <div class="form-group"><label>Email</label><input type="email"></div>
-        <button class="btn btn-green" style="width:100%;">Save Customer</button>
-    </div>
+    <div id="viewGen" class="hidden card"><h2>New Sale</h2></div>
+    <div id="viewInv" class="hidden card"><h2>Inventory</h2></div>
+    <div id="viewCust" class="hidden card"><h2>Customers</h2></div>
+    <div id="viewLook" class="hidden card"><h2>Invoice Lookup</h2></div>
+
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw99ETCoDFnyumicuEBn-MXsqjG7foGZTn2uE0x0lDK6MmvuDAcrJ0-B2tP6xfJWYy9/exec";
-
-    window.onload = () => {
-        const d = new Date();
-        document.getElementById('invDate').value = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-        document.getElementById('invNum').value = 'INV-' + d.getFullYear() + '001';
-        loadData();
-    };
-
-    async function loadData() {
-        try {
-            const [iR, cR] = await Promise.all([fetch(`${SCRIPT_URL}?action=getInventory`), fetch(`${SCRIPT_URL}?action=getCustomers`)]);
-            const inv = await iR.json();
-            const cust = await cR.json();
-            
-            document.getElementById('invBody').innerHTML = inv.filter(i => i.SKU).map(i => `
-                <tr><td>${i.SKU}</td><td>${i["Item Name"]}</td><td>$${parseFloat(i.Price || 0).toFixed(2)}</td><td>${i.Size || ''}</td>
-                <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>`).join('');
-
-            document.getElementById('custBody').innerHTML = cust.filter(c => c.Name).map(c => `
-                <tr><td>${c.Name}</td><td>${c.Company || '--'}</td><td>${c.Email || c.Phone}</td>
-                <td><button class="btn btn-small">VIEW</button><button class="btn btn-small btn-green">EDIT</button><button class="btn btn-small btn-red">DEL</button></td></tr>`).join('');
-            
-            document.getElementById('saleCustSelect').innerHTML = '<option>Select Customer</option>' + cust.map(c => `<option>${c.Name}</option>`).join('');
-        } catch(e) { console.error("Sync Error"); }
-    }
-
     function switchTab(t) {
         document.querySelectorAll('.nav-links div').forEach(el => el.classList.remove('active-tab'));
         document.getElementById('tab'+t).classList.add('active-tab');
-        ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'].forEach(v => document.getElementById(v).classList.add('hidden'));
+        ['viewGen', 'viewInv', 'viewCust', 'viewLook', 'viewAdm'].forEach(v => {
+            document.getElementById(v).classList.add('hidden');
+        });
         document.getElementById('view'+t).classList.remove('hidden');
     }
 
-    function togglePass(id) {
-        const x = document.getElementById(id);
-        x.type = (x.type === "password" ? "text" : "password");
+    /**
+     * Toggles the visibility of passwords and PINs in the table
+     */
+    function toggleSecurity(elementId) {
+        const el = document.getElementById(elementId);
+        if (el.classList.contains('masked')) {
+            el.classList.remove('masked');
+        } else {
+            el.classList.add('masked');
+        }
     }
 
-    function openPopup(id) { document.getElementById(id).style.display = 'block'; dragElement(document.getElementById(id)); }
-    function closePopup(id) { document.getElementById(id).style.display = 'none'; }
-
-    function dragElement(elm) {
-        var p1=0, p2=0, p3=0, p4=0;
-        elm.querySelector(".modal-header").onmousedown = (e) => {
-            p3 = e.clientX; p4 = e.clientY;
-            document.onmouseup = () => { document.onmouseup=null; document.onmousemove=null; };
-            document.onmousemove = (e) => {
-                p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY;
-                elm.style.top = (elm.offsetTop - p2) + "px"; elm.style.left = (elm.offsetLeft - p1) + "px";
-            };
-        };
+    // Logic to be connected to your Google Sheet later
+    function openAddUser() {
+        alert("This will open your User Registration pop-up window.");
     }
 </script>
+
 </body>
 </html>
